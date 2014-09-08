@@ -1,0 +1,14 @@
+#!/usr/bin/env php
+<?php
+require 'vendor/autoload.php';
+
+try {
+    $cmd = new Graze\Morphism\Command\Normalise;
+    $cmd->argv($argv);
+    $cmd->run();
+}
+catch(\Exception $e) {
+    fprintf(STDERR, $e->getMessage() . "\n");
+    exit(1);
+}
+

@@ -1,0 +1,35 @@
+{
+    "name": "graze/morphism",
+    "type": "library",
+    "description": "MySQL Database Migration",
+    "keywords": [
+        "mysql",
+        "database",
+        "migration",
+        "migrate"
+    ],
+    "homepage": "https://github.com/graze/morphism",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Graze tech team",
+            "homepage": "https://github.com/graze/prof/graphs/contributors"
+        }
+    ],
+    "require": {
+        "php": ">=5.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~4.0.11"
+    },
+    "autoload": {
+        "psr-4": {
+            "Graze\\Morphism\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Graze\\Morphism\\Test\\" : "test/"
+        }
+    }
+}

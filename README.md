@@ -1,6 +1,8 @@
 # Graze\morphism #
 
+<!--
 <img src="http://i.imgur.com/0YOJPQO.jpg" alt="Morph" align="right" width="300"/>
+-->
 <img src="http://i.imgur.com/FuzIxpl.jpg" alt="Keep Moving" align="right" width="240"/>
 
 This library blah blah blah.
@@ -8,8 +10,9 @@ This library blah blah blah.
 
 ### Usage ###
 
-```command line
+``bash
 $ blah
+```
 
 
 ### License ###

@@ -33,24 +33,32 @@ you who added a redundant index on 'pr\_name'.
 
 ### Example Usage ###
 
-``bash
+```
+(master) $ # create a baseline for the schema
 (master) $ mkdir schema
-(master) $ mysqldump --no-data catalog | vendor/graze/morphism/bin/normalise --output=schema/catalog
+(master) $ mysqldump --no-data catalog |
+    vendor/graze/morphism/bin/normalise --output=schema/catalog
 (master) $ git add schema
 (master) $ git commit -m "initial schema checkin"
+(master) $ 
+(master) $ # start work on changes to the catalog...
 (master) $ git checkout -b catalog-fixes
-
-(catalog-fixes) $ vi schema/catalog/product.sql             # add / remove some columns
-(catalog-fixes) $ vi schema/catalog/product_dimensions.sql  # add a new table 
+(catalog-fixes) $ vi schema/catalog/product.sql             # edit table definition
+(catalog-fixes) $ vi schema/catalog/product_dimensions.sql  # add new table 
 (catalog-fixes) $ git add schema/catalog
 (catalog-fixes) $ git rm schema/catalog/discontinued.sql    # delete a table
-(catalog-fixes) $ git commit -m "changes to the 'catalog' schema"
-(catalog-fixes) $ mysqldump --no-data catalog | vendor/graze/morphism/bin/diff - schema/catalog | mysql catalog
+(catalog-fixes) $ git commit -m "various changes to catalog schema"
+(catalog-fixes) $ # alter the database to match the schema files
+(catalog-fixes) $ mysqldump --no-data catalog |
+    vendor/graze/morphism/bin/diff - schema/catalog | mysql catalog
 (catalog-fixes) $ # hack hack hack
+(catalog-fixes) $ ...
+(catalog-fixes) $ # do some work back on master...
 (catalog-fixes) $ git checkout master
-
-# restore schema to previous state
-(master) $ mysqldump --no-data catalog | vendor/graze/morphism/bin/diff - schema/catalog | mysql catalog
+(master) $ # restore schema to previous state
+(master) $ mysqldump --no-data catalog | 
+    vendor/graze/morphism/bin/diff - schema/catalog | 
+    mysql catalog
 ```
 
 

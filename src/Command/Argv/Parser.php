@@ -32,7 +32,7 @@ class Parser
                     $consumer->consumeHelp($this->prog);
                     exit(0);
                 }
-                else if (substr($opt, 0, 1) == '-') {
+                else if (strlen($opt) > 1 && substr($opt, 0, 1) == '-') {
                     $eqPos = strpos($opt, '=');
                     if ($eqPos === false) {
                         $option = new Option($opt);

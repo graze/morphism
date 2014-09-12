@@ -24,6 +24,8 @@ class Diff implements Argv\Consumer
             "Diff two database schemas, and output the necessary ALTER TABLE statements\n" .
             "to transform the schema defined by PATH1 to that defined by PATH2.\n" .
             "\n" .
+            "If `-' is specified for PATH1 or PATH2, standard input will be read.\n" .
+            "\n" .
             "OPTIONS\n" .
             "  -h, -help, --help      display this message, and exit\n" .
             "  --output=DIR           write statements to files in DIR\n" .
@@ -96,6 +98,9 @@ class Diff implements Argv\Consumer
 
         try {
             foreach($this->paths as $i => $path) {
+                if ($path == '-') {
+                    $path = "php://stdin";
+                }
                 $dumps[$i] = MysqlDump::parseFromPaths([$path], $this->engine, $this->collation);
             }
         }

@@ -208,49 +208,18 @@ class Token
             return $this->text;
 
         case 'number':
-            if (stripos($this->text, "e")) {
-                $abs = abs($this->text);
-                if ($abs >= 1e15 || $abs < 1e-15) {
-                    return str_replace('+', '', sprintf("%.17e", $this->text));
-                }
-                else if ($abs >= 1) {
-                    preg_match(
-                        '/^
-                        ( [-+]? )
-                        ( [0-9]* )
-                        (?: 
-                            \. 
-                            ([0-9]*)
-                        )?
-                        (?:
-                            [eE]
-                            ( [-+]? [0-9]* )
-                        )?
-                        ()
-                        $/x', $text, $pregMatch
-                    );
-                    list(, $sign, $prePoint, $postPoint, $exponent) = $pregMatch;
-                    $prePoint = ltrim($prePoint, '0');
-                    if ($prePoint == '') {
-                        $prePoint = '0';
-                    }
-                    $postPoint = rtrim($postPoint, '0');
-                    $digits = $prePoint . $postPoint;
-                    $exponent = ($exponent == '') ? 0 : (int) $exponent;
-                    $exponent += strlen($prePoint) - strlen($postPoint) - 1;
-
-
-                    return sprintf("%.17g", $this->text);
-                }
-                else {
-                    // TODO - need to dynamically adjust dp's
-                    return sprintf("%.17f", $this->text);
-                }
+            preg_match('/^([+-]?)0*(.*)$/', $this->text, $pregMatch);
+            list(, $sign, $value) = $pregMatch;
+            if ($value == '') {
+                $value = '0';
             }
-            else {
-                $string = ltrim($this->text, "+0");
-                return ($string == '') ? '0' : $string;
+            else if (substr($value, 0, 1) == '.') {
+                $value = '0' . $value;
             }
+            if ($sign == '-') {
+                $value = $sign . $value;
+            }
+            return $value;
 
         case 'hex':
             return pack('H*', $this->text);

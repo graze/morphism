@@ -178,7 +178,10 @@ class CreateTable
     {
         $column = new ColumnDefinition();
         $column->parse($stream);
-        $this->columns[$column->name] = $column;
+        if (array_key_exists(strtolower($column->name), $this->columns)) {
+            throw new \RuntimeException("duplicate column name '" . $column->name . "'");
+        }
+        $this->columns[strtolower($column->name)] = $column;
         $this->indexes = array_merge(
             $this->indexes,
             $column->indexes
@@ -251,15 +254,11 @@ class CreateTable
     private function _processIndexes()
     {
         // check indexes are sane wrt available columns
-        $columnNames = [];
-        foreach($this->columns as $column) {
-            $columnNames[] = $column->name;
-        }
         foreach($this->indexes as $index) {
             foreach($index->columns as $indexColumn) {
                 $indexColumnName = $indexColumn['name'];
-                if (!in_array($indexColumnName, $columnNames)) {
-                    throw new \RuntimeException("Key column '$indexColumnName' doesn't exist in table");
+                if (!array_key_exists(strtolower($indexColumnName), $this->columns)) {
+                    throw new \RuntimeException("key column '$indexColumnName' doesn't exist in table");
                 }
             }
         }
@@ -336,22 +335,22 @@ class CreateTable
                 }
                 $index->name = $name;
             }
-            else if (array_key_exists($name, $usedName)) {
-                throw new \RuntimeException("duplicate index name");
+            else if (array_key_exists(strtolower($name), $usedName)) {
+                throw new \RuntimeException("duplicate key name '$name'");
             }
             $index->name = $name;
-            $usedName[$name] = true;
+            $usedName[strtolower($name)] = true;
 
             $indexesByType[$index->type][] = $index;
         }
 
         if (count($indexesByType['PRIMARY KEY']) > 1) {
-            throw new \RuntimeException("there can only by one PRIMARY KEY");
+            throw new \RuntimeException("multiple PRIMARY KEYs defined");
         }
 
         foreach($indexesByType['PRIMARY KEY'] as $pk) {
             foreach($pk->columns as $indexColumn) {
-                $column = $this->columns[$indexColumn['name']];
+                $column = $this->columns[strtolower($indexColumn['name'])];
                 if ($column->nullable) {
                     $column->nullable = false;
                     if (is_null($column->default)) {

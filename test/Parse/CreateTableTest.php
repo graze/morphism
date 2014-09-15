@@ -26,11 +26,36 @@ class CreateTableTest extends \Graze\Morphism\Test\Parse\TestCase
         $collation = new CollationInfo();
         $table = new CreateTable($collation);
         $table->setDefaultEngine('InnoDB');
-        $table->parse($stream);
-        $this->assertSame(
-            trim(preg_replace('/\s+/', ' ', $expected)),
-            trim(preg_replace('/\s+/', ' ', $table->toString()))
-        );
+
+        $threw = null;
+        try {
+            $table->parse($stream);
+        }
+        catch(\Exception $e) {
+            $threw = $e;
+        }
+        if (preg_match('/^exception/i', $expected)) {
+            if (!preg_match('/^exception\\s+(\\S+)\s+"(.*)"/i', $expected, $pregMatch)) {
+                throw new Exception("garbled exception specification: $expected");
+            }
+            list(, $expectedExceptionType, $expectedMessageRegex) = $pregMatch;
+            if (is_null($threw)) {
+                $this->fail("expected an $expectedExceptionType exception, but none was thrown");
+            }
+            else {
+                $this->assertInstanceOf($expectedExceptionType, $threw, "wrong exception type thrown");
+                $this->assertRegExp("/$expectedMessageRegex/", $e->getMessage(), "wrong exception message");
+            }
+        }
+        elseif (is_null($threw)) {
+            $this->assertSame(
+                trim(preg_replace('/\s+/', ' ', $expected)),
+                trim(preg_replace('/\s+/', ' ', $table->toString()))
+            );
+        }
+        else {
+            $this->fail("Unexpected exception " . get_class($threw) . ": " . $threw->getMessage());
+        }
     }
 
     public function providerParse()
@@ -45,6 +70,7 @@ class CreateTableTest extends \Graze\Morphism\Test\Parse\TestCase
             'fullTextIndex.sql',
             'uniqueIndex.sql',
             'foreignKey.sql',
+            'indexes.sql',
             'timestamp.sql',
         ] as $file) {
             $path = __DIR__ . '/sql/' . $file;
@@ -55,7 +81,10 @@ class CreateTableTest extends \Graze\Morphism\Test\Parse\TestCase
             foreach(preg_split('/^-- test .*$/m', $sql) as $pair) {
                 if (trim($pair) != '') {
                     list($text, $expected) = preg_split('/(?<=;)/', $pair);
-                    $tests[] = [$text, $expected];
+                    $tests[] = [
+                        trim($text),
+                        trim($expected)
+                    ];
                 }
             }
         }

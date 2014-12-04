@@ -51,6 +51,56 @@ class ColumnDefinition
     private $_primaryKey = false;
     private $_uniqueKey = false;
 
+    private static $_typeInfoMap = [
+        //                             format   default  allow   allow   allow   uninitialised
+        // datatype       kind         Spec     Lengths  Autoinc Binary  Charset Value
+        'bit'        => [ 'bit',       [0,1  ], [1],     false,  false,  false,  0,    ],
+        'tinyint'    => [ 'int',       [0,1  ], [3,4],   true,   false,  false,  0,    ],
+        'smallint'   => [ 'int',       [0,1  ], [5,6],   true,   false,  false,  0,    ],
+        'mediumint'  => [ 'int',       [0,1  ], [8,9],   true,   false,  false,  0,    ],
+        'int'        => [ 'int',       [0,1  ], [10,11], true,   false,  false,  0,    ],
+        'bigint'     => [ 'int',       [0,1  ], [20,20], true,   false,  false,  0,    ],
+        'double'     => [ 'decimal',   [0,  2], null,    true,   false,  false,  0,    ], // prec = 22
+        'float'      => [ 'decimal',   [0,  2], null,    true,   false,  false,  0,    ], // prec = 12
+        'decimal'    => [ 'decimal',   [0,1,2], [10,10], false,  false,  false,  0,    ],
+        'date'       => [ 'date',      [0    ], null,    false,  false,  false,  0,    ],
+        'time'       => [ 'time',      [0    ], null,    false,  false,  false,  0,    ],
+        'timestamp'  => [ 'datetime',  [0    ], null,    false,  false,  false,  0,    ],
+        'datetime'   => [ 'datetime',  [0,1  ], null,    false,  false,  false,  0,    ],
+        'year'       => [ 'year',      [0,1  ], [4],     false,  false,  false,  0,    ],
+        'char'       => [ 'text',      [0,1  ], [1],     false,  true,   true,   '',   ],
+        'varchar'    => [ 'text',      [  1  ], null,    false,  true,   true,   '',   ],
+        'binary'     => [ 'binary',    [0,1  ], [1],     false,  false,  false,  '',   ],
+        'varbinary'  => [ 'text',      [  1  ], null,    false,  false,  false,  '',   ],
+        'tinyblob'   => [ 'blob',      [0    ], null,    false,  false,  false,  null, ],
+        'blob'       => [ 'blob',      [0    ], null,    false,  false,  false,  null, ],
+        'mediumblob' => [ 'blob',      [0    ], null,    false,  false,  false,  null, ],
+        'longblob'   => [ 'blob',      [0    ], null,    false,  false,  false,  null, ],
+        'tinytext'   => [ 'blob',      [0    ], null,    false,  true,   true,   null, ],
+        'text'       => [ 'blob',      [0    ], null,    false,  true,   true,   null, ],
+        'mediumtext' => [ 'blob',      [0    ], null,    false,  true,   true,   null, ],
+        'longtext'   => [ 'blob',      [0    ], null,    false,  true,   true,   null, ],
+        'enum'       => [ 'enum',      [0    ], null,    false,  false,  true,   0,    ],
+        'set'        => [ 'set',       [0    ], null,    false,  false,  true,   '',   ],
+    ];
+    private static $_typeInfoCache = [];
+
+    private static $_aliasMap = [
+        'bool'      => 'tinyint',
+        'boolean'   => 'tinyint',
+        'int1'      => 'tinyint',
+        'int2'      => 'smallint',
+        'int3'      => 'mediumint',
+        'middleint' => 'mediumint',
+        'int4'      => 'int',
+        'integer'   => 'int',
+        'int8'      => 'bigint',
+        'dec'       => 'decimal',
+        'numeric'   => 'decimal',
+        'fixed'     => 'decimal',
+        'real'      => 'double',
+    ];
+
     /**
      * Constructor
      */
@@ -97,44 +147,15 @@ class ColumnDefinition
 
     private function _getTypeInfo()
     {
-        $map = [
-            //                             format   default  allow   allow   allow   uninitialised
-            // datatype       kind         Spec     Lengths  Autoinc Binary  Charset Value
-            'bit'        => [ 'bit',       [0,1  ], [1],     false,  false,  false,  0,    ],
-            'tinyint'    => [ 'int',       [0,1  ], [3,4],   true,   false,  false,  0,    ],
-            'smallint'   => [ 'int',       [0,1  ], [5,6],   true,   false,  false,  0,    ],
-            'mediumint'  => [ 'int',       [0,1  ], [8,9],   true,   false,  false,  0,    ],
-            'int'        => [ 'int',       [0,1  ], [10,11], true,   false,  false,  0,    ],
-            'bigint'     => [ 'int',       [0,1  ], [20,20], true,   false,  false,  0,    ],
-            'double'     => [ 'decimal',   [0,  2], null,    true,   false,  false,  0,    ], // prec = 22
-            'float'      => [ 'decimal',   [0,  2], null,    true,   false,  false,  0,    ], // prec = 12
-            'decimal'    => [ 'decimal',   [0,1,2], [10,10], false,  false,  false,  0,    ],
-            'date'       => [ 'date',      [0    ], null,    false,  false,  false,  0,    ],
-            'time'       => [ 'time',      [0    ], null,    false,  false,  false,  0,    ],
-            'timestamp'  => [ 'datetime',  [0    ], null,    false,  false,  false,  0,    ],
-            'datetime'   => [ 'datetime',  [0,1  ], null,    false,  false,  false,  0,    ],
-            'year'       => [ 'year',      [0,1  ], [4],     false,  false,  false,  0,    ],
-            'char'       => [ 'text',      [0,1  ], [1],     false,  true,   true,   '',   ],
-            'varchar'    => [ 'text',      [  1  ], null,    false,  true,   true,   '',   ],
-            'binary'     => [ 'binary',    [0,1  ], [1],     false,  false,  false,  '',   ],
-            'varbinary'  => [ 'text',      [  1  ], null,    false,  false,  false,  '',   ],
-            'tinyblob'   => [ 'blob',      [0    ], null,    false,  false,  false,  null, ],
-            'blob'       => [ 'blob',      [0    ], null,    false,  false,  false,  null, ],
-            'mediumblob' => [ 'blob',      [0    ], null,    false,  false,  false,  null, ],
-            'longblob'   => [ 'blob',      [0    ], null,    false,  false,  false,  null, ],
-            'tinytext'   => [ 'blob',      [0    ], null,    false,  true,   true,   null, ],
-            'text'       => [ 'blob',      [0    ], null,    false,  true,   true,   null, ],
-            'mediumtext' => [ 'blob',      [0    ], null,    false,  true,   true,   null, ],
-            'longtext'   => [ 'blob',      [0    ], null,    false,  true,   true,   null, ],
-            'enum'       => [ 'enum',      [0    ], null,    false,  false,  true,   0,    ],
-            'set'        => [ 'set',       [0    ], null,    false,  false,  true,   '',   ],
-        ];
+        if (array_key_exists($this->type, self::$_typeInfoCache)) {
+            return self::$_typeInfoCache[$this->type];
+        }
 
-        if (!array_key_exists($this->type, $map)) {
+        if (!array_key_exists($this->type, self::$_typeInfoMap)) {
             return null;
         }
 
-        $data = $map[$this->type];
+        $data = self::$_typeInfoMap[$this->type];
 
         $typeInfo = (object) [
             'kind'               => $data[0],
@@ -147,28 +168,13 @@ class ColumnDefinition
             'uninitialisedValue' => $data[6],
         ];
         $typeInfo->allowSign = $typeInfo->allowZerofill = in_array($typeInfo->kind, ['int', 'decimal']);
+        self::$_typeInfoCache[$this->type] = $typeInfo;
 
         return $typeInfo;
     }
 
     private function _parseColumnDatatype(TokenStream $stream)
     {
-        $alias = [
-            'bool'      => 'tinyint',
-            'boolean'   => 'tinyint',
-            'int1'      => 'tinyint',
-            'int2'      => 'smallint',
-            'int3'      => 'mediumint',
-            'middleint' => 'mediumint',
-            'int4'      => 'int',
-            'integer'   => 'int',
-            'int8'      => 'bigint',
-            'dec'       => 'decimal',
-            'numeric'   => 'decimal',
-            'fixed'     => 'decimal',
-            'real'      => 'double',
-        ];
-
         $token = $stream->nextToken();
         if ($token->type !== 'identifier') {
             throw new \RuntimeException("expected a datatype");
@@ -176,8 +182,8 @@ class ColumnDefinition
 
         // map aliases to concrete type
         $sqlType = strtolower($token->text);
-        if (array_key_exists($sqlType, $alias)) {
-            $type = $alias[$sqlType];
+        if (array_key_exists($sqlType, self::$_aliasMap)) {
+            $type = self::$_aliasMap[$sqlType];
         }
         else {
             switch($sqlType) {
@@ -372,46 +378,63 @@ class ColumnDefinition
     private function _parseColumnOptions(TokenStream $stream)
     {
         while(true) {
-            if ($stream->consume('NOT NULL')) {
+            $mark = $stream->getMark();
+            $token1 = $stream->nextToken();
+            if ($token1->type !== 'identifier') {
+                $stream->rewind($mark);
+                break;
+            }
+
+            if (
+                strcasecmp($token1->text, 'NOT') == 0 &&
+                $stream->consume('NULL')
+            ) {
                 $this->nullable = false;
             }
-            else if ($stream->consume('NULL')) {
+            else if (
+                strcasecmp($token1->text, 'NULL') == 0
+            ) {
                 if (!$this->autoIncrement) {
                     $this->nullable = true;
                 }
             }
-            else if ($stream->consume('DEFAULT')) {
-                $token = $stream->nextToken();
+            else if (
+                strcasecmp($token1->text, 'DEFAULT') == 0
+            ) {
+                $token2 = $stream->nextToken();
 
-                if ($token->eq('identifier', 'NOW') ||
-                    $token->eq('identifier', 'CURRENT_TIMESTAMP') ||
-                    $token->eq('identifier', 'LOCALTIME') ||
-                    $token->eq('identifier', 'LOCALTIMESTAMP')
+                if ($token2->eq('identifier', 'NOW') ||
+                    $token2->eq('identifier', 'CURRENT_TIMESTAMP') ||
+                    $token2->eq('identifier', 'LOCALTIME') ||
+                    $token2->eq('identifier', 'LOCALTIMESTAMP')
                 ) {
                     if (!$stream->consume([['symbol', '('], ['symbol', ')']]) &&
-                        $token->eq('identifier', 'NOW')
+                        $token2->eq('identifier', 'NOW')
                     ) {
                         throw new \RuntimeException("expected ()");
                     }
-                    $token = new Token('identifier', 'CURRENT_TIMESTAMP');
+                    $token2 = new Token('identifier', 'CURRENT_TIMESTAMP');
                 }
 
                 try {
-                    $this->default = $this->_defaultValue($token);
+                    $this->default = $this->_defaultValue($token2);
                 }
                 catch(Exception $e) {
                     throw new \RuntimeException("invalid DEFAULT for '" . $this->name . "'");
                 }
             }
-            else if ($stream->consume('ON UPDATE')) {
-                $token = $stream->nextToken();
-                if ($token->eq('identifier', 'NOW') ||
-                    $token->eq('identifier', 'CURRENT_TIMESTAMP') ||
-                    $token->eq('identifier', 'LOCALTIME') ||
-                    $token->eq('identifier', 'LOCALTIMESTAMP')
+            else if (
+                strcasecmp($token1->text, 'ON') == 0 &&
+                $stream->consume('UPDATE')
+            ) {
+                $token2 = $stream->nextToken();
+                if ($token2->eq('identifier', 'NOW') ||
+                    $token2->eq('identifier', 'CURRENT_TIMESTAMP') ||
+                    $token2->eq('identifier', 'LOCALTIME') ||
+                    $token2->eq('identifier', 'LOCALTIMESTAMP')
                 ) {
                     if (!$stream->consume([['symbol', '('], ['symbol', ')']]) &&
-                        $token->eq('identifier', 'NOW')
+                        $token2->eq('identifier', 'NOW')
                     ) {
                         throw new \RuntimeException("expected ()");
                     }
@@ -424,28 +447,37 @@ class ColumnDefinition
                     throw new \RuntimeException("expected CURRENT_TIMESTAMP, NOW, LOCALTIME or LOCALTIMESTAMP");
                 }
             }
-            else if ($stream->consume('AUTO_INCREMENT')) {
+            else if (
+                strcasecmp($token1->text, 'AUTO_INCREMENT') == 0
+            ) {
                 if (!$this->_getTypeInfo()->allowAutoIncrement) {
                     throw new \RuntimeException("AUTO_INCREMENT not allowed for this datatype");
                 }
                 $this->autoIncrement = true;
                 $this->nullable = false;
             }
-            else if ($stream->consume('UNIQUE')) {
+            else if (
+                strcasecmp($token1->text, 'UNIQUE') == 0
+            ) {
                 $stream->consume('KEY');
                 $this->_uniqueKey = true;
             }
             else if (
-                $stream->consume('PRIMARY KEY') ||
-                $stream->consume('KEY')
+                strcasecmp($token1->text, 'PRIMARY') == 0 && $stream->consume('KEY') ||
+                strcasecmp($token1->text, 'KEY') == 0
             ) {
                 $this->_primaryKey = true;
                 $this->nullable = false;
             }
-            else if ($stream->consume('COMMENT')) {
+            else if (
+                strcasecmp($token1->text, 'COMMENT') == 0
+            ) {
                 $this->comment = $stream->expectString();
             }
-            else if ($stream->consume('SERIAL DEFAULT VALUE')) {
+            else if (
+                strcasecmp($token1->text, 'SERIAL') == 0 &&
+                $stream->consume('DEFAULT VALUE')
+            ) {
                 if (!$this->_getTypeInfo()->allowAutoIncrement) {
                     throw new \RuntimeException("SERIAL DEFAULT VALUE is not allowed for this datatype");
                 }
@@ -455,6 +487,7 @@ class ColumnDefinition
                 $this->default = null;
             }
             else {
+                $stream->rewind($mark);
                 break;
             }
         }

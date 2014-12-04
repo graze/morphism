@@ -63,10 +63,10 @@ class TableOptions
         $this->options = $this->_defaultOptions;
 
         while(true) {
-            $stream->setMark();
+            $mark = $stream->getMark();
             $token = $stream->nextToken();
             if ($token->type !== 'identifier') {
-                $stream->rewindToMark();
+                $stream->rewind($mark);
                 break;
             }
 

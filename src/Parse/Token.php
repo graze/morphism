@@ -105,13 +105,13 @@ class Token
         $text = '';
         $n = strlen($string);
         for($i = 0; $i < $n; ++$i) {
-            $ch = substr($string, $i, 1);
+            $ch = $string[$i];
             if ($ch === $quoteChar) {
                 ++$i;
             }
             if ($ch === '\\') {
                 ++$i;
-                $ch = substr($string, $i, 1);
+                $ch = $string[$i];
                 switch($ch) {
                     case '0': $ch = chr(0); break;
                     case 'b': $ch = chr(8); break;
@@ -135,16 +135,7 @@ class Token
      */
     public static function fromIdentifier($string)
     {
-        $text = '';
-        $n = strlen($string);
-        for($i = 0; $i < $n; ++$i) {
-            $ch = substr($string, $i, 1);
-            if ($ch === '`') {
-                ++$i;
-            }
-            $text .= $ch;
-        }
-        return new self('identifier', $text);
+        return new self('identifier', str_replace('``', '`', $string));
     }
 
     /**
@@ -213,7 +204,7 @@ class Token
             if ($value == '') {
                 $value = '0';
             }
-            else if (substr($value, 0, 1) == '.') {
+            else if ($value[0] == '.') {
                 $value = '0' . $value;
             }
             if ($sign == '-') {

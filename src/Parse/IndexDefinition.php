@@ -95,13 +95,13 @@ class IndexDefinition
 
     private function _parseOptionalIndexName(TokenStream $stream)
     {
-        $stream->setMark();
+        $mark = $stream->getMark();
         $token = $stream->nextToken();
         if ($token->type === 'identifier') {
             $this->name = $token->text;
         }
         else {
-            $stream->rewindToMark();
+            $stream->rewind($mark);
         }
     }
 

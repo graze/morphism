@@ -7,8 +7,7 @@ class TokenStream
     private $text;
     private $offset = 0;
     private $inConditional = false;
-    private $mark = 0;
-    private $markInConditional = false;
+    private $memo = [];
 
     private function __construct()
     {
@@ -27,12 +26,28 @@ class TokenStream
 
     private function nextTokenRaw()
     {
-        $text = $this->text;
+        $startOffset = $this->offset;
+        if (isset($this->memo[$startOffset])) {
+            $entry = $this->memo[$startOffset];
+            $this->offset = $entry[0];
+            $this->inConditional = $entry[1];
+            return $entry[2];
+        }
 
-        list($token, $offset) = $this->_nextTokenRaw($this->text, $this->offset);
+        if ($this->offset >= strlen($this->text)) {
+            $token = new Token('EOF');
+            $this->offset = strlen($this->text);
+        }
+        else {
+            list($token, $offset) = $this->_nextTokenRaw($this->text, $this->offset);
+            $this->offset = $offset;
+        }
 
-        $this->text = $text;
-        $this->offset = $offset;
+        $this->memo[$startOffset] = [
+            $this->offset,
+            $this->inConditional,
+            $token,
+        ];
 
         return $token;
     }
@@ -45,43 +60,128 @@ class TokenStream
         //      temporal literals, e.g. DATE'2014-07-08'
         //      the null literal, i.e. \N
 
-        // check for false, because substr('blah', strlen('blah')) is FALSE rather
-        // than the empty string like any normal, sane human being would expect.
-        if ($offset >= strlen($text)) {
-            return [
-                new Token('EOF'),
-                strlen($text)
-            ];
+        switch($text[$offset]) {
+            case " ":
+            case "\n":
+            case "\r":
+            case "\t":
+                $n = strspn($text, " \n\r\t", $offset);
+                return [
+                    new Token('whitespace', substr($text, $offset, $n)),
+                    $offset + $n
+                ];
+
+            case '#':
+                return
+                    $this->_getComment($text, $offset);
+
+            case '.':
+            case '+':
+                return
+                    $this->_getNumber($text, $offset) ?:
+                    $this->_getSymbol($text, $offset);
+            
+            case '-':
+                return
+                    $this->_getComment($text, $offset) ?:
+                    $this->_getNumber($text, $offset) ?:
+                    $this->_getSymbol($text, $offset);
+
+            case '*':
+                return
+                    $this->_getConditionEnd($text, $offset) ?:
+                    $this->_getSymbol($text, $offset);
+            
+            case '/': 
+                return
+                    $this->_getConditionalStart($text, $offset) ?:
+                    $this->_getMultilineComment($text, $offset) ?:
+                    $this->_getSymbol($text, $offset);
+            
+            case '0': case '1': case '2': case '3':
+            case '4': case '5': case '6': case '7':
+            case '8': case '9': 
+                return
+                    $this->_getNumber($text, $offset) ?:
+                    $this->_getIdentifier($text, $offset);
+            
+            case '"': case "'":
+                return
+                    $this->_getString($text, $offset);
+
+            case '`':
+                return
+                    $this->_getQuotedIdentifier($text, $offset);
+            
+            case 'B': case 'b':
+                return
+                    $this->_getBin($text, $offset) ?:
+                    $this->_getIdentifier($text, $offset);
+
+            case 'X': case 'x':
+                return
+                    $this->_getHex($text, $offset) ?:
+                    $this->_getIdentifier($text, $offset);
+
+            case '$': case '_':
+            case 'A': case 'a': case 'C': case 'c':
+            case 'D': case 'd': case 'E': case 'e':
+            case 'F': case 'f': case 'G': case 'g':
+            case 'H': case 'h': case 'I': case 'i':
+            case 'J': case 'j': case 'K': case 'k':
+            case 'L': case 'l': case 'M': case 'm':
+            case 'N': case 'n': case 'O': case 'o':
+            case 'P': case 'p': case 'Q': case 'q':
+            case 'R': case 'r': case 'S': case 's':
+            case 'T': case 't': case 'U': case 'u':
+            case 'V': case 'v': case 'W': case 'w':
+            case 'Y': case 'y': case 'Z': case 'z':
+                return
+                    $this->_getIdentifier($text, $offset);
+            
+            case '!': case '%': case '&': case '(': case ')': case ',':
+            case ':': case ';': case '<': case '=': case '>': case '@':
+            case '^': case '|': case '~': 
+                return
+                    $this->_getSpecialSymbol($text, $offset);
+
+            case '?': case '[': case '\\': case ']':
+            case '{': case '}':
+            default:
+                $ch = $text[$offset];
+                throw new \LogicException("lexer is confused by char '$ch' ord " . ord($ch));
         }
-        else if (
-            preg_match('/\A\s/ms', substr($text, $offset, 1)) &&
-            preg_match('/\s+/ms', $text, $pregMatch, 0, $offset)
-        ) {
+    }
+
+    private function _getQuotedIdentifier($text, $offset)
+    {
+        if (preg_match('/`((?:[^`]|``)*)`/ms', $text, $pregMatch, 0, $offset)) {
+            $token = Token::fromIdentifier($pregMatch[1]);
             return [
-                new Token('whitespace', $pregMatch[0]),
+                $token,
                 $offset + strlen($pregMatch[0])
             ];
         }
-        else if (
-            substr($text, $offset, 1) === '`'
-        ) {
-            if (preg_match('/`((?:[^`]|``)*)`/ms', $text, $pregMatch, 0, $offset)) {
-                $token = Token::fromIdentifier($pregMatch[1]);
-                return [
-                    $token,
-                    $offset + strlen($pregMatch[0])
-                ];
-            }
-            throw new \RuntimeException("unterminated identifier $quote...$quote");
-        }
+        throw new \RuntimeException("unterminated identifier $quote...$quote");
+    }
+
+    private function _getSpecialSymbol($text, $offset)
+    {
         // TODO - should probably be a new token type 'variable' for @ and @@
-        else if (preg_match('/\A(?:<=|>=|<>|!=|:=|@@|&&|\|\||[=~!@%^&();:,<>])/xms', substr($text, $offset, 2), $pregMatch)) {
+        if (
+            preg_match('/\A(?:<=|>=|<>|!=|:=|@@|&&|\|\||[=~!@%^&();:,<>])/xms', substr($text, $offset, 2), $pregMatch)
+        ) {
             return [
                 new Token('symbol', $pregMatch[0]),
                 $offset + strlen($pregMatch[0])
             ];
         }
-        else if (   
+        return null;
+    }
+
+    private function _getConditionalStart($text, $offset)
+    {
+        if (   
             // 10 comes from allowing for the /*! sequence, a MySQL version number, and a space
             preg_match('_\A/\*!([0-9]*)\s_ms', substr($text, $offset, 10)) &&
             preg_match('_/\*!([0-9]*)\s_ms', $text, $pregMatch, 0, $offset)
@@ -92,7 +192,12 @@ class TokenStream
                 $offset + strlen($pregMatch[0])
             ];
         }
-        else if (substr($text, $offset, 2) === '*/') {
+        return null;
+    }
+
+    private function _getConditionEnd($text, $offset)
+    {
+        if (substr($text, $offset, 2) === '*/') {
             if (!$this->inConditional) {
                 throw new \RuntimeException("unexpected '*/'");
             }
@@ -102,7 +207,12 @@ class TokenStream
                 $offset + 2
             ];
         }
-        else if (substr($text, $offset, 2) === '/*') {
+        return null;
+    }
+
+    private function _getMultilineComment($text, $offset)
+    {
+        if (substr($text, $offset, 2) === '/*') {
             if (($pos = strpos($text, '*/', $offset)) !== FALSE) {
                 return [
                     new Token('comment', substr($text, $offset, $pos - $offset + 2)),
@@ -111,7 +221,12 @@ class TokenStream
             }
             throw new \RuntimeException("unterminated '/*'");
         }
-        else if (preg_match('/\A(?:#|--\s)/ms', substr($text, $offset, 3))) {
+        return null;
+    }
+
+    private function _getComment($text, $offset)
+    {
+        if (preg_match('/\A(?:#|--\s)/ms', substr($text, $offset, 3))) {
             if (($pos = strpos($text, "\n", $offset)) !== FALSE) {
                 return [
                     new Token('comment', substr($text, $offset, $pos - $offset)),
@@ -123,33 +238,37 @@ class TokenStream
                 strlen($text)
             ];
         }
-        else if (
-            substr($text, $offset, 1) === "'" ||
-            substr($text, $offset, 1) === '"'
+        return null;
+    }
+
+    private function _getString($text, $offset)
+    {
+        $quote = $text[$offset];
+        if (preg_match(
+            '/' . 
+            $quote . 
+            '(' .
+                '(?:' .
+                    '[^\\\\' . $quote . ']' .   // not \ or "
+                    '|\\\\.' .                  // escaped quotearacter
+                    '|' .  $quote . $quote .    // ""
+                ')*' .
+            ')' .
+            $quote .
+            '/ms', $text, $pregMatch, 0, $offset)
         ) {
-            $quote = substr($text, $offset, 1);
-            if (preg_match(
-                '/' . 
-                $quote . 
-                '(' .
-                    '(?:' .
-                        '[^\\\\' . $quote . ']' . // not \ or "
-                        '|\\\\.' .                // escaped character
-                        '|' .  $quote . $quote .  // ""
-                    ')*' .
-                ')' .
-                $quote .
-                '/ms', $text, $pregMatch, 0, $offset)
-            ) {
-                $token = Token::fromString($pregMatch[1], $quote);
-                return [
-                    $token,
-                    $offset + strlen($pregMatch[0])
-                ];
-            }
-            throw new \RuntimeException("unterminated string $quote...$quote");
+            $token = Token::fromString($pregMatch[1], $quote);
+            return [
+                $token,
+                $offset + strlen($pregMatch[0])
+            ];
         }
-        else if (
+        throw new \RuntimeException("unterminated string $quote...$quote");
+    }
+
+    private function _getNumber($text, $offset)
+    {
+        if (
             preg_match('/\A[-+]?[.]?[0-9]/ms', substr($text, $offset, 3)) &&
             preg_match('/[-+]?(?:[0-9]+(?:[.][0-9]*)?|[.][0-9]+)(?:[eE][-+]?[0-9]+)?/ms', $text, $pregMatch, 0, $offset)
         ) {
@@ -158,7 +277,12 @@ class TokenStream
                 $offset + strlen($pregMatch[0])
             ];
         }
-        else if (
+        return null;
+    }
+
+    private function _getHex($text, $offset)
+    {
+        if (
             preg_match('/\Ax\'[0-9a-f\']/ims', substr($text, $offset, 3)) &&
             preg_match('/x\'([0-9a-f]*)\'/ims', $text, $pregMatch, 0, $offset)
         ) {
@@ -170,7 +294,12 @@ class TokenStream
                 $offset + strlen($pregMatch[0])
             ];
         }
-        else if (
+        return null;
+    }
+
+    private function _getBin($text, $offset)
+    {
+        if (
             preg_match('/\Ab\'[01\']/ms', substr($text, $offset, 3)) &&
             preg_match('/b\'([01]*)\'/ms', $text, $pregMatch, 0, $offset)
         ) {
@@ -179,8 +308,13 @@ class TokenStream
                 $offset + strlen($pregMatch[0])
             ];
         }
-        else if (
-            preg_match('/\A[a-zA-Z0-9$_]/ms', substr($text, $offset, 1)) &&
+        return null;
+    }
+
+    private function _getIdentifier($text, $offset)
+    {
+        if (
+            preg_match('/\A[a-zA-Z0-9$_]/ms', $text[$offset]) &&
             preg_match('/[a-zA-Z0-9$_]+/ms', $text, $pregMatch, 0, $offset)
         ) {
             return [
@@ -188,14 +322,18 @@ class TokenStream
                 $offset + strlen($pregMatch[0])
             ];
         }
-        else if (preg_match('/\A(?:[-+*.\/])/xms', substr($text, $offset, 2), $pregMatch)) {
+        return null;
+    }
+
+    private function _getSymbol($text, $offset)
+    {
+        if (preg_match('/\A(?:[-+*.\/])/xms', substr($text, $offset, 2), $pregMatch)) {
             return [
                 new Token('symbol', $pregMatch[0]),
                 $offset + strlen($pregMatch[0])
             ];
         }
-
-        throw new \LogicException("lexer is confused!");
+        return null;
     }
 
     public function nextToken()
@@ -213,57 +351,74 @@ class TokenStream
         }
     }
 
-    public function setMark()
+    public function getMark()
     {
-        $this->mark = $this->offset;
-        $this->markInConditional = $this->inConditional;
+        return (object)[
+            'offset'        => $this->offset,
+            'inConditional' => $this->inConditional,
+        ];
     }
 
-    public function rewindToMark()
+    public function rewind($mark)
     {
-        $this->offset = $this->mark;
-        $this->inConditional = $this->markInConditional;
+        $this->offset        = $mark->offset;
+        $this->inConditional = $mark->inConditional;
     }
 
-    // warning! tramples mark
     public function consume($spec)
     {
-        return $this->_consume($spec, false);
+        // inline getMark()
+        $markOffset        = $this->offset;
+        $markInConditional = $this->inConditional;
+
+        if (is_string($spec)) {
+            foreach(explode(' ', $spec) as $text) {
+                $token = $this->nextToken();
+                // inline $token->eq(...)
+                if (
+                    strcasecmp($token->text, $text) !== 0 ||
+                    $token->type !== 'identifier'
+                ) {
+                    // inline rewind()
+                    $this->offset        = $markOffset;
+                    $this->inConditional = $markInConditional;
+                    return false;
+                }
+            }
+        }
+        else {
+            foreach($spec as $match) {
+                list($type, $text) = $match;
+                $token = $this->nextToken();
+                // inline $token->eq(...)
+                if (
+                    strcasecmp($token->text, $text) !== 0 || 
+                    $token->type !== $type
+                ) {
+                    // inline rewind()
+                    $this->offset        = $markOffset;
+                    $this->inConditional = $markInConditional;
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     public function peek($spec)
     {
-        return $this->_consume($spec, true);
-    }
+        // inline getMark()
+        $markOffset        = $this->offset;
+        $markInConditional = $this->inConditional;
 
-    private function _consume($spec, $peek)
-    {
-        if (is_string($spec)) {
-            $matches = array_map(
-                function($e) { return ['identifier', $e]; },
-                explode(' ', $spec)
-            );
-        }
-        else {
-            $matches = $spec;
-        }
+        $result = $this->consume($spec);
 
-        $this->setMark();
+        // inline rewind()
+        $this->offset        = $markOffset;
+        $this->inConditional = $markInConditional;
 
-        foreach($matches as $match) {
-            list($type, $text) = $match;
-            $token = $this->nextToken();
-            if (!$token->eq($type, $text)) {
-                $this->rewindToMark();
-                return false;
-            }
-        }
-
-        if ($peek) {
-            $this->rewindToMark();
-        }
-
-        return true;
+        return $result;
     }
 
     public function expect($type, $text = null)

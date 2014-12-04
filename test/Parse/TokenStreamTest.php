@@ -133,14 +133,14 @@ class TokenStreamTest extends \Graze\Morphism\Test\Parse\TestCase
         ];
     }
 
-    public function testRewindToMark()
+    public function testRewind()
     {
         $stream = $this->makeStream("create table t (x int, y int)");
         $stream->nextToken();
-        $stream->setMark();
+        $mark = $stream->getMark();
         $token11 = $stream->nextToken();
         $token12 = $stream->nextToken();
-        $stream->rewindToMark();
+        $stream->rewind($mark);
         $token21 = $stream->nextToken();
         $token22 = $stream->nextToken();
 

@@ -294,25 +294,33 @@ class ColumnDefinition
         }
 
         while(true) {
-            if ($stream->consume('ZEROFILL')) {
+            $mark = $stream->getMark();
+            $token1 = $stream->nextToken();
+            if ($token1->type !== 'identifier') {
+                $stream->rewind($mark);
+                break;
+            }
+
+            if ($token1->eq('identifier', 'ZEROFILL')) {
                 if (!$typeInfo->allowZerofill) {
                     throw new \RuntimeException("unexpected ZEROFILL");
                 }
                 $this->zerofill = true;
             }
-            else if ($stream->consume('UNSIGNED')) {
+            else if ($token1->eq('identifier', 'UNSIGNED')) {
                 if (!$typeInfo->allowSign) {
                     throw new \RuntimeException("unexpected UNSIGNED");
                 }
                 $this->unsigned = true;
             }
-            else if ($stream->consume('SIGNED')) {
+            else if ($token1->eq('identifier', 'SIGNED')) {
                 if (!$typeInfo->allowSign) {
                     throw new \RuntimeException("unexpected SIGNED");
                 }
                 $this->unsigned = false;
             }
             else {
+                $stream->rewind($mark);
                 break;
             }
         }
@@ -345,15 +353,22 @@ class ColumnDefinition
         }
 
         while(true) {
-            if ($stream->consume('BINARY')) {
+            $mark = $stream->getMark();
+            $token1 = $stream->nextToken();
+            if ($token1->type !== 'identifier') {
+                $stream->rewind($mark);
+                break;
+            }
+
+            if ($token1->eq('identifier', 'BINARY')) {
                 if (!$typeInfo->allowBinary) {
                     throw new \RuntimeException("unexpected BINARY");
                 }
                 $this->collation->setBinaryCollation();
             }
             else if (
-                $stream->consume('CHARSET') ||
-                $stream->consume('CHARACTER SET')
+                $token1->eq('identifier', 'CHARSET') ||
+                $token1->eq('identifier', 'CHARACTER') && $stream->consume('SET')
             ) {
                 if (!$typeInfo->allowCharset) {
                     throw new \RuntimeException("unexpected CHARSET");
@@ -362,6 +377,7 @@ class ColumnDefinition
                 $this->collation->setCharset($charset);
             }
             else {
+                $stream->rewind($mark);
                 break;
             }
         }
@@ -386,20 +402,20 @@ class ColumnDefinition
             }
 
             if (
-                strcasecmp($token1->text, 'NOT') == 0 &&
+                $token1->eq('identifier', 'NOT') &&
                 $stream->consume('NULL')
             ) {
                 $this->nullable = false;
             }
             else if (
-                strcasecmp($token1->text, 'NULL') == 0
+                $token1->eq('identifier', 'NULL')
             ) {
                 if (!$this->autoIncrement) {
                     $this->nullable = true;
                 }
             }
             else if (
-                strcasecmp($token1->text, 'DEFAULT') == 0
+                $token1->eq('identifier', 'DEFAULT')
             ) {
                 $token2 = $stream->nextToken();
 
@@ -424,7 +440,7 @@ class ColumnDefinition
                 }
             }
             else if (
-                strcasecmp($token1->text, 'ON') == 0 &&
+                $token1->eq('identifier', 'ON') &&
                 $stream->consume('UPDATE')
             ) {
                 $token2 = $stream->nextToken();
@@ -448,7 +464,7 @@ class ColumnDefinition
                 }
             }
             else if (
-                strcasecmp($token1->text, 'AUTO_INCREMENT') == 0
+                $token1->eq('identifier',  'AUTO_INCREMENT')
             ) {
                 if (!$this->_getTypeInfo()->allowAutoIncrement) {
                     throw new \RuntimeException("AUTO_INCREMENT not allowed for this datatype");
@@ -457,25 +473,25 @@ class ColumnDefinition
                 $this->nullable = false;
             }
             else if (
-                strcasecmp($token1->text, 'UNIQUE') == 0
+                $token1->eq('identifier', 'UNIQUE')
             ) {
                 $stream->consume('KEY');
                 $this->_uniqueKey = true;
             }
             else if (
-                strcasecmp($token1->text, 'PRIMARY') == 0 && $stream->consume('KEY') ||
-                strcasecmp($token1->text, 'KEY') == 0
+                $token1->eq('identifier',  'PRIMARY') && $stream->consume('KEY') ||
+                $token1->eq('identifier', 'KEY')
             ) {
                 $this->_primaryKey = true;
                 $this->nullable = false;
             }
             else if (
-                strcasecmp($token1->text, 'COMMENT') == 0
+                $token1->eq('identifier', 'COMMENT')
             ) {
                 $this->comment = $stream->expectString();
             }
             else if (
-                strcasecmp($token1->text, 'SERIAL') == 0 &&
+                $token1->eq('identifier', 'SERIAL') &&
                 $stream->consume('DEFAULT VALUE')
             ) {
                 if (!$this->_getTypeInfo()->allowAutoIncrement) {

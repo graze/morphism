@@ -5,9 +5,17 @@ class TokenStream
 {
     private $path;
     private $text;
+    private $len;
     private $offset = 0;
     private $inConditional = false;
     private $memo = [];
+
+    private static $skipTokenTypes = [
+        'conditional-start' => true,
+        'conditional-end'   => true,
+        'comment'           => true,
+        'whitespace'        => true,
+    ];
 
     private function __construct()
     {
@@ -15,12 +23,14 @@ class TokenStream
 
     public static function newFromFile($path)
     {
-        $stream = new self;
-        $stream->path = $path;
-        $stream->text = @file_get_contents($path);
-        if ($stream->text === false) {
+        $text = @file_get_contents($path);
+        if ($text === false) {
             throw new \RuntimeException("$path: could not open file");
         }
+        $stream = new self;
+        $stream->path = $path;
+        $stream->text = $text;
+        $stream->len = strlen($text);
         return $stream;
     }
 
@@ -34,9 +44,9 @@ class TokenStream
             return $entry[2];
         }
 
-        if ($this->offset >= strlen($this->text)) {
+        if ($this->offset >= $this->len) {
             $token = new Token('EOF');
-            $this->offset = strlen($this->text);
+            $this->offset = $this->len;
         }
         else {
             list($token, $offset) = $this->_nextTokenRaw($this->text, $this->offset);
@@ -155,11 +165,11 @@ class TokenStream
 
     private function _getQuotedIdentifier($text, $offset)
     {
-        if (preg_match('/`((?:[^`]|``)*)`/ms', $text, $pregMatch, 0, $offset)) {
-            $token = Token::fromIdentifier($pregMatch[1]);
+        if (preg_match('/`((?:[^`]|``)*)`()/ms', $text, $pregMatch, PREG_OFFSET_CAPTURE, $offset)) {
+            $token = Token::fromIdentifier($pregMatch[1][0]);
             return [
                 $token,
-                $offset + strlen($pregMatch[0])
+                $pregMatch[2][1]
             ];
         }
         throw new \RuntimeException("unterminated identifier $quote...$quote");
@@ -168,15 +178,11 @@ class TokenStream
     private function _getSpecialSymbol($text, $offset)
     {
         // TODO - should probably be a new token type 'variable' for @ and @@
-        if (
-            preg_match('/\A(?:<=|>=|<>|!=|:=|@@|&&|\|\||[=~!@%^&();:,<>])/xms', substr($text, $offset, 2), $pregMatch)
-        ) {
-            return [
-                new Token('symbol', $pregMatch[0]),
-                $offset + strlen($pregMatch[0])
-            ];
-        }
-        return null;
+        preg_match('/\A(?:<=|>=|<>|!=|:=|@@|&&|\|\||[=~!@%^&();:,<>|])()/xms', substr($text, $offset, 2), $pregMatch, PREG_OFFSET_CAPTURE);
+        return [
+            new Token('symbol', $pregMatch[0][0]),
+            $offset + $pregMatch[1][1]
+        ];
     }
 
     private function _getConditionalStart($text, $offset)
@@ -313,16 +319,11 @@ class TokenStream
 
     private function _getIdentifier($text, $offset)
     {
-        if (
-            preg_match('/\A[a-zA-Z0-9$_]/ms', $text[$offset]) &&
-            preg_match('/[a-zA-Z0-9$_]+/ms', $text, $pregMatch, 0, $offset)
-        ) {
-            return [
-                new Token('identifier', $pregMatch[0]),
-                $offset + strlen($pregMatch[0])
-            ];
-        }
-        return null;
+        preg_match('/[a-zA-Z0-9$_]+()/ms', $text, $pregMatch, PREG_OFFSET_CAPTURE, $offset);
+        return [
+            new Token('identifier', $pregMatch[0][0]),
+            $pregMatch[1][1]
+        ];
     }
 
     private function _getSymbol($text, $offset)
@@ -340,12 +341,7 @@ class TokenStream
     {
         while(true) {
             $token = $this->nextTokenRaw();
-            if (!in_array($token->type, [
-                'conditional-start',
-                'conditional-end',
-                'comment',
-                'whitespace',
-            ])) {
+            if (!isset(self::$skipTokenTypes[$token->type])) {
                 return $token;
             }
         }

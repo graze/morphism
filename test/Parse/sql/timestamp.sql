@@ -80,20 +80,29 @@ CREATE TABLE x (
     t1 timestamp default current_timestamp,
     t2 timestamp default current_timestamp
 );
-exception RuntimeException "there can be only one TIMESTAMP column with CURRENT_TIMESTAMP in DEFAULT or ON UPDATE clause"
+CREATE TABLE `x` (
+    `t1` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `t2` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
 
 -- test ----------------------------------------
 CREATE TABLE x (
     t1 timestamp on update current_timestamp,
     t2 timestamp default current_timestamp
 );
-exception RuntimeException "there can be only one TIMESTAMP column with CURRENT_TIMESTAMP in DEFAULT or ON UPDATE clause"
+CREATE TABLE `x` (
+    `t1` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP,
+    `t2` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
 
 -- test ----------------------------------------
-CREATE TABLE x (
-    t1 timestamp on update current_timestamp,
-    t2 timestamp on update current_timestamp
+CREATE TABLE `x` (
+    `t1` timestamp NOT NULL on update current_timestamp,
+    `t2` timestamp NOT NULL on update current_timestamp
 );
-exception RuntimeException "there can be only one TIMESTAMP column with CURRENT_TIMESTAMP in DEFAULT or ON UPDATE clause"
+CREATE TABLE `x` (
+    `t1` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP,
+    `t2` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
 
 

@@ -77,6 +77,10 @@ class ColumnDefinitionTest extends \Graze\Morphism\Test\Parse\TestCase
             ["x datetime",                               "`x` datetime DEFAULT NULL"],
             ["x datetime default 0",                     "`x` datetime DEFAULT '0000-00-00 00:00:00'"],
             ["x datetime default '1970-08-12 23:58:57'", "`x` datetime DEFAULT '1970-08-12 23:58:57'"],
+            ["x datetime default current_timestamp",     "`x` datetime DEFAULT CURRENT_TIMESTAMP"],
+            ["x datetime on update current_timestamp",   "`x` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP"],
+            ["x datetime default current_timestamp on update current_timestamp",
+                "`x` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"],
 
             ["x timestamp",                               "`x` timestamp NOT NULL"],
             ["x timestamp default 0",                     "`x` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00'"],

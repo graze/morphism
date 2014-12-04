@@ -200,19 +200,8 @@ class CreateTable
         $this->options->parse($stream);
     }
 
-    
-    // NOTE - this is based on the rules for 5.5.
-    //
-    // The rules have become more permissive and can also apply to DATETIME columns in 5.6 onwards.
-    //
     private function _processTimestamps()
     {
-        // One TIMESTAMP column in a table can have the current timestamp as
-        // the default value for initializing the column, as the auto-update
-        // value, or both. It is not possible to have the current timestamp
-        // be the default value for one column and the auto-update value for
-        // another column.
-
         // To specify automatic properties, use the DEFAULT CURRENT_TIMESTAMP
         // and ON UPDATE CURRENT_TIMESTAMP clauses. The order of the clauses
         // does not matter. If both are present in a column definition, either
@@ -236,15 +225,26 @@ class CreateTable
             $ts[0]->onUpdateCurrentTimestamp = true;
         }
 
-        $specials = 0;
+        // [[ this restriction no longer exists as of MySQL 5.6.5 and MariaDB 10.0.1 ]]
+
+        // One TIMESTAMP column in a table can have the current timestamp as
+        // the default value for initializing the column, as the auto-update
+        // value, or both. It is not possible to have the current timestamp
+        // be the default value for one column and the auto-update value for
+        // another column.
+
+        // $specials = 0;
+        // foreach($ts as $column) {
+        //     if ($column->default === 'CURRENT_TIMESTAMP' ||
+        //         $column->onUpdateCurrentTimestamp
+        //     ) {
+        //         if (++$specials > 1) {
+        //             throw new \RuntimeException("there can be only one TIMESTAMP column with CURRENT_TIMESTAMP in DEFAULT or ON UPDATE clause");
+        //         }
+        //     }
+        // }
+
         foreach($ts as $column) {
-            if ($column->default === 'CURRENT_TIMESTAMP' ||
-                $column->onUpdateCurrentTimestamp
-            ) {
-                if (++$specials > 1) {
-                    throw new \RuntimeException("there can be only one TIMESTAMP column with CURRENT_TIMESTAMP in DEFAULT or ON UPDATE clause");
-                }
-            }
             if (!$column->nullable && is_null($column->default)) {
                 $column->default = '0000-00-00 00:00:00';
             }

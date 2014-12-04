@@ -454,8 +454,8 @@ class ColumnDefinition
                     ) {
                         throw new \RuntimeException("expected ()");
                     }
-                    if ($this->type !== 'timestamp') {
-                        throw new \RuntimeException("ON UPDATE CURRENT_TIMESTAMP only valid for TIMESTAMP columns");
+                    if (!in_array($this->type, ['timestamp', 'datetime'])) {
+                        throw new \RuntimeException("ON UPDATE CURRENT_TIMESTAMP only valid for TIMESTAMP and DATETIME columns");
                     }
                     $this->onUpdateCurrentTimestamp = true;
                 }
@@ -555,7 +555,7 @@ class ColumnDefinition
         }
 
         if ($token->eq('identifier', 'CURRENT_TIMESTAMP')) {
-            if ($this->type !== 'timestamp') {
+            if (!in_array($this->type, ['timestamp', 'datetime'])) {
                 throw new \Exception();
             }
             return 'CURRENT_TIMESTAMP';
@@ -775,7 +775,10 @@ class ColumnDefinition
                 $text .= " DEFAULT NULL";
             }
         }
-        else if ($this->type === 'timestamp' && $this->default === 'CURRENT_TIMESTAMP') {
+        else if (
+            in_array($this->type, ['timestamp', 'datetime']) &&
+            $this->default === 'CURRENT_TIMESTAMP'
+        ) {
             $text .= " DEFAULT CURRENT_TIMESTAMP";
         }
         else if ($this->type === 'bit') {

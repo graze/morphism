@@ -32,13 +32,19 @@ class Parser
                     $consumer->consumeHelp($this->prog);
                     exit(0);
                 }
-                else if (strlen($opt) > 1 && substr($opt, 0, 1) == '-') {
+                else if (strlen($opt) > 1 && $opt[0] == '-') {
                     $eqPos = strpos($opt, '=');
                     if ($eqPos === false) {
                         $option = new Option($opt);
                     }
                     else {
-                        $option = new Option(substr($opt, 0, $eqPos), substr($opt, $eqPos + 1));
+                        $option = new Option(
+                            substr($opt, 0, $eqPos),
+                            // substr($s, strlen($s)) returns false, so we must 
+                            // cast to string to ensure we get '' as any sane
+                            // person would expect
+                            (string)substr($opt, $eqPos + 1)
+                        );
                     }
                     $consumer->consumeOption($option);
                 }

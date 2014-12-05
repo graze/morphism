@@ -14,6 +14,7 @@ class Diff implements Argv\Consumer
     private $dropDatabase = true;
     private $createTable = true;
     private $dropTable = true;
+    private $alterEngine = true;
     private $path1 = null;
     private $path2 = null;
 
@@ -31,12 +32,12 @@ class Diff implements Argv\Consumer
             "  --output=DIR           write statements to files in DIR\n" .
             "  --engine=ENGINE        set the default database engine\n" .
             "  --collation=COLLATION  set the default collation\n" .
-            "  --skip-quote-names     do not quote names with `...` (default)\n" .
-            "  --quote-names          quote names with `...`\n" .
-            "  --no-create-db         do not output CREATE DATABASEs (and associated CREATE TABLEs)\n" .
-            "  --no-drop-db           do not output DROP DATABASE statements\n" .
-            "  --no-create-table      do not output CREATE TABLE statements\n" .
-            "  --no-drop-table        do not output DROP TABLE statements\n" .
+            "  --[no-]quote-names     [do not] quote names with `...`\n" .
+            "  --[no-]create-db       [do not] output CREATE DATABASEs (and associated CREATE TABLEs)\n" .
+            "  --[no-]drop-db         [do not] output DROP DATABASE statements\n" .
+            "  --[no-]create-table    [do not] output CREATE TABLE statements\n" .
+            "  --[no-]drop-table      [do not] output DROP TABLE statements\n" .
+            "  --[no-]alter-engine    [do not] output ALTER TABLE ... ENGINE=\n" .
             "",
             $prog
         );
@@ -60,23 +61,30 @@ class Diff implements Argv\Consumer
             case '--collation':
                 $this->collation = $option->required();
                 break;
-            case '--skip-quote-names':
-                Token::setQuoteNames(false);
-                break;
             case '--quote-names':
-                Token::setQuoteNames(true);
+            case '--no-quote-names':
+                Token::setQuoteNames($option->bool());
                 break;
+            case '--create-db':
             case '--no-create-db':
-                $this->createDatabase = $option->noValue();
+                $this->createDatabase = $option->bool();
                 break;
+            case '--drop-db':
             case '--no-drop-db':
-                $this->dropDatabase = $option->noValue();
+                $option->noValue();
+                $this->dropDatabase = $option->bool();
                 break;
+            case '--create-table':
             case '--no-create-table':
-                $this->createTable = $option->noValue();
+                $this->createTable = $option->bool();
                 break;
+            case '--drop-table':
             case '--no-drop-table':
-                $this->createTable = $option->noValue();
+                $this->createTable = $option->bool();
+                break;
+            case '--alter-engine':
+            case '--no-alter-engine':
+                $this->alterEngine = $option->bool();
                 break;
             default:
                 $option->unrecognised();
@@ -117,6 +125,7 @@ class Diff implements Argv\Consumer
                 'dropDatabase'   => $this->dropDatabase,
                 'createTable'    => $this->createTable,
                 'dropTable'      => $this->dropTable,
+                'alterEngine'    => $this->alterEngine,
             ]
         );
     }

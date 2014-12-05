@@ -282,13 +282,23 @@ class TableOptions
      *
      * The empty string is returned if nothing needs to be done.
      *
+     * $flags           |
+     * :----------------|
+     * 'alterEngine'    | (bool) include 'ALTER TABLE ... ENGINE=' [default: true]
+     *
      * @return string
      */
-    public function diff(self $that)
+    public function diff(self $that, $flags = [])
     {
+        $flags += [
+            'alterEngine' => true,
+        ];
+
         $alters = [];
-        if (strcasecmp($this->engine, $that->engine) !== 0) {
-            $alters[] = "ENGINE=" . $that->engine;
+        if ($flags['alterEngine']) {
+            if (strcasecmp($this->engine, $that->engine) !== 0) {
+                $alters[] = "ENGINE=" . $that->engine;
+            }
         }
 
         $thisCollation = $this->collation->isSpecified()

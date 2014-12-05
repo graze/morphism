@@ -396,14 +396,24 @@ class CreateTable
      * represented by $that. If the tables are already equivalent, just
      * returns the empty string.
      *
+     * $flags        |
+     * :-------------|----
+     * 'alterEngine' | (bool) include ALTER TABLE ... ENGINE= [default: true]
+     *
      * @return string
      */
-    public function diff(self $that)
+    public function diff(self $that, array $flags = [])
     {
+        $flags += [
+            'alterEngine' => true,
+        ];
+
         $alters = array_merge(
             $this->_diffColumns($that),
             $this->_diffIndexes($that),
-            $this->_diffOptions($that)
+            $this->_diffOptions($that, [
+                'alterEngine' => $flags['alterEngine']
+            ])
         );
 
         if (count($alters) === 0) {
@@ -522,9 +532,14 @@ class CreateTable
         return $alters;
     }
 
-    private function _diffOptions(CreateTable $that)
+    private function _diffOptions(CreateTable $that, $flags = [])
     {
-        $diff = $this->options->diff($that->options);
+        $flags += [
+            'alterEngine' => true,
+        ];
+        $diff = $this->options->diff($that->options, [
+            'alterEngine' => $flags['alterEngine']
+        ]);
         return ($diff == '') ? [] : [$diff];
     }
 }

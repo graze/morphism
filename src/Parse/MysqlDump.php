@@ -172,23 +172,25 @@ class MysqlDump
      * Returns SQL DDL for transforming the database schema into the one 
      * represented by $that.
      *
-     * $options         |
+     * $flags           |
      * :----------------|
      * 'createDatabase' | (bool) include 'CREATE DATABASE' statements and dependent CREATE TABLEs [default: true]
      * 'dropDatabase'   | (bool) include 'DROP DATABASE' statements [default: true]
      * 'createTable'    | (bool) include 'CREATE TABLE' statements [default: true]
      * 'dropTable'      | (bool) include 'DROP TABLE' statements [default: true]
+     * 'alterEngine'    | (bool) include 'ALTER TABLE ... ENGINE=' [default: true]
      *
-     * @param bool[] $options  controls what to include in the generated DDL
+     * @param bool[] $flags  controls what to include in the generated DDL
      * @return string
      */
-    public function diff(self $that, $options = [])
+    public function diff(self $that, $flags = [])
     {
-        $options += [
+        $flags += [
             'createDatabase' => true,
             'dropDatabase'   => true,
             'createTable'    => true,
             'dropTable'      => true,
+            'alterEngine'    => true,
         ];
 
         $thisDatabaseNames = array_keys($this->databases);
@@ -200,14 +202,14 @@ class MysqlDump
 
         $text = '';
 
-        if ($options['dropDatabase'] && count($droppedDatabaseNames) > 0) {
+        if ($flags['dropDatabase'] && count($droppedDatabaseNames) > 0) {
             foreach($droppedDatabaseNames as $databaseName) {
                 $text .= "DROP DATABASE IF EXISTS " . Token::escapeIdentifier($databaseName) . ";\n";
             }
             $text .= "\n";
         }
 
-        if ($options['createDatabase']) {
+        if ($flags['createDatabase']) {
             foreach($createdDatabaseNames as $databaseName) {
                 $thatDatabase = $that->databases[$databaseName];
                 $text .= $thatDatabase->toString() . ";\n";
@@ -224,8 +226,9 @@ class MysqlDump
             $thisDatabase = $this->databases[$databaseName];
             $thatDatabase = $that->databases[$databaseName];
             $databaseDiff = $thisDatabase->diff($thatDatabase, [
-                'createTable' => $options['createTable'],
-                'dropTable'   => $options['dropTable'],
+                'createTable' => $flags['createTable'],
+                'dropTable'   => $flags['dropTable'],
+                'alterEngine' => $flags['alterEngine'],
             ]);
 
             if ($databaseDiff !== '') {

@@ -127,18 +127,20 @@ class CreateDatabase
      * Returns SQL DDL to transform this database and all contained tables
      * into the database specified by $that.
      *
-     * $options      |
+     * $flags        |
      * :-------------|----
      * 'createTable' | (bool) include 'CREATE TABLE' statements [default: true]
      * 'dropTable'   | (bool) include 'DROP TABLE' statements [default: true]
+     * 'alterEngine' | (bool) include ALTER TABLE ... ENGINE= [default: true]
      *
      * @return string
      */
-    public function diff(self $that, array $options = [])
+    public function diff(self $that, array $flags = [])
     {
-        $options += [
+        $flags += [
             'createTable' => true,
             'dropTable'   => true,
+            'alterEngine' => true,
         ];
 
         $thisTableNames = array_keys($this->tables);
@@ -150,14 +152,14 @@ class CreateDatabase
 
         $text = '';
 
-        if ($options['dropTable'] && count($droppedTableNames) > 0) {
+        if ($flags['dropTable'] && count($droppedTableNames) > 0) {
             foreach($droppedTableNames as $tableName) {
                 $text .= "DROP TABLE IF EXISTS " . Token::escapeIdentifier($tableName) . ";\n";
             }
             $text .= "\n";
         }
 
-        if ($options['createTable'] && count($createdTableNames) > 0) {
+        if ($flags['createTable'] && count($createdTableNames) > 0) {
             foreach($createdTableNames as $tableName) {
                 $text .= $that->tables[$tableName]->toString();
                 $text .= "\n";
@@ -167,7 +169,9 @@ class CreateDatabase
         foreach($commonTableNames as $tableName) {
             $thisTable = $this->tables[$tableName];
             $thatTable = $that->tables[$tableName];
-            $tableDiff = $thisTable->diff($thatTable);
+            $tableDiff = $thisTable->diff($thatTable, [
+                'alterEngine' => $flags['alterEngine'],
+            ]);
             if ($tableDiff !== '') {
                 $text .= $tableDiff . "\n";
             }

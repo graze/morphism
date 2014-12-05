@@ -29,8 +29,7 @@ class Normalise implements Argv\Consumer
             "  --output=DIR           write statements to files in DIR\n" .
             "  --engine=ENGINE        set the default database engine\n" .
             "  --collation=COLLATION  set the default collation\n" .
-            "  --skip-quote-names     do not quote names with `...` (default)\n" .
-            "  --quote-names          quote names with `...`\n" .
+            "  --[no-]quote-names     [do not] quote names with `...`\n" .
             "\n" .
             "Each PATH may specify a mysqldump file, or a directory of such files.\n" .
             "If no PATH is given, standard input will be read.\n" .
@@ -54,11 +53,9 @@ class Normalise implements Argv\Consumer
             case '--collation':
                 $this->collation = $option->required();
                 break;
-            case '--skip-quote-names':
-                Token::setQuoteNames(false);
-                break;
             case '--quote-names':
-                Token::setQuoteNames(true);
+            case '--no-quote-names':
+                Token::setQuoteNames($option->bool());
                 break;
             default:
                 $option->unrecognised();

@@ -38,6 +38,12 @@ class Option
         return $this->value;
     }
 
+    public function bool()
+    {
+        $this->noValue();
+        return substr($this->option, 0, 5) === '--no-' ? false : true;
+    }
+
     public function unrecognised()
     {
         throw new Exception("unrecognised option `{$this->option}'");

@@ -33,9 +33,9 @@ class Option
         return $this->value;
     }
 
-    public function optional()
+    public function optional($default = null)
     {
-        return $this->value;
+        return is_null($this->value) ? $default : $this->value;
     }
 
     public function bool()

@@ -33,9 +33,9 @@
             "Graze\\Morphism\\Test\\" : "test/"
         }
     },
-    "bin": {
+    "bin": [
         "./bin/morph-dump",
         "./bin/morph-diff",
         "./bin/morph-norm"
-    }
+    ]
 }

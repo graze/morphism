@@ -1,4 +1,5 @@
 {
+    "version": "1.0.0",
     "name": "graze/morphism",
     "type": "library",
     "description": "MySQL Database Migration",
@@ -31,5 +32,10 @@
         "psr-4": {
             "Graze\\Morphism\\Test\\" : "test/"
         }
+    },
+    "bin": {
+        "./bin/morph-dump",
+        "./bin/morph-diff",
+        "./bin/morph-norm"
     }
 }

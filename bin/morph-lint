@@ -1,0 +1,15 @@
+#!/usr/bin/env php
+<?php
+require 'vendor/autoload.php';
+
+try {
+    $cmd = new Graze\Morphism\Command\Lint;
+    $cmd->argv($argv);
+    $success = $cmd->run();
+}
+catch(\Exception $e) {
+    fprintf(STDERR, $e->getMessage() . "\n");
+    exit(1);
+}
+
+exit($success ? 0 : 1);

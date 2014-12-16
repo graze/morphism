@@ -46,7 +46,12 @@ class Parser
                             (string)substr($opt, $eqPos + 1)
                         );
                     }
-                    $consumer->consumeOption($option);
+                    try {
+                        $consumer->consumeOption($option);
+                    }
+                    catch(Exception $e) {
+                        throw new Exception("option `{$option->getOption()}`: " . $e->getMessage());
+                    }
                 }
                 else {
                     $this->args[] = $opt;

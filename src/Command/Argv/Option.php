@@ -21,14 +21,14 @@ class Option
     public function noValue()
     {
         if (!is_null($this->value)) {
-            throw new Exception("option `{$this->option}' does not allow an argument");
+            throw new Exception("does not allow an argument");
         }
     }
 
     public function required()
     {
         if (is_null($this->value)) {
-            throw new Exception("option `{$this->option}' requires an argument");
+            throw new Exception("requires an argument");
         }
         return $this->value;
     }
@@ -46,7 +46,7 @@ class Option
 
     public function unrecognised()
     {
-        throw new Exception("unrecognised option `{$this->option}'");
+        throw new Exception("unrecognised option");
     }
 }
 

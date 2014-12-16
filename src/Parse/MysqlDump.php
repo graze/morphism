@@ -51,10 +51,8 @@ class MysqlDump
         $files = [];
         foreach($paths as $path) {
             if (is_dir($path)) {
-                foreach(new \DirectoryIterator($path) as $fileInfo) {
-                    if (!$fileInfo->isDot()) {
-                        $files[] = $fileInfo->getPathname();
-                    }
+                foreach(new \GlobIterator("$path/*.sql") as $fileInfo) {
+                    $files[] = $fileInfo->getPathname();
                 }
             }
             else {

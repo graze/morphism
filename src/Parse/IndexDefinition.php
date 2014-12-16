@@ -187,7 +187,19 @@ class IndexDefinition
     private function _parseReferenceDefinition(TokenStream $stream)
     {
         $stream->expect('identifier', 'REFERENCES');
-        $this->reference['table'] = $stream->expectName();
+
+        $tableOrSchema = $stream->expectName();
+        if ($stream->consume([['symbol', '.']])) {
+            $schema = $tableOrSchema;
+            $table = $stream->expectName();
+        }
+        else {
+            $schema = null;
+            $table = $tableOrSchema;
+        }
+
+        $this->reference['schema'] = null;
+        $this->reference['table'] = $table;
         $this->reference['columns'] = $this->_expectIndexColumns($stream);
         $this->reference['ON DELETE'] = 'RESTRICT';
         $this->reference['ON UPDATE'] = 'RESTRICT';
@@ -308,7 +320,11 @@ class IndexDefinition
         }
 
         if ($this->type === 'FOREIGN KEY') {
-            $line .= " REFERENCES " . Token::escapeIdentifier($this->reference['table']);
+            $reference = Token::escapeIdentifier($this->reference['table']);
+            if (!is_null($this->reference['schema'])) {
+                $reference = Token::escapeIdentifier($this->reference['schema']) . '.' . $reference;
+            }
+            $line .= " REFERENCES $reference";
             $cols = [];
             foreach($this->reference['columns'] as $column) {
                 $col = Token::escapeIdentifier($column['name']);

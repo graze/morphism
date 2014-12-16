@@ -324,7 +324,13 @@ class TableOptions
             'PACK_KEYS',
             'CHECKSUM',
             'DELAY_KEY_WRITE',
-            'ROW_FORMAT',
+
+            // The storage engine may pick a different row format when
+            // ROW_FORMAT=DEFAULT (or no ROW_FORMAT)/ is specified, depending
+            // on whether any variable length columns are present. Since we
+            // don't (currently) explicitly specify ROW_FORMAT in any of our
+            // tables, I'm choosing to ignore it for the time being...
+        //  'ROW_FORMAT',
             'KEY_BLOCK_SIZE',
             'COMMENT',
             'CONNECTION',

@@ -337,7 +337,7 @@ class TableOptions
         ] as $option) {
 
             $thisValue = $this->options[$option];
-            $thatValue = $this->options[$option];
+            $thatValue = $that->options[$option];
             if (in_array($option, ['COMMENT', 'CONNECTION'])) {
                 $thisValue = Token::escapeString($thisValue);
                 $thatValue = Token::escapeString($thatValue);

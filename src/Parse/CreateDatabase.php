@@ -100,15 +100,15 @@ class CreateDatabase
     }
 
     /**
-     * Returns SQL DDL to create the database.
+     * Returns an array of SQL DDL statements to create the database.
      *
      * The returned DDL only refers to the database itself, it does not include
      * the necessary DDL to create any contained tables. For that you will need
-     * to iterate over the $tables property, calling toString() on each element.
+     * to iterate over the $tables property, calling getDDL() on each element.
      *
      * @return string
      */
-    public function toString()
+    public function getDDL()
     {
         $text = "CREATE DATABASE IF NOT EXISTS " . Token::escapeIdentifier($this->name);
 
@@ -120,12 +120,12 @@ class CreateDatabase
             }
         }
 
-        return $text;
+        return [$text];
     }
 
     /**
-     * Returns SQL DDL to transform this database and all contained tables
-     * into the database specified by $that.
+     * Returns an array of SQL DDL statements to transform this database and
+     * all contained tables into the database specified by $that.
      *
      * $flags        |
      * :-------------|----
@@ -133,7 +133,7 @@ class CreateDatabase
      * 'dropTable'   | (bool) include 'DROP TABLE' statements [default: true]
      * 'alterEngine' | (bool) include ALTER TABLE ... ENGINE= [default: true]
      *
-     * @return string
+     * @return string[]
      */
     public function diff(self $that, array $flags = [])
     {
@@ -150,19 +150,17 @@ class CreateDatabase
         $droppedTableNames = array_diff($thisTableNames, $thatTableNames);
         $createdTableNames = array_diff($thatTableNames, $thisTableNames);
 
-        $text = '';
+        $diff = [];
 
         if ($flags['dropTable'] && count($droppedTableNames) > 0) {
             foreach($droppedTableNames as $tableName) {
-                $text .= "DROP TABLE IF EXISTS " . Token::escapeIdentifier($tableName) . ";\n";
+                $diff[] = "DROP TABLE IF EXISTS " . Token::escapeIdentifier($tableName);
             }
-            $text .= "\n";
         }
 
         if ($flags['createTable'] && count($createdTableNames) > 0) {
             foreach($createdTableNames as $tableName) {
-                $text .= $that->tables[$tableName]->toString();
-                $text .= "\n";
+                $diff = array_merge($diff, $that->tables[$tableName]->getDDL());
             }
         }
 
@@ -172,11 +170,11 @@ class CreateDatabase
             $tableDiff = $thisTable->diff($thatTable, [
                 'alterEngine' => $flags['alterEngine'],
             ]);
-            if ($tableDiff !== '') {
-                $text .= $tableDiff . "\n";
+            if ($tableDiff) {
+                $diff = array_merge($diff, $tableDiff);
             }
         }
 
-        return $text;
+        return $diff;
     }
 }

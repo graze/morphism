@@ -143,11 +143,11 @@ class CreateTable
     }
 
     /**
-     * Returns the table definition as an SQL DDL statement.
+     * Returns an array of SQL DDL statements to create the table.
      *
      * @return string
      */
-    public function toString()
+    public function getDDL()
     {
         $lines = [];
         foreach($this->columns as $column) {
@@ -169,9 +169,8 @@ class CreateTable
         if ($options !== '') {
             $text .= " " . $this->options->toString();
         }
-        $text .= ";\n";
 
-        return $text;
+        return [$text];
     }
     
     private function _parseColumn(TokenStream $stream)
@@ -420,9 +419,7 @@ class CreateTable
             return '';
         }
 
-        return "ALTER TABLE " . Token::escapeIdentifier($this->name) . "\n" .
-            implode(",\n", $alters) .
-            ";\n";
+        return ["ALTER TABLE " . Token::escapeIdentifier($this->name) . "\n" . implode(",\n", $alters)];
     }
 
     private function _diffColumns(CreateTable $that)

@@ -146,31 +146,30 @@ class MysqlDump
     }
 
     /**
-     * Returns SQL DDL for creating the database schema.
+     * Returns an array of SQL DDL statements for creating the database schema.
      *
-     * @return string
+     * @return string[]
      */
-    public function toString()
+    public function getDDL()
     {
-        $text = '';
+        $ddl = [];
 
         foreach($this->databases as $database) {
             if ($database->name !== '') {
-                $text .= $database->toString() . ";\n";
-                $text .= "USE " . Token::escapeIdentifier($database->name) . ";\n";
+                $ddl = array_merge($ddl, $database->getDDL());
+                $ddl[] = "USE " . Token::escapeIdentifier($database->name);
             }
             foreach($database->tables as $table) {
-                $text .= $table->toString();
-                $text .= "\n";
+                $ddl = array_merge($ddl, $table->getDDL());
             }
         }
 
-        return $text;
+        return $ddl;
     }
 
     /**
-     * Returns SQL DDL for transforming the database schema into the one 
-     * represented by $that.
+     * Returns an array of SQL DDL statements for transforming the database
+     * schema into the one represented by $that.
      *
      * $flags           |
      * :----------------|
@@ -181,7 +180,7 @@ class MysqlDump
      * 'alterEngine'    | (bool) include 'ALTER TABLE ... ENGINE=' [default: true]
      *
      * @param bool[] $flags  controls what to include in the generated DDL
-     * @return string
+     * @return string[]
      */
     public function diff(self $that, $flags = [])
     {
@@ -200,24 +199,21 @@ class MysqlDump
         $droppedDatabaseNames = array_diff($thisDatabaseNames, $thatDatabaseNames);
         $createdDatabaseNames = array_diff($thatDatabaseNames, $thisDatabaseNames);
 
-        $text = '';
+        $diff = [];
 
         if ($flags['dropDatabase'] && count($droppedDatabaseNames) > 0) {
             foreach($droppedDatabaseNames as $databaseName) {
-                $text .= "DROP DATABASE IF EXISTS " . Token::escapeIdentifier($databaseName) . ";\n";
+                $diff[] = "DROP DATABASE IF EXISTS " . Token::escapeIdentifier($databaseName);
             }
-            $text .= "\n";
         }
 
         if ($flags['createDatabase']) {
             foreach($createdDatabaseNames as $databaseName) {
                 $thatDatabase = $that->databases[$databaseName];
-                $text .= $thatDatabase->toString() . ";\n";
-                $text .= "USE " . Token::escapeIdentifier($databaseName) . ";\n";
-                $text .= "\n";
+                $diff[] = $thatDatabase->getDDL();
+                $diff[] = "USE " . Token::escapeIdentifier($databaseName);
                 foreach($thatDatabase->tables as $table) {
-                    $text .= $table->toString($thatDatabase->getCollation());
-                    $text .= "\n";
+                    $diff[] = $table->getDDL($thatDatabase->getCollation());
                 }
             }
         }
@@ -233,12 +229,12 @@ class MysqlDump
 
             if ($databaseDiff !== '') {
                 if ($databaseName !== '') {
-                    $text .= "USE " . Token::escapeIdentifier($databaseName) . ";\n";
+                    $diff[] = "USE " . Token::escapeIdentifier($databaseName);
                 }
-                $text .= $databaseDiff . "\n";
+                $diff = array_merge($diff, $databaseDiff);
             }
         }
 
-        return $text;
+        return $diff;
     }
 }

@@ -48,9 +48,12 @@ class CreateTableTest extends \Graze\Morphism\Test\Parse\TestCase
             }
         }
         elseif (is_null($threw)) {
+            $ddl = $table->getDDL();
+            $actual = $ddl[0] . ';';
+            $this->assertCount(1, $ddl);
             $this->assertSame(
                 trim(preg_replace('/\s+/', ' ', $expected)),
-                trim(preg_replace('/\s+/', ' ', $table->toString()))
+                trim(preg_replace('/\s+/', ' ', $actual))
             );
         }
         else {

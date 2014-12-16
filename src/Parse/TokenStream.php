@@ -21,6 +21,18 @@ class TokenStream
     {
     }
 
+    // TODO - this is a hack that needs to be refactored
+    // perhaps supply a LineStream interface that is satisfied
+    // by a FileLineStream or ConnectionLineStream for example?
+    public static function newFromText($text, $label)
+    {
+        $stream = new self;
+        $stream->path = $label;
+        $stream->text = $text;
+        $stream->len = strlen($text);
+        return $stream;
+    }
+
     public static function newFromFile($path)
     {
         $text = @file_get_contents($path);

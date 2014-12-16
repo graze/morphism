@@ -309,9 +309,11 @@ class TableOptions
             : null;
         if ($thisCollation !== $thatCollation) {
             // TODO - what if !$that->collation->isSpecified()
-            $alters[] = "DEFAULT CHARSET=" . $that->collation->getCharset();
-            if (!$that->collation->isDefaultCollation()) {
-                $alters[] = "COLLATE=" . $that->collation->getCollation();
+            if (!is_null($thatCollation)) {
+                $alters[] = "DEFAULT CHARSET=" . $thatCollation->getCharset();
+                if (!$that->collation->isDefaultCollation()) {
+                    $alters[] = "COLLATE=" . $thatCollation->getCollation();
+                }
             }
         }
                 

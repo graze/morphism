@@ -36,8 +36,8 @@
         }
     },
     "bin": [
-        "./bin/morph-dump",
         "./bin/morph-diff",
-        "./bin/morph-norm"
+        "./bin/morph-dump",
+        "./bin/morph-lint"
     ]
 }

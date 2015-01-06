@@ -310,9 +310,9 @@ class TableOptions
         if ($thisCollation !== $thatCollation) {
             // TODO - what if !$that->collation->isSpecified()
             if (!is_null($thatCollation)) {
-                $alters[] = "DEFAULT CHARSET=" . $thatCollation->getCharset();
+                $alters[] = "DEFAULT CHARSET=" . $that->collation->getCharset();
                 if (!$that->collation->isDefaultCollation()) {
-                    $alters[] = "COLLATE=" . $thatCollation->getCollation();
+                    $alters[] = "COLLATE=" . $thatCollation;
                 }
             }
         }

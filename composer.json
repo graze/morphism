@@ -1,5 +1,5 @@
 {
-    "version": "1.0.0",
+    "version": "1.0.3",
     "name": "graze/morphism",
     "type": "library",
     "description": "MySQL Database Migration",
@@ -38,6 +38,7 @@
     "bin": [
         "./bin/morph-diff",
         "./bin/morph-dump",
+        "./bin/morph-extract",
         "./bin/morph-lint"
     ]
 }

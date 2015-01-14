@@ -11,6 +11,7 @@ class Extract implements Argv\Consumer
     private $schemaPath = './schemas';
     private $write = false;
     private $mysqldump = null;
+    private $databaseName = null;
 
     public function consumeHelp($prog)
     {
@@ -22,6 +23,7 @@ class Extract implements Argv\Consumer
             "  -h, -help, --help   display this message, and exit\n" .
             "  --[no-]quote-names  [do not] quote names with `...`; default: no\n" .
             "  --schema-path=PATH  location of schemas; default: ./schemas\n" .
+            "  --database=NAME     name of database if not specified in dump\n" .
             "  --[no-]write        write schema files to schema path; default: no\n" .
             "",
             $prog
@@ -44,6 +46,10 @@ class Extract implements Argv\Consumer
             
             case '--schema-path':
                 $this->schemaPath = $option->required();
+                break;
+
+            case '--database':
+                $this->databaseName = $option->required();
                 break;
 
             case '--write':
@@ -74,8 +80,6 @@ class Extract implements Argv\Consumer
     {
         $stream = TokenStream::newFromFile($this->mysqldump);
 
-        $this->parseStream($stream);
-
         $dump = new MysqlDump();
         try {
             $dump->parse($stream);
@@ -89,6 +93,10 @@ class Extract implements Argv\Consumer
 
         if ($this->write) {
             foreach($dump->databases as $database) {
+                $databaseName = ($database->name == '') ? $this->databaseName : $database->name;
+                if ($databaseName == '') {
+                    throw new \RuntimeException("no database name specified in dump - please use --database=NAME to supply one");
+                }
                 $output = "{$this->schemaPath}/$databaseName";
 
                 if (!is_dir($output)) {

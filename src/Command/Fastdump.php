@@ -75,8 +75,6 @@ class Fastdump implements Argv\Consumer
         $config = new Config($this->configFile);
         $config->parse();
 
-        $dbalConfig = new \Doctrine\DBAL\Configuration();
-
         foreach($this->connectionNames as $connectionName) {
             // the connection name does double duty as the database name
             // but it should really be specified in the config file itself
@@ -88,8 +86,7 @@ class Fastdump implements Argv\Consumer
                 echo "\n";
             }
 
-            $params = $config->getConnectionParams($connectionName);
-            $dbh = \Doctrine\DBAL\DriverManager::getConnection($params, $dbalConfig);
+            $dbh = $config->getConnection($connectionName);
 
             $extractor = new Extractor($dbh);
             $extractor->setDatabases([$databaseName]);

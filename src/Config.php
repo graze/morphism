@@ -8,7 +8,7 @@ namespace Graze\Morphism;
  */
 class Config
 {
-    private $dbParams = [];
+    private $entries = [];
     private $path;
 
     /**
@@ -33,7 +33,29 @@ class Config
             throw new \RuntimeException("missing databases section in '{$this->path}'");
         }
 
-        $this->dbParams = $config['databases'];
+        $entries = [];
+        foreach($config['databases'] as $connectionName => $entry) {
+            if (empty($entry['morphism']['enable'])) {
+                continue;
+            }
+            $morphism = $entry['morphism'];
+            unset($entry['morphism']);
+            if (!isset($entry['dbname'])) {
+                $entry['dbname'] = $connectionName;
+            }
+            if (!empty($morphism['skip_tables'])) {
+                $morphism['skip_tables'] = '/^(' . implode('|', $morphism['skip_tables']) . ')$/';
+            }
+            else {
+                // magical regex that never matches (negative lookahead for empty string)
+                $morphism['skip_tables'] = '/(?!)/';
+            }
+            $entries[$connectionName] = [
+                'connection' => $entry,
+                'morphism'   => $morphism,
+            ];
+        }
+        $this->entries = $entries;
     }
 
     /**
@@ -51,19 +73,15 @@ class Config
      *      'unix_socket' => $socket
      *
      * @param $connectionName string - name of the connection to look up
-     * @return [$param => $value, ...]
+     * @return ['connection' => [$param => $value, ...], 'morphism' => [ ... ] ]
      */
-    public function getConnectionParams($connectionName)
+    public function getEntry($connectionName)
     {
-        if (!isset($this->dbParams[$connectionName])) {
+        if (!isset($this->entries[$connectionName])) {
             throw new \RuntimeException("unknown connection '$connectionName'");
         }
 
-        $params = $this->dbParams[$connectionName];
-        if (!isset($params['dbname'])) {
-            $params['dbname'] = $connectionName;
-        }
-        return $params;
+        return $this->entries[$connectionName];
     }
 
     /**
@@ -75,9 +93,9 @@ class Config
      */
     public function getConnection($connectionName)
     {
-        $params = $this->getConnectionParams($connectionName);
+        $entry = $this->getEntry($connectionName);
         $dbalConfig = new \Doctrine\DBAL\Configuration();
-        return \Doctrine\DBAL\DriverManager::getConnection($params, $dbalConfig);
+        return \Doctrine\DBAL\DriverManager::getConnection($entry['connection'], $dbalConfig);
     }
 
     /**
@@ -87,6 +105,6 @@ class Config
      */
     public function getConnectionNames()
     {
-        return array_keys($this->dbParams);
+        return array_keys($this->entries);
     }
 }

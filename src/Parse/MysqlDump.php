@@ -15,6 +15,7 @@ class MysqlDump
     public $databases = [];
 
     private $database = null;
+    private $_defaultDatabaseName = '';
     private $_defaultEngine = 'InnoDB';
     private $_defaultCollation = null;
 
@@ -35,9 +36,10 @@ class MysqlDump
      * @param string[]    $paths            files or directories to parse
      * @param string|null $defaultEngine    default database engine to use (e.g. InnoDB)
      * @param string|null $defaultCollation default collation to use (e.g. utf8)
+     * @param string|null $defaultDatabaseName database name to use if unspecified in stream
      * @return MysqlDump
      */
-    public static function parseFromPaths(array $paths, $defaultEngine = null, $defaultCollation = null)
+    public static function parseFromPaths(array $paths, $defaultEngine = null, $defaultCollation = null, $defaultDatabaseName = null)
     {
         $dump = new self;
         if (!is_null($defaultEngine)) {
@@ -46,7 +48,9 @@ class MysqlDump
         if (!is_null($defaultCollation)) {
             $dump->setDefaultCollation(new CollationInfo($defaultCollation));
         }
-        
+        if (!is_null($defaultDatabaseName)) {
+            $dump->setDefaultDatabase($defaultDatabaseName);
+        }
         
         $files = [];
         foreach($paths as $path) {
@@ -72,6 +76,16 @@ class MysqlDump
         }
 
         return $dump;
+    }
+
+    /**
+     * Sets the name to use for the database if none is specified in the stream.
+     *
+     * @param string $databaseName
+     */
+    public function setDefaultDatabase($databaseName)
+    {
+        $this->_defaultDatabaseName = $databaseName;
     }
 
     /**
@@ -114,8 +128,10 @@ class MysqlDump
             }
             else if ($stream->peek('CREATE TABLE')) {
                 if (is_null($this->database)) {
+                    $name = $this->_defaultDatabaseName;
                     $this->database = new CreateDatabase($this->_defaultCollation);
-                    $this->databases[''] = $this->database;
+                    $this->database->name = $name;
+                    $this->databases[$name] = $this->database;
                 }
                 $table = new CreateTable($this->database->getCollation());
                 $table->setDefaultEngine($this->_defaultEngine);
@@ -176,6 +192,7 @@ class MysqlDump
      * 'createTable'    | (bool) include 'CREATE TABLE' statements [default: true]
      * 'dropTable'      | (bool) include 'DROP TABLE' statements [default: true]
      * 'alterEngine'    | (bool) include 'ALTER TABLE ... ENGINE=' [default: true]
+     * 'skipTables'     | [$database => $regex] tables to ignore
      *
      * @param bool[] $flags  controls what to include in the generated DDL
      * @return string[]
@@ -188,6 +205,7 @@ class MysqlDump
             'createTable'    => true,
             'dropTable'      => true,
             'alterEngine'    => true,
+            'skipTables'     => [],
         ];
 
         $thisDatabaseNames = array_keys($this->databases);
@@ -207,26 +225,32 @@ class MysqlDump
 
         if ($flags['createDatabase']) {
             foreach($createdDatabaseNames as $databaseName) {
+                $skipTables = $flags['skipTables'][$databaseName];
                 $thatDatabase = $that->databases[$databaseName];
                 $diff[] = $thatDatabase->getDDL();
                 $diff[] = "USE " . Token::escapeIdentifier($databaseName);
                 foreach($thatDatabase->tables as $table) {
+                    if (preg_match($skipTables, $table)) {
+                        continue;
+                    }
                     $diff[] = $table->getDDL($thatDatabase->getCollation());
                 }
             }
         }
 
         foreach($commonDatabaseNames as $databaseName) {
+            $skipTables = $flags['skipTables'][$databaseName];
             $thisDatabase = $this->databases[$databaseName];
             $thatDatabase = $that->databases[$databaseName];
             $databaseDiff = $thisDatabase->diff($thatDatabase, [
                 'createTable' => $flags['createTable'],
                 'dropTable'   => $flags['dropTable'],
                 'alterEngine' => $flags['alterEngine'],
+                'skipTables'  => $skipTables,
             ]);
 
             if ($databaseDiff !== '') {
-                if ($databaseName !== '') {
+                if ($databaseName !== $this->_defaultDatabaseName) {
                     $diff[] = "USE " . Token::escapeIdentifier($databaseName);
                 }
                 $diff = array_merge($diff, $databaseDiff);

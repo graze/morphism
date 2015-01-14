@@ -18,18 +18,19 @@ class Diff implements Argv\Consumer
     private $alterEngine = true;
     private $schemaPath = './schemas';
     private $configFile = null;
-    private $connectionName = null;
+    private $connectionNames = [];
     private $applyChanges = 'no';
-    private $logFile = null;
+    private $logDir = null;
     private $logSkipped = true;
 
     public function consumeHelp($prog)
     {
         printf(
-            "Usage: %s [OPTION] CONFIG-FILE CONN\n" .
-            "Diff database schemas, and output the necessary ALTER TABLE statements\n" .
-            "to transform the schema found on the conection to that defined under the\n" .
-            "schema path.\n" .
+            "Usage: %s [OPTION] CONFIG-FILE [CONN] ...\n" .
+            "Diff database schemas, and output the necessary ALTER TABLE statements to\n" .
+            "transform the schema found on the connection(s) to that defined under the\n" .
+            "schema path. If no connections are specified, all connections in the config\n" .
+            "with morphism: enable: true will be used.\n" .
             "\n" .
             "GENERAL OPTIONS:\n" .
             "  -h, -help, --help      display this message, and exit\n" .
@@ -41,8 +42,9 @@ class Diff implements Argv\Consumer
             "  --[no-]alter-engine    output ALTER TABLE ... ENGINE=...; default: yes\n" .
             "  --schema-path=PATH     location of schemas; default: ./schemas\n" .
             "  --apply-changes=WHEN   apply changes (yes/no/confirm); default: no\n" .
-            "  --log-file=FILE        log applied changes to FILE; default: none\n" .
-            "  --[no-]log-skipped     include skipped queries (commented out); default: yes\n" .
+            "  --log-dir=DIR          log applied changes to DIR - one log file will be\n" .
+            "                         created per connection; default: none\n" .
+            "  --[no-]log-skipped     log skipped queries (commented out); default: yes\n" .
             "",
             $prog
         );
@@ -97,8 +99,8 @@ class Diff implements Argv\Consumer
                 $this->applyChanges = $applyChanges;
                 break;
 
-            case '--log-file':
-                $this->logFile = $option->required();
+            case '--log-dir':
+                $this->logDir = $option->required();
                 break;
 
             case '--log-skipped':
@@ -114,24 +116,17 @@ class Diff implements Argv\Consumer
 
     public function consumeArgs(array $args)
     {
-        if (count($args) != 2) {
-            throw new Argv\Exception("expected CONFIG-FILE and CONN as arguments");
+        if (count($args) < 1) {
+            throw new Argv\Exception("expected CONFIG-FILE");
         }
-        $this->configFile = $args[0];
-        $this->connectionName = $args[1];
+        $this->configFile = array_shift($args);
+        $this->connectionNames = $args;
     }
 
-    private function getConnection()
-    {
-        $config = new Config($this->configFile);
-        $config->parse();
-        return $config->getConnection($this->connectionName);
-    }
-
-    private function getCurrentSchema($connection)
+    private function getCurrentSchema($connection, $dbName)
     {
         $extractor = new Extractor($connection);
-        $extractor->setDatabases([$this->connectionName]);
+        $extractor->setDatabases([$dbName]);
         $extractor->setCreateDatabases(false);
         $extractor->setQuoteNames($this->quoteNames);
 
@@ -142,23 +137,25 @@ class Diff implements Argv\Consumer
         $stream = TokenStream::newFromText($text, '');
 
         $dump = new MysqlDump();
+        $dump->setDefaultDatabase($dbName);
         $dump->parse($stream);
 
         return $dump;
     }
 
-    private function getTargetSchema()
+    private function getTargetSchema($connectionName, $dbName)
     {
-        $path = $this->schemaPath . "/" . $this->connectionName;
+        $path = $this->schemaPath . "/" . $connectionName;
 
         return MysqlDump::parseFromPaths(
             [$path],
             $this->engine,
-            $this->collation
+            $this->collation,
+            $dbName
         );
     }
 
-    private function applyChanges($connection, $diff)
+    private function applyChanges($connection, $connectionName, $diff)
     {
         if (count($diff) == 0) {
             return;
@@ -171,12 +168,18 @@ class Diff implements Argv\Consumer
         $defaultResponse = 'y';
         $logHandle = null;
 
-        if (!is_null($this->logFile)) {
-            $logHandle = fopen($this->logFile, "w");
+        if (!is_null($this->logDir)) {
+            $logFile = "{$this->logDir}/$connectionName";
+            $logHandle = fopen($logFile, "w");
             if ($logHandle == false) {
-                fprintf(STDERR, "Could not open log file for writing: {$this->logFile}\n");
+                fprintf(STDERR, "Could not open log file for writing: $logFile\n");
                 exit(1);
             }
+        }
+
+        if (count($diff) > 0 && $confirm) {
+            echo "\n";
+            echo "-- Confirm changes to $connectionName:\n";
         }
 
         foreach($diff as $query) {
@@ -187,7 +190,7 @@ class Diff implements Argv\Consumer
                 echo "\n";
                 echo "$query;\n\n";
                 do {
-                    echo "Apply this change? [y]es [n]o [a]ll [q]uit: ";
+                    echo "-- Apply this change? [y]es [n]o [a]ll [q]uit: ";
                     $response = fgets(STDIN);
                     if ($response === false) {
                         throw new \Exception("could not read response");
@@ -227,9 +230,8 @@ class Diff implements Argv\Consumer
             }
             else if ($logHandle && $this->logSkipped) {
                 fwrite($logHandle, 
-                    "/********** SKIPPED **********\n" .
-                    "$query;\n" .
-                    "******************************/\n" .
+                    "-- [SKIPPED]\n" .
+                    preg_replace('/^/xms', '-- ', $query) .  ";\n" .
                     "\n"
                 );
             }
@@ -239,27 +241,57 @@ class Diff implements Argv\Consumer
     public function run()
     {
         try {
+            $config = new Config($this->configFile);
+            $config->parse();
+
+            $connectionNames =
+                (count($this->connectionNames) > 0) 
+                    ? $this->connectionNames 
+                    : $config->getConnectionNames();
+
             Token::setQuoteNames($this->quoteNames);
-            $connection = $this->getConnection();
-            $currentSchema = $this->getCurrentSchema($connection);
-            $targetSchema = $this->getTargetSchema();
 
-            $diff = $currentSchema->diff(
-                $targetSchema,
-                [
-                    'createDatabase' => false,
-                    'dropDatabase'   => false,
-                    'createTable'    => $this->createTable,
-                    'dropTable'      => $this->dropTable,
-                    'alterEngine'    => $this->alterEngine,
-                ]
-            );
-
-            foreach($diff as $query) {
-                echo "$query;\n\n";
+            if (!is_null($this->logDir)) {
+                if (!is_dir($this->logDir)) {
+                    if (!@mkdir($this->logDir, 0777, true)) {
+                        fprintf(STDERR, "Could not create log directory: {$this->logDir}\n");
+                        exit(1);
+                    }
+                }
             }
 
-            $this->applyChanges($connection, $diff);
+            foreach($connectionNames as $connectionName) {
+                echo "-- --------------------------------\n";
+                echo "--   Connection: $connectionName\n";
+                echo "-- --------------------------------\n";
+                $connection = $config->getConnection($connectionName);
+                $entry = $config->getEntry($connectionName);
+                $dbName = $entry['connection']['dbname'];
+                $skipTables = isset($entry['morphism']['skip_tables'])
+                    ? [$dbName => $entry['morphism']['skip_tables']]
+                    : [];
+
+                $currentSchema = $this->getCurrentSchema($connection, $dbName);
+                $targetSchema = $this->getTargetSchema($connectionName, $dbName);
+
+                $diff = $currentSchema->diff(
+                    $targetSchema,
+                    [
+                        'createDatabase' => false,
+                        'dropDatabase'   => false,
+                        'createTable'    => $this->createTable,
+                        'dropTable'      => $this->dropTable,
+                        'alterEngine'    => $this->alterEngine,
+                        'skipTables'     => $skipTables,
+                    ]
+                );
+
+                foreach($diff as $query) {
+                    echo "$query;\n\n";
+                }
+
+                $this->applyChanges($connection, $connectionName, $diff);
+            }
         }
         catch(\RuntimeException $e) {
             throw $e;

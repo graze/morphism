@@ -8,7 +8,7 @@ try {
     $cmd->run();
 }
 catch(\Exception $e) {
-    fprintf(STDERR, $e->getMessage() . "\n");
+    fprintf(STDERR, "%s\n", $e->getMessage());
     exit(1);
 }
 

@@ -25,7 +25,7 @@ class Fastdump implements Argv\Consumer
             "OPTIONS\n" .
             "  -h, -help, --help   display this message, and exit\n" .
             "  --[no-]quote-names  [do not] quote names with `...`; default: no\n" .
-            "  --schema-path=PATH  location of schemas; default: ./schemas\n" .
+            "  --schema-path=PATH  location of schemas; default: ./schema\n" .
             "  --[no-]write        write schema files to schema path; default: no\n" .
             "",
             $prog

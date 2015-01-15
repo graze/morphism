@@ -16,7 +16,7 @@ class Diff implements Argv\Consumer
     private $createTable = true;
     private $dropTable = true;
     private $alterEngine = true;
-    private $schemaPath = './schemas';
+    private $schemaPath = './schema';
     private $configFile = null;
     private $connectionNames = [];
     private $applyChanges = 'no';
@@ -40,7 +40,7 @@ class Diff implements Argv\Consumer
             "  --[no-]create-table    output CREATE TABLE statements; default: yes\n" .
             "  --[no-]drop-table      output DROP TABLE statements; default: yes\n" .
             "  --[no-]alter-engine    output ALTER TABLE ... ENGINE=...; default: yes\n" .
-            "  --schema-path=PATH     location of schemas; default: ./schemas\n" .
+            "  --schema-path=PATH     location of schemas; default: ./schema\n" .
             "  --apply-changes=WHEN   apply changes (yes/no/confirm); default: no\n" .
             "  --log-dir=DIR          log applied changes to DIR - one log file will be\n" .
             "                         created per connection; default: none\n" .

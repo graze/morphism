@@ -169,7 +169,7 @@ class Diff implements Argv\Consumer
         $logHandle = null;
 
         if (!is_null($this->logDir)) {
-            $logFile = "{$this->logDir}/$connectionName";
+            $logFile = "{$this->logDir}/{$connectionName}.sql";
             $logHandle = fopen($logFile, "w");
             if ($logHandle == false) {
                 fprintf(STDERR, "Could not open log file for writing: $logFile\n");

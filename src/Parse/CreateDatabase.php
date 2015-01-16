@@ -132,7 +132,7 @@ class CreateDatabase
      * 'createTable' | (bool) include 'CREATE TABLE' statements [default: true]
      * 'dropTable'   | (bool) include 'DROP TABLE' statements [default: true]
      * 'alterEngine' | (bool) include ALTER TABLE ... ENGINE= [default: true]
-     * 'skipTables'  | string - regex of tables to ignore
+     * 'matchTables' | ['include' => $regex, 'exclude' => $regex] regex of tables to include/exclude
      *
      * @return string[]
      */
@@ -142,7 +142,10 @@ class CreateDatabase
             'createTable' => true,
             'dropTable'   => true,
             'alterEngine' => true,
-            'skipTables'  => null,
+            'matchTables' => [
+                'include' => '',
+                'exclude' => '',
+            ],
         ];
 
         $thisTableNames = array_keys($this->tables);
@@ -154,11 +157,15 @@ class CreateDatabase
 
         $diff = [];
 
-        $skipTablesRegex = $flags['skipTables'];
+        $includeTablesRegex = $flags['matchTables']['include'];
+        $excludeTablesRegex = $flags['matchTables']['exclude'];
 
         if ($flags['dropTable'] && count($droppedTableNames) > 0) {
             foreach($droppedTableNames as $tableName) {
-                if (!preg_match($skipTablesRegex, $tableName)) {
+                if (
+                    ($includeTablesRegex == '' || preg_match($includeTablesRegex, $tableName)) &&
+                    ($excludeTablesRegex == '' || !preg_match($excludeTablesRegex, $tableName))
+                ) {
                     $diff[] = "DROP TABLE IF EXISTS " . Token::escapeIdentifier($tableName);
                 }
             }
@@ -166,14 +173,20 @@ class CreateDatabase
 
         if ($flags['createTable'] && count($createdTableNames) > 0) {
             foreach($createdTableNames as $tableName) {
-                if (!preg_match($skipTablesRegex, $tableName)) {
+                if (
+                    ($includeTablesRegex == '' || preg_match($includeTablesRegex, $tableName)) &&
+                    ($excludeTablesRegex == '' || !preg_match($excludeTablesRegex, $tableName))
+                ) {
                     $diff = array_merge($diff, $that->tables[$tableName]->getDDL());
                 }
             }
         }
 
         foreach($commonTableNames as $tableName) {
-            if (!preg_match($skipTablesRegex, $tableName)) {
+            if (
+                ($includeTablesRegex == '' || preg_match($includeTablesRegex, $tableName)) &&
+                ($excludeTablesRegex == '' || !preg_match($excludeTablesRegex, $tableName))
+            ) {
                 $thisTable = $this->tables[$tableName];
                 $thatTable = $that->tables[$tableName];
                 $tableDiff = $thisTable->diff($thatTable, [

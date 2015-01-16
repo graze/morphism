@@ -267,9 +267,9 @@ class Diff implements Argv\Consumer
                 $connection = $config->getConnection($connectionName);
                 $entry = $config->getEntry($connectionName);
                 $dbName = $entry['connection']['dbname'];
-                $skipTables = isset($entry['morphism']['skip_tables'])
-                    ? [$dbName => $entry['morphism']['skip_tables']]
-                    : [];
+                $matchTables = [
+                    $dbName => $entry['morphism']['matchTables'],
+                ];
 
                 $currentSchema = $this->getCurrentSchema($connection, $dbName);
                 $targetSchema = $this->getTargetSchema($connectionName, $dbName);
@@ -282,7 +282,7 @@ class Diff implements Argv\Consumer
                         'createTable'    => $this->createTable,
                         'dropTable'      => $this->dropTable,
                         'alterEngine'    => $this->alterEngine,
-                        'skipTables'     => $skipTables,
+                        'matchTables'    => $matchTables,
                     ]
                 );
 

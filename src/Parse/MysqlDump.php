@@ -192,7 +192,7 @@ class MysqlDump
      * 'createTable'    | (bool) include 'CREATE TABLE' statements [default: true]
      * 'dropTable'      | (bool) include 'DROP TABLE' statements [default: true]
      * 'alterEngine'    | (bool) include 'ALTER TABLE ... ENGINE=' [default: true]
-     * 'skipTables'     | [$database => $regex] tables to ignore
+     * 'matchTables'    | [$database => ['include' => $regex, 'exclude' => $regex], ...] tables to include / exclude
      *
      * @param bool[] $flags  controls what to include in the generated DDL
      * @return string[]
@@ -205,7 +205,10 @@ class MysqlDump
             'createTable'    => true,
             'dropTable'      => true,
             'alterEngine'    => true,
-            'skipTables'     => [],
+            'matchTables'    => [
+                'include' => '',
+                'exclude' => '',
+            ],
         ];
 
         $thisDatabaseNames = array_keys($this->databases);
@@ -225,28 +228,32 @@ class MysqlDump
 
         if ($flags['createDatabase']) {
             foreach($createdDatabaseNames as $databaseName) {
-                $skipTables = $flags['skipTables'][$databaseName];
+                $matchTables = $flags['matchTables'][$databaseName];
+                $includeTablesRegex = $matchTables['include'];
+                $excludeTablesRegex = $matchTables['exclude'];
                 $thatDatabase = $that->databases[$databaseName];
                 $diff[] = $thatDatabase->getDDL();
                 $diff[] = "USE " . Token::escapeIdentifier($databaseName);
                 foreach($thatDatabase->tables as $table) {
-                    if (preg_match($skipTables, $table)) {
-                        continue;
+                    if (
+                        ($includeTablesRegex == '' || preg_match($includeTablesRegex, $tableName)) &&
+                        ($excludeTablesRegex == '' || !preg_match($excludeTablesRegex, $tableName))
+                    ) {
+                        $diff[] = $table->getDDL($thatDatabase->getCollation());
                     }
-                    $diff[] = $table->getDDL($thatDatabase->getCollation());
                 }
             }
         }
 
         foreach($commonDatabaseNames as $databaseName) {
-            $skipTables = $flags['skipTables'][$databaseName];
+            $matchTables = $flags['matchTables'][$databaseName];
             $thisDatabase = $this->databases[$databaseName];
             $thatDatabase = $that->databases[$databaseName];
             $databaseDiff = $thisDatabase->diff($thatDatabase, [
                 'createTable' => $flags['createTable'],
                 'dropTable'   => $flags['dropTable'],
                 'alterEngine' => $flags['alterEngine'],
-                'skipTables'  => $skipTables,
+                'matchTables' => $matchTables,
             ]);
 
             if ($databaseDiff !== '') {

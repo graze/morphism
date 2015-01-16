@@ -40,19 +40,25 @@ class Config
             }
             $morphism = $entry['morphism'];
             unset($entry['morphism']);
+
             if (!isset($entry['dbname'])) {
                 $entry['dbname'] = $connectionName;
             }
-            if (!empty($morphism['skip_tables'])) {
-                $morphism['skip_tables'] = '/^(' . implode('|', $morphism['skip_tables']) . ')$/';
+
+            $matchTables = [];
+            foreach(['include', 'exclude'] as $key) {
+                $regex = '';
+                if (!empty($morphism["{$key}_tables"])) {
+                    $regex =  '/^(' . implode('|', $morphism["{$key}_tables"]) . ')$/';
+                }
+                $matchTables[$key] = $regex;
             }
-            else {
-                // magical regex that never matches (negative lookahead for empty string)
-                $morphism['skip_tables'] = '/(?!)/';
-            }
+
             $entries[$connectionName] = [
                 'connection' => $entry,
-                'morphism'   => $morphism,
+                'morphism'   => [   
+                    'matchTables' => $matchTables,
+                ],
             ];
         }
         $this->entries = $entries;

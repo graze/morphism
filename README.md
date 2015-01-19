@@ -31,6 +31,73 @@ or generate a conflict for manual merging where it cannot. All the usual git too
 become useful - e.g. a simple "git annotate schema/live_web/product.sql" can tell
 you who added a redundant index on 'pr\_name'.
 
+### Unit tests ###
+
+Execute ```make test``` from a shell prompt to run this package's unit test suite.
+
+### Tools ###
+
+#### morphism-extract ####
+You might use this tool when initialising the schema directory from a mysqldump
+file that was created on a production server with ```mysqldump --no-data```.
+```
+Usage: morphism-extract [OPTIONS] [MYSQL-DUMP-FILE]
+Extracts schema definition from a mysqldump file.
+
+OPTIONS
+  -h, -help, --help   display this message, and exit
+  --[no-]quote-names  [do not] quote names with `...`; default: no
+  --schema-path=PATH  location of schemas; default: ./schema
+  --database=NAME     name of database if not specified in dump
+  --[no-]write        write schema files to schema path; default: no
+```
+
+#### morphism-dump ####
+```
+Usage: morphism-dump [OPTIONS] CONFIG-FILE CONN [CONN ...]
+Dump specified database schemas. This tool is considerably faster than mysqldump
+(especially for large schemas).
+
+OPTIONS
+  -h, -help, --help   display this message, and exit
+  --[no-]quote-names  [do not] quote names with `...`; default: no
+  --schema-path=PATH  location of schemas; default: ./schema
+  --[no-]write        write schema files to schema path; default: no
+```
+
+#### morphism-lint ####
+```
+Usage: morphism-lint [OPTIONS] PATH ...
+Check all schema files below the specified paths for correctness.
+
+OPTIONS
+  -h, -help, --help   display this message, and exit
+  --[no-]verbose      include valid files in output; default: no
+```
+
+#### morphism-diff ####
+```
+Usage: morphism-diff [OPTION] CONFIG-FILE [CONN] ...
+Diff database schemas, and output the necessary ALTER TABLE statements to
+transform the schema found on the connection(s) to that defined under the
+schema path. If no connections are specified, all connections in the config
+with morphism: enable: true will be used.
+
+GENERAL OPTIONS:
+  -h, -help, --help      display this message, and exit
+  --engine=ENGINE        set the default database engine
+  --collation=COLLATION  set the default collation
+  --[no-]quote-names     quote names with `...`; default: yes
+  --[no-]create-table    output CREATE TABLE statements; default: yes
+  --[no-]drop-table      output DROP TABLE statements; default: yes
+  --[no-]alter-engine    output ALTER TABLE ... ENGINE=...; default: yes
+  --schema-path=PATH     location of schemas; default: ./schema
+  --apply-changes=WHEN   apply changes (yes/no/confirm); default: no
+  --log-dir=DIR          log applied changes to DIR - one log file will be
+                         created per connection; default: none
+  --[no-]log-skipped     log skipped queries (commented out); default: yes
+  ```
+
 ### Example Usage ###
 
 ```

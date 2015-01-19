@@ -38,11 +38,12 @@ Execute ```make test``` from a shell prompt to run this package's unit test suit
 ### Tools ###
 
 #### morphism-extract ####
-You might use this tool when initialising the schema directory from a mysqldump
-file that was created on a production server with ```mysqldump --no-data```.
 ```
 Usage: morphism-extract [OPTIONS] [MYSQL-DUMP-FILE]
-Extracts schema definition from a mysqldump file.
+Extracts schema definition(s) from a mysqldump file. Multiple databases may
+be defined in the dump, and they will be extracted to separate directories.
+You might use this tool when initialising the schema directory from a dump
+created on a production server with 'mysqldump --no-data'.
 
 OPTIONS
   -h, -help, --help   display this message, and exit
@@ -55,33 +56,43 @@ OPTIONS
 #### morphism-dump ####
 ```
 Usage: morphism-dump [OPTIONS] CONFIG-FILE CONN [CONN ...]
-Dump specified database schemas. This tool is considerably faster than mysqldump
-(especially for large schemas).
+Dumps database schemas for named connections. This tool is considerably faster
+than mysqldump, especially for large schemas. You might use this tool to
+(re-)initalise your project's schema directory from a local database.
 
 OPTIONS
   -h, -help, --help   display this message, and exit
   --[no-]quote-names  [do not] quote names with `...`; default: no
   --schema-path=PATH  location of schemas; default: ./schema
   --[no-]write        write schema files to schema path; default: no
+
+CONFIG-FILE
+A YAML file mapping connection names to parameters. See the morphism project's
+README.md file for detailed information.
 ```
 
 #### morphism-lint ####
 ```
 Usage: morphism-lint [OPTIONS] PATH ...
-Check all schema files below the specified paths for correctness.
+Checks all schema files below the specified paths for correctness. If no PATH
+is given, checks standard input. By default output is only produced if errors
+are detected.
 
 OPTIONS
   -h, -help, --help   display this message, and exit
   --[no-]verbose      include valid files in output; default: no
+
+EXIT STATUS
+The exit status will be 1 if any errors were detected, or 0 otherwise.
 ```
 
 #### morphism-diff ####
 ```
 Usage: morphism-diff [OPTION] CONFIG-FILE [CONN] ...
-Diff database schemas, and output the necessary ALTER TABLE statements to
-transform the schema found on the connection(s) to that defined under the
-schema path. If no connections are specified, all connections in the config
-with morphism: enable: true will be used.
+Extracts schema definitions from the named connections, and outputs the
+necessary ALTER TABLE statements to transform them into what is defined
+under the schema path. If no connections are specified, all connections
+in the config with 'morphism: enable: true' will be used.
 
 GENERAL OPTIONS:
   -h, -help, --help      display this message, and exit
@@ -96,7 +107,11 @@ GENERAL OPTIONS:
   --log-dir=DIR          log applied changes to DIR - one log file will be
                          created per connection; default: none
   --[no-]log-skipped     log skipped queries (commented out); default: yes
-  ```
+
+CONFIG-FILE
+A YAML file mapping connection names to parameters. See the morphism project's
+README.md file for detailed information.
+```
 
 ### Example Usage ###
 

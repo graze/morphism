@@ -115,7 +115,7 @@ README.md file for detailed information.
 
 ### Config File ###
 
-The config files used by some of morphism's tools uses yaml format, as follows:
+The config file used by some of morphism's tools uses yaml format, as follows:
 
 ```
 # All connection definitions appear under the 'databases' key

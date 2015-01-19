@@ -19,14 +19,19 @@ class Fastdump implements Argv\Consumer
     {
         printf(
             "Usage: %s [OPTIONS] CONFIG-FILE CONN [CONN ...]\n" .
-            "Dump specified database schemas. This tool is considerably faster than mysqldump\n" .
-            "(especially for large schemas).\n" .
+            "Dumps database schemas for named connections. This tool is considerably faster\n" .
+            "than mysqldump, especially for large schemas. You might use this tool to\n" .
+            "(re-)initalise your project's schema directory from a local database.\n" .
             "\n" .
             "OPTIONS\n" .
             "  -h, -help, --help   display this message, and exit\n" .
             "  --[no-]quote-names  [do not] quote names with `...`; default: no\n" .
             "  --schema-path=PATH  location of schemas; default: ./schema\n" .
             "  --[no-]write        write schema files to schema path; default: no\n" .
+            "\n" .
+            "CONFIG-FILE\n" .
+            "A YAML file mapping connection names to parameters. See the morphism project's\n" .
+            "README.md file for detailed information.\n" .
             "",
             $prog
         );

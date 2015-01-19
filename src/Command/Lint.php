@@ -13,11 +13,16 @@ class Lint implements Argv\Consumer
     {
         printf(
             "Usage: %s [OPTIONS] PATH ...\n" .
-            "Check all schema files below the specified paths for correctness.\n" .
+            "Checks all schema files below the specified paths for correctness. If no PATH\n" .
+            "is given, checks standard input. By default output is only produced if errors\n" .
+            "are detected.\n" .
             "\n" .
             "OPTIONS\n" .
             "  -h, -help, --help   display this message, and exit\n" .
             "  --[no-]verbose      include valid files in output; default: no\n" .
+            "\n" .
+            "EXIT STATUS\n" .
+            "The exit status will be 1 if any errors were detected, or 0 otherwise.\n" .
             "",
             $prog
         );

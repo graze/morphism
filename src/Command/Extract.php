@@ -17,7 +17,10 @@ class Extract implements Argv\Consumer
     {
         printf(
             "Usage: %s [OPTIONS] [MYSQL-DUMP-FILE]\n" .
-            "Extracts schema definition from a mysqldump file.\n" .
+            "Extracts schema definition(s) from a mysqldump file. Multiple databases may\n" .
+            "be defined in the dump, and they will be extracted to separate directories.\n" .
+            "You might use this tool when initialising the schema directory from a dump\n" .
+            "created on a production server with 'mysqldump --no-data'.\n" .
             "\n" .
             "OPTIONS\n" .
             "  -h, -help, --help   display this message, and exit\n" .

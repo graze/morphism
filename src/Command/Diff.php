@@ -27,10 +27,10 @@ class Diff implements Argv\Consumer
     {
         printf(
             "Usage: %s [OPTION] CONFIG-FILE [CONN] ...\n" .
-            "Diff database schemas, and output the necessary ALTER TABLE statements to\n" .
-            "transform the schema found on the connection(s) to that defined under the\n" .
-            "schema path. If no connections are specified, all connections in the config\n" .
-            "with morphism: enable: true will be used.\n" .
+            "Extracts schema definitions from the named connections, and outputs the\n" .
+            "necessary ALTER TABLE statements to transform them into what is defined\n" .
+            "under the schema path. If no connections are specified, all connections\n" .
+            "in the config with 'morphism: enable: true' will be used.\n" .
             "\n" .
             "GENERAL OPTIONS:\n" .
             "  -h, -help, --help      display this message, and exit\n" .
@@ -45,6 +45,10 @@ class Diff implements Argv\Consumer
             "  --log-dir=DIR          log applied changes to DIR - one log file will be\n" .
             "                         created per connection; default: none\n" .
             "  --[no-]log-skipped     log skipped queries (commented out); default: yes\n" .
+            "\n" .
+            "CONFIG-FILE\n" .
+            "A YAML file mapping connection names to parameters. See the morphism project's\n" .
+            "README.md file for detailed information.\n" .
             "",
             $prog
         );

@@ -113,6 +113,43 @@ A YAML file mapping connection names to parameters. See the morphism project's
 README.md file for detailed information.
 ```
 
+### Config File ###
+
+The config files used by some of morphism's tools uses yaml format, as follows:
+
+```
+# All connection definitions appear under the 'databases' key
+databases:
+    # name of connection
+    catalog:
+        # Connection details - this is just an example, you may want to specify
+        # different properties, e.g. if connecting to a remote server. You are
+        # advised to refer to the 'pdo' documentation for further details.
+        user: 'my-user'
+        password: 'my-password'
+        host: 'localhost'
+        driver: 'pdo_mysql'
+        unix_socket: '/var/lib/mysql/catalog.sock'
+        # morphism specific options
+        morphism:
+            # morphism-diff only operates on connections with 'enable: true'
+            enable: true
+            # you may optionally specify one or more regexes matching tables
+            # to exclude (any changes, creation or deletion of matching tables
+            # will be ignored). The regex must match the entire table name, i.e.
+            # it is implicitly anchored with ^...$
+            exclude_tables:
+                - temp_.*
+                - page_load_\d{4}-\d{2}-\d{2}
+            # similarly, you may optionally specify tables for explicit inclusion.
+            include_tables:
+                ...
+    # you may specify more connections
+    ...
+# other top level keys are ignored
+...
+```
+
 ### Example Usage ###
 
 ```

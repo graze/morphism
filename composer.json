@@ -36,9 +36,9 @@
         }
     },
     "bin": [
-        "./bin/morph-diff",
-        "./bin/morph-dump",
-        "./bin/morph-extract",
-        "./bin/morph-lint"
+        "./bin/morphism-diff",
+        "./bin/morphism-dump",
+        "./bin/morphism-extract",
+        "./bin/morphism-lint"
     ]
 }

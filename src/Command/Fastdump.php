@@ -11,7 +11,7 @@ class Fastdump implements Argv\Consumer
 {
     private $quoteNames = true;
     private $configFile = null;
-    private $schemaPath = './schemas';
+    private $schemaPath = './schema';
     private $write = false;
     private $connectionNames = [];
 

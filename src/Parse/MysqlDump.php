@@ -113,11 +113,21 @@ class MysqlDump
      *
      * All other SQL statements and comments are skipped. After a CREATE DATABASE,
      * any subsequent CREATE TABLEs are assumed to belong to that database. Any
-     * CREATE TABLEs encountered before the first CREATE DATABASE are assigned to 
+     * CREATE TABLEs encountered before the first CREATE DATABASE are assigned to
      * an anonymous dummy database named ''.
+     *
+     * @param TokenStream $stream
+     * @param array $flags
      */
-    public function parse(TokenStream $stream)
+    public function parse(TokenStream $stream, array $flags = [])
     {
+        $flags += [
+            'matchTables' => [
+                'include' => '',
+                'exclude' => '',
+            ]
+        ];
+
         while(true) {
             if ($stream->peek('CREATE DATABASE')) {
                 $this->database = new CreateDatabase($this->_defaultCollation);
@@ -138,7 +148,14 @@ class MysqlDump
                 $table->parse($stream);
                 $stream->expect('symbol', ';');
 
-                $this->database->addTable($table);
+                $includeTablesRegex = $flags['matchTables']['include'];
+                $excludeTablesRegex = $flags['matchTables']['exclude'];
+                if (
+                    ($includeTablesRegex == '' || preg_match($includeTablesRegex, $table->name)) &&
+                    ($excludeTablesRegex == '' || !preg_match($excludeTablesRegex, $table->name))
+                ) {
+                    $this->database->addTable($table);
+                }
             }
             else if (!$this->_skipQuery($stream)) {
                 break;

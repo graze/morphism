@@ -92,6 +92,8 @@ class Fastdump implements Argv\Consumer
             }
 
             $dbh = $config->getConnection($connectionName);
+            $entry = $config->getEntry($connectionName);
+            $matchTables = $entry['morphism']['matchTables'];
 
             $extractor = new Extractor($dbh);
             $extractor->setDatabases([$databaseName]);
@@ -105,7 +107,7 @@ class Fastdump implements Argv\Consumer
 
             $dump = new MysqlDump();
             try {
-                $dump->parse($stream);
+                $dump->parse($stream, ['matchTables' => $matchTables]);
             }
             catch(\RuntimeException $e) {
                 throw new \RuntimeException($stream->contextualise($e->getMessage()));

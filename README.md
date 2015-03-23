@@ -138,11 +138,11 @@ databases:
             # to exclude (any changes, creation or deletion of matching tables
             # will be ignored). The regex must match the entire table name, i.e.
             # it is implicitly anchored with ^...$
-            exclude_tables:
+            exclude:
                 - temp_.*
                 - page_load_\d{4}-\d{2}-\d{2}
             # similarly, you may optionally specify tables for explicit inclusion.
-            include_tables:
+            include:
                 ...
     # you may specify more connections
     ...

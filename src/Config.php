@@ -48,8 +48,8 @@ class Config
             $matchTables = [];
             foreach(['include', 'exclude'] as $key) {
                 $regex = '';
-                if (!empty($morphism["{$key}_tables"])) {
-                    $regex =  '/^(' . implode('|', $morphism["{$key}_tables"]) . ')$/';
+                if (!empty($morphism["{$key}"])) {
+                    $regex =  '/^(' . implode('|', $morphism["{$key}"]) . ')$/';
                 }
                 $matchTables[$key] = $regex;
             }

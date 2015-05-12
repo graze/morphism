@@ -161,62 +161,56 @@ class Differ
 
     public function run()
     {
-        try {
-            $config = new Config($this->config->getConfigFile());
-            $config->parse();
+        $config = new Config($this->config->getConfigFile());
+        $config->parse();
 
-            $connectionNames =
-                (count($this->config->getConnectionNames()) > 0)
-                    ? $this->config->getConnectionNames()
-                    : $config->getConnectionNames();
+        $connectionNames =
+            (count($this->config->getConnectionNames()) > 0)
+                ? $this->config->getConnectionNames()
+                : $config->getConnectionNames();
 
-            Token::setQuoteNames($this->config->isQuoteNames());
+        Token::setQuoteNames($this->config->isQuoteNames());
 
-            $logDir = $this->config->getLogDir();
+        $logDir = $this->config->getLogDir();
 
-            if ($logDir !== null
-                && ! is_dir($logDir)
-                && ! @mkdir($logDir, 0777, true)) {
-                fprintf(STDERR, "Could not create log directory: {$logDir}\n");
-                exit(1);
+        if ($logDir !== null
+            && ! is_dir($logDir)
+            && ! @mkdir($logDir, 0777, true)) {
+            fprintf(STDERR, "Could not create log directory: {$logDir}\n");
+            exit(1);
+        }
+
+        foreach ($connectionNames as $connectionName) {
+            echo "-- --------------------------------\n";
+            echo "--   Connection: $connectionName\n";
+            echo "-- --------------------------------\n";
+            $connection = $config->getConnection($connectionName);
+            $entry = $config->getEntry($connectionName);
+            $dbName = $entry['connection']['dbname'];
+            $matchTables = [
+                $dbName => $entry['morphism']['matchTables']
+            ];
+
+            $currentSchema = $this->getCurrentSchema($connection, $dbName);
+            $targetSchema = $this->getTargetSchema($connectionName, $dbName);
+
+            $diff = $currentSchema->diff(
+                $targetSchema,
+                [
+                    'createDatabase' => false,
+                    'dropDatabase'   => false,
+                    'createTable'    => $this->config->isCreateTable(),
+                    'dropTable'      => $this->config->isDropTable(),
+                    'alterEngine'    => $this->config->isAlterEngine(),
+                    'matchTables'    => $matchTables
+                ]
+            );
+
+            foreach($diff as $query) {
+                echo "$query;\n\n";
             }
 
-            foreach ($connectionNames as $connectionName) {
-                echo "-- --------------------------------\n";
-                echo "--   Connection: $connectionName\n";
-                echo "-- --------------------------------\n";
-                $connection = $config->getConnection($connectionName);
-                $entry = $config->getEntry($connectionName);
-                $dbName = $entry['connection']['dbname'];
-                $matchTables = [
-                    $dbName => $entry['morphism']['matchTables']
-                ];
-
-                $currentSchema = $this->getCurrentSchema($connection, $dbName);
-                $targetSchema = $this->getTargetSchema($connectionName, $dbName);
-
-                $diff = $currentSchema->diff(
-                    $targetSchema,
-                    [
-                        'createDatabase' => false,
-                        'dropDatabase'   => false,
-                        'createTable'    => $this->config->isCreateTable(),
-                        'dropTable'      => $this->config->isDropTable(),
-                        'alterEngine'    => $this->config->isAlterEngine(),
-                        'matchTables'    => $matchTables
-                    ]
-                );
-
-                foreach($diff as $query) {
-                    echo "$query;\n\n";
-                }
-
-                $this->applyChanges($connection, $diff);
-            }
-        } catch(\RuntimeException $e) {
-            throw $e;
-        } catch(\Exception $e) {
-            throw new \Exception($e->getMessage() . "\n\n" . $e->getTraceAsString());
+            $this->applyChanges($connection, $diff);
         }
     }
 }

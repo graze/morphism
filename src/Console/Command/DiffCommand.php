@@ -5,6 +5,7 @@ namespace Graze\Morphism\Console\Command;
 use Graze\Morphism\Configuration\ConfigurationParser;
 use Graze\Morphism\Connection\ConnectionResolver;
 use Graze\Morphism\Console\Output\OutputHelper;
+use Graze\Morphism\Diff\ConfirmableDiffApplier;
 use Graze\Morphism\Diff\DiffApplier;
 use Graze\Morphism\Diff\Differ;
 use Graze\Morphism\Diff\DifferConfiguration;
@@ -92,6 +93,7 @@ class DiffCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $outputHelper = new OutputHelper($output);
+        $applyChanges = $input->getOption('apply-changes');
 
         // setup the config
         $parser = new ConfigurationParser();
@@ -120,9 +122,17 @@ class DiffCommand extends Command
             }
 
             // apply the diff to the connection if there is one
-            if ($diff) {
-                $applier = new DiffApplier($input, $output, $this->getHelper('question'));
-                $applier->apply($diff, $connection, $input->getOption('apply-changes'));
+            if ($diff && $applyChanges !== 'no') {
+                if ($applyChanges === 'confirm') {
+                    $output->writeln('');
+                    $output->writeln('<comment>-- Confirm changes to ' . $connection->getDatabase() . ':</comment>');
+
+                    $applier = new ConfirmableDiffApplier($input, $output, $this->getHelper('question'));
+                    $applier->apply($diff, $connection);
+                } else {
+                    $applier = new DiffApplier();
+                    $applier->apply($diff, $connection);
+                }
             }
         }
     }

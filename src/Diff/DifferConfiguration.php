@@ -37,7 +37,6 @@ class DifferConfiguration
         $config = new static($input->getArgument('config-file'));
         $config->setEngine($input->getOption('engine'));
         $config->setCollation($input->getOption('collation'));
-        $config->setQuoteNames(!$input->getOption('no-quote-names'));
         $config->setCreateTable(!$input->getOption('no-create-table'));
         $config->setDropTable(!$input->getOption('no-drop-table'));
         $config->setAlterEngine(!$input->getOption('no-alter-engine'));

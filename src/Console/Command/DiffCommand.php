@@ -7,7 +7,6 @@ use Graze\Morphism\Connection\ConnectionResolver;
 use Graze\Morphism\Diff\DiffApplier;
 use Graze\Morphism\Diff\Differ;
 use Graze\Morphism\Diff\DifferConfiguration;
-use Graze\Morphism\Parse\Token;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -97,20 +96,20 @@ class DiffCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $diffConfig = DifferConfiguration::buildFromInput($input);
-        $differ = new Differ($diffConfig);
+        $differConfig = DifferConfiguration::buildFromInput($input);
+        $differ = new Differ($differConfig);
 
-        $config = new Config($diffConfig->getConfigFile());
+        $config = new Config($input->getArgument('config-file'));
         $config->parse();
 
         $connectionResolver = new ConnectionResolver($config);
+        $connectionNames = $config->getConnectionNames();
 
-        $connectionNames =
-            (count($diffConfig->getConnectionNames()) > 0)
-                ? $diffConfig->getConnectionNames()
-                : $config->getConnectionNames();
+        if ($input->getArgument('connection')) {
+            $connectionNames = [$input->getArgument('connection')];
+        }
 
-        Token::setQuoteNames($diffConfig->isQuoteNames());
+//        Token::setQuoteNames($diffConfig->isQuoteNames());
 
 //        $logDir = $this->config->getLogDir();
 //
@@ -140,7 +139,7 @@ class DiffCommand extends Command
             }
 
             $applier = new DiffApplier($input, $output, $this->getHelper('question'));
-            $applier->apply($diff, $connection, $diffConfig->getApplyChanges());
+            $applier->apply($diff, $connection, $input->getOption('apply-changes'));
         }
     }
 }

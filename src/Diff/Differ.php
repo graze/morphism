@@ -204,7 +204,7 @@ class Differ
                 ]
             );
 
-            foreach($diff as $query) {
+            foreach ($diff as $query) {
                 echo "$query;\n\n";
             }
 

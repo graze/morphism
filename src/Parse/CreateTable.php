@@ -11,7 +11,7 @@ class CreateTable
 
     /** @var ColumnDefinition[] */
     public $columns = [];
-    
+
     /** @var IndexDefinition[] definitions of non-foreign keys */
     public $indexes = [];
 
@@ -145,7 +145,7 @@ class CreateTable
     /**
      * Returns an array of SQL DDL statements to create the table.
      *
-     * @return string
+     * @return array
      */
     public function getDDL()
     {
@@ -159,7 +159,7 @@ class CreateTable
         foreach($this->foreigns as $foreign) {
             $lines[] = "  " . $foreign->toString();
         }
-        
+
         $text = "CREATE TABLE " . Token::escapeIdentifier($this->name) . " (\n" .
             implode(",\n", $lines) .
             "\n" .
@@ -172,7 +172,7 @@ class CreateTable
 
         return [$text];
     }
-    
+
     private function _parseColumn(TokenStream $stream)
     {
         $column = new ColumnDefinition();
@@ -204,7 +204,7 @@ class CreateTable
         // To specify automatic properties, use the DEFAULT CURRENT_TIMESTAMP
         // and ON UPDATE CURRENT_TIMESTAMP clauses. The order of the clauses
         // does not matter. If both are present in a column definition, either
-        // can occur first. 
+        // can occur first.
 
         // collect all timestamps
         $ts = [];

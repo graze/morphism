@@ -6,8 +6,8 @@ namespace Graze\Morphism\Parse;
  */
 class MysqlDump
 {
-    /** 
-     * @var CreateDatabase[] 
+    /**
+     * @var CreateDatabase[]
      *
      * indexed by (string) database name; when enumerated, reflects the order
      * in which the databases declarations were parsed.
@@ -51,7 +51,7 @@ class MysqlDump
         if (!is_null($defaultDatabaseName)) {
             $dump->setDefaultDatabase($defaultDatabaseName);
         }
-        
+
         $files = [];
         foreach($paths as $path) {
             if (is_dir($path)) {

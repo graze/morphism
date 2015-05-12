@@ -96,16 +96,14 @@ class DiffCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $differConfig = DifferConfiguration::buildFromInput($input);
-
         $config = new Config($input->getArgument('config-file'));
         $config->parse();
 
+        $differConfig = DifferConfiguration::buildFromInput($input);
         $differ = new Differ($differConfig, $config);
-
         $connectionResolver = new ConnectionResolver($config);
-        $connectionNames = $config->getConnectionNames();
 
+        $connectionNames = $config->getConnectionNames();
         if ($input->getArgument('connection')) {
             $connectionNames = [$input->getArgument('connection')];
         }

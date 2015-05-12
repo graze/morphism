@@ -70,13 +70,12 @@ class Differ
 
     /**
      * @param Connection $connection
-     * @param string $connectionName
      * @param array $diff
      *
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Exception
      */
-    private function applyChanges(Connection $connection, $connectionName, $diff)
+    private function applyChanges(Connection $connection, $diff)
     {
         if (count($diff) === 0) {
             return;
@@ -92,7 +91,7 @@ class Differ
         $logDir = $this->config->getLogDir();
 
         if ($logDir !== null) {
-            $logFile = "{$logDir}/{$connectionName}.sql";
+            $logFile = "{$logDir}/{$connection->getDatabase()}.sql";
             $logHandle = fopen($logFile, 'w');
             if ($logHandle === false) {
                 fprintf(STDERR, "Could not open log file for writing: $logFile\n");
@@ -102,7 +101,7 @@ class Differ
 
         if (count($diff) > 0 && $confirm) {
             echo "\n";
-            echo "-- Confirm changes to $connectionName:\n";
+            echo "-- Confirm changes to {$connection->getDatabase()}:\n";
         }
 
         foreach($diff as $query) {
@@ -212,7 +211,7 @@ class Differ
                     echo "$query;\n\n";
                 }
 
-                $this->applyChanges($connection, $connectionName, $diff);
+                $this->applyChanges($connection, $diff);
             }
         } catch(\RuntimeException $e) {
             throw $e;

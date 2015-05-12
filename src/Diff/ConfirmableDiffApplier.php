@@ -7,6 +7,7 @@ use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ChoiceQuestion;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class ConfirmableDiffApplier extends DiffApplier
 {
@@ -41,12 +42,19 @@ class ConfirmableDiffApplier extends DiffApplier
     private $applyAll = false;
 
     /**
+     * @param EventDispatcherInterface $dispatcher
      * @param InputInterface $input
      * @param OutputInterface $output
      * @param QuestionHelper $question
      */
-    public function __construct(InputInterface $input, OutputInterface $output, QuestionHelper $question)
-    {
+    public function __construct(
+        EventDispatcherInterface $dispatcher,
+        InputInterface $input,
+        OutputInterface $output,
+        QuestionHelper $question
+    ) {
+        parent::__construct($dispatcher);
+
         $this->input = $input;
         $this->output = $output;
         $this->outputHelper = new OutputHelper($output);
@@ -65,7 +73,6 @@ class ConfirmableDiffApplier extends DiffApplier
         } elseif ($this->applyAll) {
             return true;
         } else {
-
             $this->outputHelper->sql($query);
 
             $choice = new ChoiceQuestion(

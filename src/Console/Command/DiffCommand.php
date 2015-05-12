@@ -14,9 +14,24 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class DiffCommand extends Command
 {
+    /**
+     * @var EventDispatcherInterface
+     */
+    private $dispatcher;
+
+    /**
+     * @param EventDispatcherInterface $dispatcher
+     */
+    public function __construct(EventDispatcherInterface $dispatcher)
+    {
+        parent::__construct();
+        $this->dispatcher = $dispatcher;
+    }
+
     protected function configure()
     {
         $this->setName('diff')
@@ -90,6 +105,10 @@ class DiffCommand extends Command
             );
     }
 
+    /**
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $outputHelper = new OutputHelper($output);
@@ -127,10 +146,10 @@ class DiffCommand extends Command
                     $output->writeln('');
                     $output->writeln('<comment>-- Confirm changes to ' . $connection->getDatabase() . ':</comment>');
 
-                    $applier = new ConfirmableDiffApplier($input, $output, $this->getHelper('question'));
+                    $applier = new ConfirmableDiffApplier($this->dispatcher, $input, $output, $this->getHelper('question'));
                     $applier->apply($diff, $connection);
                 } else {
-                    $applier = new DiffApplier();
+                    $applier = new DiffApplier($this->dispatcher);
                     $applier->apply($diff, $connection);
                 }
             }

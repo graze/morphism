@@ -5,7 +5,10 @@ require __DIR__.'/../vendor/autoload.php';
 
 use Graze\Morphism\Console\Command\DiffCommand;
 use Symfony\Component\Console\Application;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+
+$dispatcher = new EventDispatcher();
 
 $application = new Application();
-$application->add(new DiffCommand());
+$application->add(new DiffCommand($dispatcher));
 $application->run();

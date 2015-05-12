@@ -2,9 +2,9 @@
 
 namespace Graze\Morphism\Console\Command;
 
-use Doctrine\DBAL\Connection;
 use Graze\Morphism\Config;
 use Graze\Morphism\Connection\ConnectionResolver;
+use Graze\Morphism\Diff\DiffApplier;
 use Graze\Morphism\Diff\Differ;
 use Graze\Morphism\Diff\DifferConfiguration;
 use Graze\Morphism\Parse\Token;
@@ -13,7 +13,6 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\ChoiceQuestion;
 
 class DiffCommand extends Command
 {
@@ -140,93 +139,8 @@ class DiffCommand extends Command
                 $output->writeln('');
             }
 
-            $this->applyChanges($connection, $diffConfig, $output, $input, $diff);
-        }
-    }
-
-    protected function applyChanges(Connection $connection, DifferConfiguration $diffConfig, OutputInterface $output, InputInterface $input,  $diff)
-    {
-        if (count($diff) === 0) {
-            return;
-        }
-
-        if ($diffConfig->getApplyChanges() === 'no') {
-            return;
-        }
-
-        $confirm = $diffConfig->getApplyChanges() === 'confirm';
-        $logHandle = null;
-        $logDir = $diffConfig->getLogDir();
-
-//        if ($logDir !== null) {
-//            $logFile = "{$logDir}/{$connection->getDatabase()}.sql";
-//            $logHandle = fopen($logFile, 'w');
-//            if ($logHandle === false) {
-//                fprintf(STDERR, "Could not open log file for writing: $logFile\n");
-//                exit(1);
-//            }
-//        }
-
-        if (count($diff) > 0 && $confirm) {
-            $output->writeln('');
-            $output->writeln('<comment>-- Confirm changes to ' . $connection->getDatabase() . ':</comment>');
-        }
-
-        $defaultResponse = 'yes';
-
-        foreach($diff as $query) {
-            $response = $defaultResponse;
-            $apply = false;
-
-            if ($confirm) {
-                $output->writeln('');
-                $output->writeln('<info>' . $query . '</info>');
-                $output->writeln('');
-
-                $helper = $this->getHelper('question');
-                $question = new ChoiceQuestion(
-                    '-- Apply this change?',
-                    ['y' => 'yes', 'n' => 'no', 'a' => 'all', 'q' => 'quit']
-                );
-                $question->setErrorMessage('Unrecognised option');
-
-                $response = $helper->ask($input, $output, $question);
-            }
-
-            switch($response) {
-                case 'yes':
-                    $apply = true;
-                    break;
-
-                case 'no':
-                    $apply = false;
-                    break;
-
-                case 'all':
-                    $apply = true;
-                    $confirm = false;
-                    $defaultResponse = 'yes';
-                    break;
-
-                case 'quit':
-                    $apply = false;
-                    $confirm = false;
-                    $defaultResponse = 'no';
-                    break;
-            }
-
-            if ($apply) {
-//                if ($logHandle) {
-//                    fwrite($logHandle, "$query;\n\n");
-//                }
-                $connection->executeQuery($query);
-            } elseif ($logHandle && $diffConfig->isLogSkipped()) {
-//                fwrite($logHandle,
-//                    "-- [SKIPPED]\n" .
-//                    preg_replace('/^/xms', '-- ', $query) .  ";\n" .
-//                    "\n"
-//                );
-            }
+            $applier = new DiffApplier($input, $output, $this->getHelper('question'));
+            $applier->apply($diff, $connection, $diffConfig->getApplyChanges());
         }
     }
 }

@@ -126,9 +126,8 @@ class DiffCommand extends Command
             $output->writeln('');
             $connection = $config->getConnection($connectionName);
             $entry = $config->getEntry($connectionName);
-            $dbName = $entry['connection']['dbname'];
             $matchTables = [
-                $dbName => $entry['morphism']['matchTables']
+                $connection->getDatabase() => $entry['morphism']['matchTables']
             ];
 
             $diff = $differ->diff($connection, $matchTables);

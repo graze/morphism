@@ -181,7 +181,7 @@ class Differ
                 exit(1);
             }
 
-            foreach($connectionNames as $connectionName) {
+            foreach ($connectionNames as $connectionName) {
                 echo "-- --------------------------------\n";
                 echo "--   Connection: $connectionName\n";
                 echo "-- --------------------------------\n";

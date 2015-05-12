@@ -9,6 +9,8 @@ use Graze\Morphism\Diff\ConfirmableDiffApplier;
 use Graze\Morphism\Diff\DiffApplier;
 use Graze\Morphism\Diff\Differ;
 use Graze\Morphism\Diff\DifferConfiguration;
+use Graze\Morphism\Listener\LogListener;
+use Illuminate\Filesystem\Filesystem;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -127,6 +129,13 @@ class DiffCommand extends Command
         // build the differ
         $differConfig = DifferConfiguration::buildFromInput($input);
         $differ = new Differ($differConfig, $config);
+
+        // setup listeners
+        if ($differConfig->getLogDir()) {
+            $listener = new LogListener(new Filesystem(), $differConfig->getLogDir());
+            $this->dispatcher->addListener('query.applied', [$listener, 'onQueryApplied']);
+            $this->dispatcher->addListener('query.skipped', [$listener, 'onQuerySkipped']);
+        }
 
         // diff for each connection
         $connectionResolver = new ConnectionResolver($config);

@@ -97,10 +97,11 @@ class DiffCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $differConfig = DifferConfiguration::buildFromInput($input);
-        $differ = new Differ($differConfig);
 
         $config = new Config($input->getArgument('config-file'));
         $config->parse();
+
+        $differ = new Differ($differConfig, $config);
 
         $connectionResolver = new ConnectionResolver($config);
         $connectionNames = $config->getConnectionNames();
@@ -125,21 +126,19 @@ class DiffCommand extends Command
             $output->writeLn('    <comment>Connection: ' . $connectionName . '</comment>');
             $output->writeln('---------------------------------');
             $output->writeln('');
-            $connection = $connectionResolver->resolveFromName($connectionName);
-            $entry = $config->getEntry($connectionName);
-            $matchTables = [
-                $connection->getDatabase() => $entry['morphism']['matchTables']
-            ];
 
-            $diff = $differ->diff($connection, $matchTables);
+            $connection = $connectionResolver->resolveFromName($connectionName);
+            $diff = $differ->diff($connection);
 
             foreach ($diff->getQueries() as $query) {
                 $output->writeln('<info>' . $query . '</info>');
                 $output->writeln('');
             }
 
-            $applier = new DiffApplier($input, $output, $this->getHelper('question'));
-            $applier->apply($diff, $connection, $input->getOption('apply-changes'));
+            if ($diff) {
+                $applier = new DiffApplier($input, $output, $this->getHelper('question'));
+                $applier->apply($diff, $connection, $input->getOption('apply-changes'));
+            }
         }
     }
 }

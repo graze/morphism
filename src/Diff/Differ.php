@@ -3,6 +3,7 @@
 namespace Graze\Morphism\Diff;
 
 use Doctrine\DBAL\Connection;
+use Graze\Morphism\Config;
 use Graze\Morphism\Parse\TokenStream;
 use Graze\Morphism\Parse\MysqlDump;
 use Graze\Morphism\Extractor;
@@ -12,40 +13,53 @@ class Differ
     /**
      * @var DifferConfiguration
      */
+    private $differConfig;
+
+    /**
+     * @var Config
+     */
     private $config;
 
     /**
-     * @param DifferConfiguration $config
+     * @param DifferConfiguration $differConfig
+     * @param Config|DifferConfiguration $config
      */
-    public function __construct(DifferConfiguration $config)
+    public function __construct(DifferConfiguration $differConfig, Config $config)
     {
+        $this->differConfig = $differConfig;
         $this->config = $config;
     }
 
     /**
      * @param Connection $connection
-     * @param array $matchTables
      *
      * @return Diff
      */
-    public function diff(Connection $connection, $matchTables)
+    public function diff(Connection $connection)
     {
         $currentSchema = $this->getCurrentSchema($connection);
         $targetSchema = $this->getTargetSchema($connection);
+
+        $entry = $this->config->getEntry($connection->getDatabase());
+        $matchTables = [
+            $connection->getDatabase() => $entry['morphism']['matchTables']
+        ];
 
         $diff = $currentSchema->diff(
             $targetSchema,
             [
                 'createDatabase' => false,
                 'dropDatabase'   => false,
-                'createTable'    => $this->config->isCreateTable(),
-                'dropTable'      => $this->config->isDropTable(),
-                'alterEngine'    => $this->config->isAlterEngine(),
+                'createTable'    => $this->differConfig->isCreateTable(),
+                'dropTable'      => $this->differConfig->isDropTable(),
+                'alterEngine'    => $this->differConfig->isAlterEngine(),
                 'matchTables'    => $matchTables
             ]
         );
 
-        return new Diff($diff);
+        if (count($diff) > 0) {
+            return new Diff($diff);
+        }
     }
 
     /**
@@ -58,7 +72,7 @@ class Differ
         $extractor = new Extractor($connection);
         $extractor->setDatabases([$connection->getDatabase()]);
         $extractor->setCreateDatabases(false);
-        $extractor->setQuoteNames($this->config->isQuoteNames());
+        $extractor->setQuoteNames($this->differConfig->isQuoteNames());
 
         $text = '';
         foreach($extractor->extract() as $query) {
@@ -80,12 +94,12 @@ class Differ
      */
     private function getTargetSchema(Connection $connection)
     {
-        $path = $this->config->getSchemaPath() . '/' . $connection->getDatabase();
+        $path = $this->differConfig->getSchemaPath() . '/' . $connection->getDatabase();
 
         return MysqlDump::parseFromPaths(
             [$path],
-            $this->config->getEngine(),
-            $this->config->getCollation(),
+            $this->differConfig->getEngine(),
+            $this->differConfig->getCollation(),
             $connection->getDatabase()
         );
     }

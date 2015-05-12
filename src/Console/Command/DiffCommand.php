@@ -2,8 +2,8 @@
 
 namespace Graze\Morphism\Console\Command;
 
-use Graze\Morphism\Diff\DiffConfiguration;
 use Graze\Morphism\Diff\Differ;
+use Graze\Morphism\Diff\DifferConfiguration;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -93,7 +93,7 @@ class DiffCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $config = DiffConfiguration::buildFromInput($input);
+        $config = DifferConfiguration::buildFromInput($input);
         $differ = new Differ($config);
         $differ->run();
     }

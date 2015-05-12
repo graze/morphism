@@ -4,7 +4,7 @@ namespace Graze\Morphism\Diff;
 
 use Symfony\Component\Console\Input\InputInterface;
 
-class DiffConfiguration
+class DifferConfiguration
 {
     private $engine = 'InnoDB';
     private $collation;

@@ -12,14 +12,14 @@ use Graze\Morphism\Config;
 class Differ
 {
     /**
-     * @var DiffConfiguration
+     * @var DifferConfiguration
      */
     private $config;
 
     /**
-     * @param DiffConfiguration $config
+     * @param DifferConfiguration $config
      */
-    public function __construct(DiffConfiguration $config)
+    public function __construct(DifferConfiguration $config)
     {
         $this->config = $config;
     }
@@ -220,5 +220,3 @@ class Differ
         }
     }
 }
-
-

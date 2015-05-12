@@ -3,7 +3,7 @@
 namespace Graze\Morphism\Diff;
 
 use Doctrine\DBAL\Connection;
-use Graze\Morphism\Config;
+use Graze\Morphism\Configuration\Configuration;
 use Graze\Morphism\Parse\TokenStream;
 use Graze\Morphism\Parse\MysqlDump;
 use Graze\Morphism\Extractor;
@@ -16,15 +16,15 @@ class Differ
     private $differConfig;
 
     /**
-     * @var Config
+     * @var Configuration
      */
     private $config;
 
     /**
      * @param DifferConfiguration $differConfig
-     * @param Config|DifferConfiguration $config
+     * @param Configuration $config
      */
-    public function __construct(DifferConfiguration $differConfig, Config $config)
+    public function __construct(DifferConfiguration $differConfig, Configuration $config)
     {
         $this->differConfig = $differConfig;
         $this->config = $config;

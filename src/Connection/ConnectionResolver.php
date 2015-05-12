@@ -3,19 +3,19 @@
 namespace Graze\Morphism\Connection;
 
 use Doctrine\DBAL\DriverManager;
-use Graze\Morphism\Config;
+use Graze\Morphism\Configuration\Configuration;
 
 class ConnectionResolver
 {
     /**
-     * @var Config
+     * @var Configuration
      */
     private $config;
 
     /**
-     * @param Config $config
+     * @param Configuration $config
      */
-    public function __construct(Config $config)
+    public function __construct(Configuration $config)
     {
         $this->config = $config;
     }
@@ -28,7 +28,6 @@ class ConnectionResolver
      */
     public function resolveFromName($name)
     {
-        $entry = $this->config->getEntry($name);
-        return DriverManager::getConnection($entry['connection']);
+        return DriverManager::getConnection($this->config->getConnectionConfiguration($name));
     }
 }

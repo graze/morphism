@@ -2,7 +2,7 @@
 
 namespace Graze\Morphism\Console\Command;
 
-use Graze\Morphism\Config;
+use Graze\Morphism\Configuration\ConfigurationParser;
 use Graze\Morphism\Connection\ConnectionResolver;
 use Graze\Morphism\Diff\DiffApplier;
 use Graze\Morphism\Diff\Differ;
@@ -96,8 +96,8 @@ class DiffCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $config = new Config($input->getArgument('config-file'));
-        $config->parse();
+        $parser = new ConfigurationParser();
+        $config = $parser->parse($input->getArgument('config-file'));
 
         $differConfig = DifferConfiguration::buildFromInput($input);
         $differ = new Differ($differConfig, $config);

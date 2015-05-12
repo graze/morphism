@@ -26,14 +26,13 @@ class Differ
 
     /**
      * @param Connection $connection
-     * @param string $dbName
      *
      * @return MysqlDump
      */
-    private function getCurrentSchema(Connection $connection, $dbName)
+    private function getCurrentSchema(Connection $connection)
     {
         $extractor = new Extractor($connection);
-        $extractor->setDatabases([$dbName]);
+        $extractor->setDatabases([$connection->getDatabase()]);
         $extractor->setCreateDatabases(false);
         $extractor->setQuoteNames($this->config->isQuoteNames());
 
@@ -44,27 +43,26 @@ class Differ
         $stream = TokenStream::newFromText($text, '');
 
         $dump = new MysqlDump();
-        $dump->setDefaultDatabase($dbName);
+        $dump->setDefaultDatabase($connection->getDatabase());
         $dump->parse($stream);
 
         return $dump;
     }
 
     /**
-     * @param string $connectionName
-     * @param string $dbName
+     * @param Connection $connection
      *
      * @return MysqlDump
      */
-    private function getTargetSchema($connectionName, $dbName)
+    private function getTargetSchema(Connection $connection)
     {
-        $path = $this->config->getSchemaPath() . '/' . $connectionName;
+        $path = $this->config->getSchemaPath() . '/' . $connection->getDatabase();
 
         return MysqlDump::parseFromPaths(
             [$path],
             $this->config->getEngine(),
             $this->config->getCollation(),
-            $dbName
+            $connection->getDatabase()
         );
     }
 
@@ -191,8 +189,8 @@ class Differ
                 $dbName => $entry['morphism']['matchTables']
             ];
 
-            $currentSchema = $this->getCurrentSchema($connection, $dbName);
-            $targetSchema = $this->getTargetSchema($connectionName, $dbName);
+            $currentSchema = $this->getCurrentSchema($connection);
+            $targetSchema = $this->getTargetSchema($connection);
 
             $diff = $currentSchema->diff(
                 $targetSchema,

@@ -133,7 +133,7 @@ class DiffCommand extends Command
 
             $diff = $differ->diff($connection, $matchTables);
 
-            foreach ($diff as $query) {
+            foreach ($diff->getQueries() as $query) {
                 $output->writeln('<info>' . $query . '</info>');
                 $output->writeln('');
             }

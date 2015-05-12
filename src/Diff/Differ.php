@@ -26,7 +26,7 @@ class Differ
      * @param Connection $connection
      * @param array $matchTables
      *
-     * @return array
+     * @return Diff
      */
     public function diff(Connection $connection, $matchTables)
     {
@@ -45,7 +45,7 @@ class Differ
             ]
         );
 
-        return $diff;
+        return new Diff($diff);
     }
 
     /**

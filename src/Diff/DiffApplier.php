@@ -26,18 +26,14 @@ class DiffApplier
     }
 
     /**
-     * @param array $diff
+     * @param Diff $diff
      * @param Connection $connection
      * @param string $applyChanges
      *
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function apply($diff, Connection $connection, $applyChanges)
+    public function apply(Diff $diff, Connection $connection, $applyChanges)
     {
-        if (count($diff) === 0) {
-            return;
-        }
-
         if ($applyChanges === 'no') {
             return;
         }
@@ -55,14 +51,14 @@ class DiffApplier
 //            }
 //        }
 
-        if (count($diff) > 0 && $confirm) {
+        if ($confirm) {
             $this->output->writeln('');
             $this->output->writeln('<comment>-- Confirm changes to ' . $connection->getDatabase() . ':</comment>');
         }
 
         $defaultResponse = 'yes';
 
-        foreach($diff as $query) {
+        foreach($diff->getQueries() as $query) {
             $response = $defaultResponse;
             $apply = false;
 

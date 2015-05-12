@@ -4,6 +4,7 @@ namespace Graze\Morphism\Console\Command;
 
 use Graze\Morphism\Configuration\ConfigurationParser;
 use Graze\Morphism\Connection\ConnectionResolver;
+use Graze\Morphism\Console\Output\OutputHelper;
 use Graze\Morphism\Diff\DiffApplier;
 use Graze\Morphism\Diff\Differ;
 use Graze\Morphism\Diff\DifferConfiguration;
@@ -96,12 +97,13 @@ class DiffCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $outputHelper = new OutputHelper($output);
+
         $parser = new ConfigurationParser();
         $config = $parser->parse($input->getArgument('config-file'));
 
         $differConfig = DifferConfiguration::buildFromInput($input);
         $differ = new Differ($differConfig, $config);
-        $connectionResolver = new ConnectionResolver($config);
 
         $connectionNames = $config->getConnectionNames();
         if ($input->getArgument('connection')) {
@@ -119,18 +121,15 @@ class DiffCommand extends Command
 //            exit(1);
 //        }
 
+        $connectionResolver = new ConnectionResolver($config);
         foreach ($connectionNames as $connectionName) {
-            $output->writeln('---------------------------------');
-            $output->writeLn('    <comment>Connection: ' . $connectionName . '</comment>');
-            $output->writeln('---------------------------------');
-            $output->writeln('');
+            $outputHelper->title('Connection: ' . $connectionName);
 
             $connection = $connectionResolver->resolveFromName($connectionName);
             $diff = $differ->diff($connection);
 
             foreach ($diff->getQueries() as $query) {
-                $output->writeln('<info>' . $query . '</info>');
-                $output->writeln('');
+                $outputHelper->sql($query);
             }
 
             if ($diff) {

@@ -44,12 +44,6 @@ class DiffCommand extends Command
                 'Set the default collation'
             )
             ->addOption(
-                'no-quote-names',
-                null,
-                InputOption::VALUE_NONE,
-                'Do not quote names with `...`'
-            )
-            ->addOption(
                 'no-create-table',
                 null,
                 InputOption::VALUE_NONE,
@@ -109,17 +103,6 @@ class DiffCommand extends Command
         if ($input->getArgument('connection')) {
             $connectionNames = [$input->getArgument('connection')];
         }
-
-//        Token::setQuoteNames($diffConfig->isQuoteNames());
-
-//        $logDir = $this->config->getLogDir();
-//
-//        if ($logDir !== null
-//            && ! is_dir($logDir)
-//            && ! @mkdir($logDir, 0777, true)) {
-//            fprintf(STDERR, "Could not create log directory: {$logDir}\n");
-//            exit(1);
-//        }
 
         $connectionResolver = new ConnectionResolver($config);
         foreach ($connectionNames as $connectionName) {

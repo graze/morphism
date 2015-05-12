@@ -93,17 +93,21 @@ class DiffCommand extends Command
     {
         $outputHelper = new OutputHelper($output);
 
+        // setup the config
         $parser = new ConfigurationParser();
         $config = $parser->parse($input->getArgument('config-file'));
 
-        $differConfig = DifferConfiguration::buildFromInput($input);
-        $differ = new Differ($differConfig, $config);
-
+        // figure out which connection names we're using
         $connectionNames = $config->getConnectionNames();
         if ($input->getArgument('connection')) {
             $connectionNames = [$input->getArgument('connection')];
         }
 
+        // build the differ
+        $differConfig = DifferConfiguration::buildFromInput($input);
+        $differ = new Differ($differConfig, $config);
+
+        // diff for each connection
         $connectionResolver = new ConnectionResolver($config);
         foreach ($connectionNames as $connectionName) {
             $outputHelper->title('Connection: ' . $connectionName);
@@ -115,6 +119,7 @@ class DiffCommand extends Command
                 $outputHelper->sql($query);
             }
 
+            // apply the diff to the connection if there is one
             if ($diff) {
                 $applier = new DiffApplier($input, $output, $this->getHelper('question'));
                 $applier->apply($diff, $connection, $input->getOption('apply-changes'));

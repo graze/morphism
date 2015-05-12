@@ -24,10 +24,10 @@ class OutputHelper
      */
     public function title($text)
     {
-        $this->output->writeln('---------------------------------');
-        $this->output->writeLn('    <comment>' . $text . '</comment>');
-        $this->output->writeln('---------------------------------');
-        $this->output->writeln('');
+        $this->writeln('---------------------------------');
+        $this->writeLn('    <comment>' . $text . '</comment>');
+        $this->writeln('---------------------------------');
+        $this->writeln('');
     }
 
     /**
@@ -35,7 +35,25 @@ class OutputHelper
      */
     public function sql($sql)
     {
-        $this->output->writeln('<info>' . $sql . '</info>');
-        $this->output->writeln('');
+        $this->writeln('<info>' . $sql . '</info>');
+        $this->writeln('');
+    }
+
+    /**
+     * @param string $text
+     */
+    public function writeln($text)
+    {
+        $this->output->writeln($text);
+    }
+
+    /**
+     * @param string $text
+     */
+    public function writelnVerbose($text)
+    {
+        if ($this->output->getVerbosity() > OutputInterface::VERBOSITY_VERBOSE) {
+            $this->writeln($text);
+        }
     }
 }

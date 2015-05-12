@@ -56,7 +56,7 @@ class Config
 
             $entries[$connectionName] = [
                 'connection' => $entry,
-                'morphism'   => [   
+                'morphism'   => [
                     'matchTables' => $matchTables,
                 ],
             ];
@@ -88,20 +88,6 @@ class Config
         }
 
         return $this->entries[$connectionName];
-    }
-
-    /**
-     * Returns a new database connection using the parameters named by
-     * connectionName.
-     *
-     * @param $connectionName string
-     * @return \Doctrine\DBAL\Connection
-     */
-    public function getConnection($connectionName)
-    {
-        $entry = $this->getEntry($connectionName);
-        $dbalConfig = new \Doctrine\DBAL\Configuration();
-        return \Doctrine\DBAL\DriverManager::getConnection($entry['connection'], $dbalConfig);
     }
 
     /**

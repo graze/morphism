@@ -4,6 +4,7 @@ namespace Graze\Morphism\Console\Command;
 
 use Doctrine\DBAL\Connection;
 use Graze\Morphism\Config;
+use Graze\Morphism\Connection\ConnectionResolver;
 use Graze\Morphism\Diff\Differ;
 use Graze\Morphism\Diff\DifferConfiguration;
 use Graze\Morphism\Parse\Token;
@@ -103,6 +104,8 @@ class DiffCommand extends Command
         $config = new Config($diffConfig->getConfigFile());
         $config->parse();
 
+        $connectionResolver = new ConnectionResolver($config);
+
         $connectionNames =
             (count($diffConfig->getConnectionNames()) > 0)
                 ? $diffConfig->getConnectionNames()
@@ -124,7 +127,7 @@ class DiffCommand extends Command
             $output->writeLn('    <comment>Connection: ' . $connectionName . '</comment>');
             $output->writeln('---------------------------------');
             $output->writeln('');
-            $connection = $config->getConnection($connectionName);
+            $connection = $connectionResolver->resolveFromName($connectionName);
             $entry = $config->getEntry($connectionName);
             $matchTables = [
                 $connection->getDatabase() => $entry['morphism']['matchTables']

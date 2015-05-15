@@ -4,8 +4,10 @@ namespace Graze\Morphism\Diff;
 
 use Doctrine\DBAL\Connection;
 use Graze\Morphism\Configuration\Configuration;
+use Graze\Morphism\Parse\CollationInfo;
 use Graze\Morphism\Parse\MysqlDump;
 use Graze\Morphism\Parse\PathParser;
+use Graze\Morphism\Parse\StreamParser;
 use Graze\Morphism\Parse\TokenStreamFactory;
 
 class Differ
@@ -89,11 +91,8 @@ class Differ
     {
         $stream = $this->streamFactory->buildFromConnection($connection);
 
-        $dump = new MysqlDump();
-        $dump->setDefaultDatabase($connection->getDatabase());
-        $dump->parse($stream);
-
-        return $dump;
+        $parser = new StreamParser(new CollationInfo(), $connection->getDatabase(), 'InnoDB');
+        return $parser->parse($stream);
     }
 
     /**

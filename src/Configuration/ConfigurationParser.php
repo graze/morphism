@@ -32,19 +32,20 @@ class ConfigurationParser
                 $entry['dbname'] = $connectionName;
             }
 
-            $matchTables = [];
-            foreach(['include', 'exclude'] as $key) {
-                $regex = '';
-                if (!empty($morphism["{$key}"])) {
-                    $regex =  '/^(' . implode('|', $morphism["{$key}"]) . ')$/';
-                }
-                $matchTables[$key] = $regex;
-            }
+//            $matchTables = [];
+//            foreach(['include', 'exclude'] as $key) {
+//                $regex = '';
+//                if (!empty($morphism["{$key}"])) {
+//                    $regex =  '/^(' . implode('|', $morphism["{$key}"]) . ')$/';
+//                }
+//                $matchTables[$key] = $regex;
+//            }
 
             $entries[$connectionName] = [
                 'connection' => $entry,
                 'morphism'   => [
-                    'matchTables' => $matchTables
+                    'include' => ! empty($morphism['include']) ? $morphism['include'] : null,
+                    'exclude' => ! empty($morphism['exclude']) ? $morphism['exclude'] : null
                 ]
             ];
         }

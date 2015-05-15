@@ -21,11 +21,12 @@ class MysqlDump
     private $_defaultCollation = null;
 
     /**
-     * Constructor
+     * @param array $databases
      */
-    public function __construct()
+    public function __construct(array $databases)
     {
         $this->_defaultCollation = new CollationInfo();
+        $this->databases = $databases;
     }
 
     /**

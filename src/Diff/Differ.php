@@ -4,9 +4,8 @@ namespace Graze\Morphism\Diff;
 
 use Doctrine\DBAL\Connection;
 use Graze\Morphism\Configuration\Configuration;
-use Graze\Morphism\Parse\TokenStream;
 use Graze\Morphism\Parse\MysqlDump;
-use Graze\Morphism\Extractor;
+use Graze\Morphism\Parse\PathParser;
 use Graze\Morphism\Parse\TokenStreamFactory;
 
 class Differ
@@ -27,15 +26,26 @@ class Differ
     private $streamFactory;
 
     /**
+     * @var PathParser
+     */
+    private $pathParser;
+
+    /**
      * @param DifferConfiguration $differConfig
      * @param Configuration $config
      * @param TokenStreamFactory $streamFactory
+     * @param PathParser $pathParser
      */
-    public function __construct(DifferConfiguration $differConfig, Configuration $config, TokenStreamFactory $streamFactory)
-    {
+    public function __construct(
+        DifferConfiguration $differConfig,
+        Configuration $config,
+        TokenStreamFactory $streamFactory,
+        PathParser $pathParser
+    ) {
         $this->differConfig = $differConfig;
         $this->config = $config;
         $this->streamFactory = $streamFactory;
+        $this->pathParser = $pathParser;
     }
 
     /**
@@ -95,7 +105,7 @@ class Differ
     {
         $path = $this->differConfig->getSchemaPath() . '/' . $connection->getDatabase();
 
-        return MysqlDump::parseFromPaths(
+        return $this->pathParser->parse(
             [$path],
             $this->differConfig->getEngine(),
             $this->differConfig->getCollation(),

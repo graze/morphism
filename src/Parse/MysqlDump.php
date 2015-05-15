@@ -31,58 +31,6 @@ class MysqlDump
     }
 
     /**
-     * Parses one or more MySQL dump files from the specified paths.
-     *
-     * Each path may refer either to a file, or to a directory from which each
-     * contained file is parsed. There is no recursion into sub-directories.
-     *
-     * @param string[]    $paths            files or directories to parse
-     * @param string|null $defaultEngine    default database engine to use (e.g. InnoDB)
-     * @param string|null $defaultCollation default collation to use (e.g. utf8)
-     * @param string|null $defaultDatabaseName database name to use if unspecified in stream
-     * @return MysqlDump
-     */
-    public static function parseFromPaths(array $paths, $defaultEngine = null, $defaultCollation = null, $defaultDatabaseName = null)
-    {
-        $dump = new self;
-        if (!is_null($defaultEngine)) {
-            $dump->setDefaultEngine($defaultEngine);
-        }
-        if (!is_null($defaultCollation)) {
-            $dump->setDefaultCollation(new CollationInfo($defaultCollation));
-        }
-        if (!is_null($defaultDatabaseName)) {
-            $dump->setDefaultDatabase($defaultDatabaseName);
-        }
-
-        $files = [];
-        foreach($paths as $path) {
-            if (is_dir($path)) {
-                foreach(new \GlobIterator("$path/*.sql") as $fileInfo) {
-                    $files[] = $fileInfo->getPathname();
-                }
-            }
-            else {
-                $files[] = $path;
-            }
-        }
-
-        foreach($files as $file) {
-            $streamFactory = new TokenStreamFactory(new ExtractorFactory(), new Filesystem());
-            $stream = $streamFactory->buildFromFile($file);
-            try {
-                $dump->parse($stream);
-            }
-            catch(\RuntimeException $e) {
-                $message = $stream->contextualise($e->getMessage());
-                throw new \RuntimeException($message);
-            }
-        }
-
-        return $dump;
-    }
-
-    /**
      * Sets the name to use for the database if none is specified in the stream.
      *
      * @param string $databaseName

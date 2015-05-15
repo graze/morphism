@@ -11,6 +11,7 @@ use Graze\Morphism\Diff\Differ;
 use Graze\Morphism\Diff\DifferConfiguration;
 use Graze\Morphism\ExtractorFactory;
 use Graze\Morphism\Listener\LogListener;
+use Graze\Morphism\Parse\PathParser;
 use Graze\Morphism\Parse\TokenStreamFactory;
 use Illuminate\Filesystem\Filesystem;
 use Symfony\Component\Console\Command\Command;
@@ -129,7 +130,9 @@ class DiffCommand extends Command
 
         // build the differ
         $differConfig = DifferConfiguration::buildFromInput($input);
-        $differ = new Differ($differConfig, $config, new TokenStreamFactory(new ExtractorFactory(), new Filesystem()));
+        $streamFactory = new TokenStreamFactory(new ExtractorFactory(), new Filesystem());
+        $pathParser = new PathParser();
+        $differ = new Differ($differConfig, $config, $streamFactory, $pathParser);
 
         // setup listeners
         if ($differConfig->getLogDir()) {

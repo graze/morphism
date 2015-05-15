@@ -9,7 +9,9 @@ use Graze\Morphism\Diff\ConfirmableDiffApplier;
 use Graze\Morphism\Diff\DiffApplier;
 use Graze\Morphism\Diff\Differ;
 use Graze\Morphism\Diff\DifferConfiguration;
+use Graze\Morphism\ExtractorFactory;
 use Graze\Morphism\Listener\LogListener;
+use Graze\Morphism\Parse\TokenStreamFactory;
 use Illuminate\Filesystem\Filesystem;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -127,7 +129,7 @@ class DiffCommand extends Command
 
         // build the differ
         $differConfig = DifferConfiguration::buildFromInput($input);
-        $differ = new Differ($differConfig, $config);
+        $differ = new Differ($differConfig, $config, new TokenStreamFactory(new ExtractorFactory(), new Filesystem()));
 
         // setup listeners
         if ($differConfig->getLogDir()) {
@@ -144,21 +146,24 @@ class DiffCommand extends Command
             $connection = $connectionResolver->resolveFromName($connectionName);
             $diff = $differ->diff($connection);
 
-            foreach ($diff->getQueries() as $query) {
-                $outputHelper->sql($query);
-            }
+            if ($diff) {
+                foreach ($diff->getQueries() as $query) {
+                    $outputHelper->sql($query);
+                }
 
-            // apply the diff to the connection if there is one
-            if ($diff && $applyChanges !== 'no') {
-                if ($applyChanges === 'confirm') {
-                    $output->writeln('');
-                    $output->writeln('<comment>-- Confirm changes to ' . $connection->getDatabase() . ':</comment>');
+                // apply the diff to the connection if there is one
+                if ($applyChanges !== 'no') {
+                    if ($applyChanges === 'confirm') {
+                        $output->writeln('');
+                        $output->writeln('<comment>-- Confirm changes to ' . $connection->getDatabase() . ':</comment>');
 
-                    $applier = new ConfirmableDiffApplier($this->dispatcher, $input, $output, $this->getHelper('question'));
-                    $applier->apply($diff, $connection);
-                } else {
-                    $applier = new DiffApplier($this->dispatcher);
-                    $applier->apply($diff, $connection);
+                        $applier = new ConfirmableDiffApplier($this->dispatcher, $input, $output,
+                            $this->getHelper('question'));
+                        $applier->apply($diff, $connection);
+                    } else {
+                        $applier = new DiffApplier($this->dispatcher);
+                        $applier->apply($diff, $connection);
+                    }
                 }
             }
         }

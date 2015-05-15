@@ -2,8 +2,10 @@
 
 namespace Graze\Morphism\Command;
 
+use Graze\Morphism\ExtractorFactory;
 use Graze\Morphism\Parse\MysqlDump;
-use Graze\Morphism\Parse\TokenStream;
+use Graze\Morphism\Parse\TokenStreamFactory;
+use Illuminate\Filesystem\Filesystem;
 
 class Extract implements Argv\Consumer
 {
@@ -46,7 +48,7 @@ class Extract implements Argv\Consumer
             case '--no-quote-names':
                 $this->quoteNames = $option->bool();
                 break;
-            
+
             case '--schema-path':
                 $this->schemaPath = $option->required();
                 break;
@@ -59,7 +61,7 @@ class Extract implements Argv\Consumer
             case '--no-write':
                 $this->write = $option->bool();
                 break;
-            
+
             default:
                 $option->unrecognised();
                 break;
@@ -81,7 +83,9 @@ class Extract implements Argv\Consumer
 
     public function run()
     {
-        $stream = TokenStream::newFromFile($this->mysqldump);
+        $extractorFactory = new ExtractorFactory();
+        $streamFactory = new TokenStreamFactory($extractorFactory, new Filesystem());
+        $stream = $streamFactory->buildFromFile($this->mysqldump);
 
         $dump = new MysqlDump();
         try {

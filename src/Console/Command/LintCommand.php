@@ -2,7 +2,10 @@
 
 namespace Graze\Morphism\Console\Command;
 
+use Graze\Morphism\ExtractorFactory;
 use Graze\Morphism\Lint\Linter;
+use Graze\Morphism\Parse\TokenStreamFactory;
+use Illuminate\Filesystem\Filesystem;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Input\InputArgument;
@@ -29,7 +32,7 @@ class LintCommand extends Command
         $output->getFormatter()->setStyle('success', $style);
 
         $path = $input->getArgument('path');
-        $linter = new Linter($output);
+        $linter = new Linter(new TokenStreamFactory(new ExtractorFactory(), new Filesystem()), $output);
         return $linter->lint($path);
     }
 }

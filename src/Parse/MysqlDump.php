@@ -1,6 +1,9 @@
 <?php
 namespace Graze\Morphism\Parse;
 
+use Graze\Morphism\ExtractorFactory;
+use Illuminate\Filesystem\Filesystem;
+
 /**
  * Represents a dump of one or more databases.
  */
@@ -65,7 +68,8 @@ class MysqlDump
         }
 
         foreach($files as $file) {
-            $stream = TokenStream::newFromFile($file);
+            $streamFactory = new TokenStreamFactory(new ExtractorFactory(), new Filesystem());
+            $stream = $streamFactory->buildFromFile($file);
             try {
                 $dump->parse($stream);
             }

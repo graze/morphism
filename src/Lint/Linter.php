@@ -4,7 +4,7 @@ namespace Graze\Morphism\Lint;
 
 use Graze\Morphism\Console\Output\OutputHelper;
 use Graze\Morphism\Parse\MysqlDump;
-use Graze\Morphism\Parse\TokenStream;
+use Graze\Morphism\Parse\TokenStreamFactory;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class Linter
@@ -15,11 +15,18 @@ class Linter
     private $outputHelper;
 
     /**
+     * @var TokenStreamFactory
+     */
+    private $streamFactory;
+
+    /**
+     * @param TokenStreamFactory $streamFactory
      * @param OutputInterface $output
      */
-    public function __construct(OutputInterface $output)
+    public function __construct(TokenStreamFactory $streamFactory, OutputInterface $output)
     {
         $this->outputHelper = new OutputHelper($output);
+        $this->streamFactory = $streamFactory;
     }
 
     /**
@@ -43,7 +50,7 @@ class Linter
 
         $errorFiles = [];
         foreach ($files as $file) {
-            $stream = TokenStream::newFromFile($file);
+            $stream = $this->streamFactory->buildFromFile($file);
             try {
                 $dump->parse($stream);
                 $this->outputHelper->writelnVerbose('<success> OK </success> ' . $file);

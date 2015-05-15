@@ -5,6 +5,7 @@ namespace Graze\Morphism\Dump;
 use Doctrine\DBAL\Connection;
 use Graze\Morphism\Configuration\Configuration;
 use Graze\Morphism\Parse\CreateDatabase;
+use Graze\Morphism\Parse\TokenStreamFactory;
 use Illuminate\Filesystem\Filesystem;
 
 class FileDumper extends Dumper
@@ -21,12 +22,13 @@ class FileDumper extends Dumper
 
     /**
      * @param Configuration $config
+     * @param TokenStreamFactory $streamFactory
      * @param string $path
      * @param Filesystem $file
      */
-    public function __construct(Configuration $config, $path, Filesystem $file)
+    public function __construct(Configuration $config, TokenStreamFactory $streamFactory, $path, Filesystem $file)
     {
-        parent::__construct($config);
+        parent::__construct($config, $streamFactory);
         $this->path = $path;
         $this->file = $file;
     }

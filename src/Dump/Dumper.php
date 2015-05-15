@@ -5,9 +5,8 @@ namespace Graze\Morphism\Dump;
 use Doctrine\DBAL\Connection;
 use Exception;
 use Graze\Morphism\Configuration\Configuration;
-use Graze\Morphism\Extractor;
 use Graze\Morphism\Parse\MysqlDump;
-use Graze\Morphism\Parse\TokenStream;
+use Graze\Morphism\Parse\TokenStreamFactory;
 use RuntimeException;
 
 abstract class Dumper implements DumperInterface
@@ -18,11 +17,18 @@ abstract class Dumper implements DumperInterface
     protected $config;
 
     /**
-     * @param Configuration $config
+     * @var TokenStreamFactory
      */
-    public function __construct(Configuration $config)
+    private $streamFactory;
+
+    /**
+     * @param Configuration $config
+     * @param TokenStreamFactory $streamFactory
+     */
+    public function __construct(Configuration $config, TokenStreamFactory $streamFactory)
     {
         $this->config = $config;
+        $this->streamFactory = $streamFactory;
     }
 
     /**
@@ -33,15 +39,7 @@ abstract class Dumper implements DumperInterface
      */
     public function dump(Connection $connection)
     {
-        $extractor = new Extractor($connection);
-        $extractor->setDatabases([$connection->getDatabase()]);
-        $extractor->setCreateDatabases(false);
-
-        $text = '';
-        foreach ($extractor->extract() as $query) {
-            $text .= "$query;\n";
-        }
-        $stream = TokenStream::newFromText($text, '');
+        $stream = $this->streamFactory->buildFromConnection($connection);
 
         $entry = $this->config->getEntry($connection->getDatabase());
         $matchTables = $entry['morphism']['matchTables'];

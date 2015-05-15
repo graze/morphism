@@ -2,8 +2,11 @@
 
 namespace Graze\Morphism\Test\Parse;
 
+use Graze\Morphism\ExtractorFactory;
 use \Graze\Morphism\Parse\Token;
 use \Graze\Morphism\Parse\TokenStream;
+use Graze\Morphism\Parse\TokenStreamFactory;
+use Illuminate\Filesystem\Filesystem;
 
 abstract class TestCase extends \PHPUnit_Framework_TestCase
 {
@@ -20,7 +23,8 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
 
     public function makeStream($text)
     {
-        return TokenStream::newFromFile("data://text/plain;base64," . base64_encode($text));
+        $streamFactory = new TokenStreamFactory(new ExtractorFactory(), new Filesystem());
+        return $streamFactory->buildFromFile('data://text/plain;base64,' . base64_encode($text));
     }
 }
 

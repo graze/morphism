@@ -17,33 +17,15 @@ class TokenStream
         'whitespace'        => true,
     ];
 
-    private function __construct()
+    /**
+     * @param string $path
+     * @param $text
+     */
+    public function __construct($path, $text)
     {
-    }
-
-    // TODO - this is a hack that needs to be refactored
-    // perhaps supply a LineStream interface that is satisfied
-    // by a FileLineStream or ConnectionLineStream for example?
-    public static function newFromText($text, $label)
-    {
-        $stream = new self;
-        $stream->path = $label;
-        $stream->text = $text;
-        $stream->len = strlen($text);
-        return $stream;
-    }
-
-    public static function newFromFile($path)
-    {
-        $text = @file_get_contents($path);
-        if ($text === false) {
-            throw new \RuntimeException("$path: could not open file");
-        }
-        $stream = new self;
-        $stream->path = $path;
-        $stream->text = $text;
-        $stream->len = strlen($text);
-        return $stream;
+        $this->path = $path;
+        $this->text = $text;
+        $this->len = strlen($text);
     }
 
     private function nextTokenRaw()
@@ -102,7 +84,7 @@ class TokenStream
                 return
                     $this->_getNumber($text, $offset) ?:
                     $this->_getSymbol($text, $offset);
-            
+
             case '-':
                 return
                     $this->_getComment($text, $offset) ?:
@@ -113,20 +95,20 @@ class TokenStream
                 return
                     $this->_getConditionEnd($text, $offset) ?:
                     $this->_getSymbol($text, $offset);
-            
-            case '/': 
+
+            case '/':
                 return
                     $this->_getConditionalStart($text, $offset) ?:
                     $this->_getMultilineComment($text, $offset) ?:
                     $this->_getSymbol($text, $offset);
-            
+
             case '0': case '1': case '2': case '3':
             case '4': case '5': case '6': case '7':
-            case '8': case '9': 
+            case '8': case '9':
                 return
                     $this->_getNumber($text, $offset) ?:
                     $this->_getIdentifier($text, $offset);
-            
+
             case '"': case "'":
                 return
                     $this->_getString($text, $offset);
@@ -134,7 +116,7 @@ class TokenStream
             case '`':
                 return
                     $this->_getQuotedIdentifier($text, $offset);
-            
+
             case 'B': case 'b':
                 return
                     $this->_getBin($text, $offset) ?:
@@ -160,10 +142,10 @@ class TokenStream
             case 'Y': case 'y': case 'Z': case 'z':
                 return
                     $this->_getIdentifier($text, $offset);
-            
+
             case '!': case '%': case '&': case '(': case ')': case ',':
             case ':': case ';': case '<': case '=': case '>': case '@':
-            case '^': case '|': case '~': 
+            case '^': case '|': case '~':
                 return
                     $this->_getSpecialSymbol($text, $offset);
 
@@ -199,7 +181,7 @@ class TokenStream
 
     private function _getConditionalStart($text, $offset)
     {
-        if (   
+        if (
             // 10 comes from allowing for the /*! sequence, a MySQL version number, and a space
             preg_match('_\A/\*!([0-9]*)\s_ms', substr($text, $offset, 10)) &&
             preg_match('_/\*!([0-9]*)\s_ms', $text, $pregMatch, 0, $offset)
@@ -263,8 +245,8 @@ class TokenStream
     {
         $quote = $text[$offset];
         if (preg_match(
-            '/' . 
-            $quote . 
+            '/' .
+            $quote .
             '(' .
                 '(?:' .
                     '[^\\\\' . $quote . ']' .   // not \ or "
@@ -400,7 +382,7 @@ class TokenStream
                 $token = $this->nextToken();
                 // inline $token->eq(...)
                 if (
-                    strcasecmp($token->text, $text) !== 0 || 
+                    strcasecmp($token->text, $text) !== 0 ||
                     $token->type !== $type
                 ) {
                     // inline rewind()
@@ -507,7 +489,7 @@ class TokenStream
         $lines = explode("\n",  $this->text);
 
         $contextLines = array_slice(
-            $lines, 
+            $lines,
             max(0, $lineNo - $preContextLines),
             min($lineNo, $preContextLines),
             true // preserve keys
@@ -520,7 +502,7 @@ class TokenStream
         ];
         $contextLines += array_slice(
             $lines,
-            $lineNo + 1, 
+            $lineNo + 1,
             $postContextLines,
             true // preserve keys
         );

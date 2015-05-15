@@ -4,18 +4,6 @@ namespace Graze\Morphism\Parse;
 
 class TokenStreamTest extends \Graze\Morphism\Test\Parse\TestCase
 {
-    public function testNewFromFile()
-    {
-        $stream = TokenStream::newFromFile("/dev/null");
-        $this->assertThat($stream, $this->isInstanceOf(__NAMESPACE__ . '\TokenStream'));
-    }
-
-    /** @expectedException \Exception */
-    public function testNewFromFileNotFound()
-    {
-        TokenStream::newFromFile(dirname(__FILE__) . "/file_not_found");
-    }
-
     /** @dataProvider nextTokenProvider */
     public function testNextToken($text, $expectedType, $expectedValue)
     {
@@ -156,7 +144,7 @@ class TokenStreamTest extends \Graze\Morphism\Test\Parse\TestCase
             (bool)$success,
             (bool)$stream->consume($spec),
             "consume did not return " . ($success ? 'true' : 'false')
-        ); 
+        );
         $token = $stream->nextToken();
         $this->assertTokenEq($type, $value, $token);
     }
@@ -187,7 +175,7 @@ class TokenStreamTest extends \Graze\Morphism\Test\Parse\TestCase
         $token = $stream->nextToken();
         $this->assertTokenEq($type, $value, $token);
     }
-        
+
     public function peekProvider()
     {
         return [
@@ -218,7 +206,7 @@ class TokenStreamTest extends \Graze\Morphism\Test\Parse\TestCase
     // TODO -
     // following methods are untested:
     //     expectName
-    //     expectOpenParen 
+    //     expectOpenParen
     //     expectCloseParen
     //     expectNumber
     //     expectString

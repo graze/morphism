@@ -7,6 +7,7 @@ use Graze\Morphism\Configuration\Configuration;
 use Graze\Morphism\Parse\TokenStream;
 use Graze\Morphism\Parse\MysqlDump;
 use Graze\Morphism\Extractor;
+use Graze\Morphism\Parse\TokenStreamFactory;
 
 class Differ
 {
@@ -21,13 +22,20 @@ class Differ
     private $config;
 
     /**
+     * @var TokenStreamFactory
+     */
+    private $streamFactory;
+
+    /**
      * @param DifferConfiguration $differConfig
      * @param Configuration $config
+     * @param TokenStreamFactory $streamFactory
      */
-    public function __construct(DifferConfiguration $differConfig, Configuration $config)
+    public function __construct(DifferConfiguration $differConfig, Configuration $config, TokenStreamFactory $streamFactory)
     {
         $this->differConfig = $differConfig;
         $this->config = $config;
+        $this->streamFactory = $streamFactory;
     }
 
     /**
@@ -69,16 +77,7 @@ class Differ
      */
     private function getCurrentSchema(Connection $connection)
     {
-        $extractor = new Extractor($connection);
-        $extractor->setDatabases([$connection->getDatabase()]);
-        $extractor->setCreateDatabases(false);
-        $extractor->setQuoteNames($this->differConfig->isQuoteNames());
-
-        $text = '';
-        foreach($extractor->extract() as $query) {
-            $text .= "$query;\n";
-        }
-        $stream = TokenStream::newFromText($text, '');
+        $stream = $this->streamFactory->buildFromConnection($connection);
 
         $dump = new MysqlDump();
         $dump->setDefaultDatabase($connection->getDatabase());

@@ -1,8 +1,6 @@
 <?php
-namespace Graze\Morphism\Parse;
 
-use Graze\Morphism\ExtractorFactory;
-use Illuminate\Filesystem\Filesystem;
+namespace Graze\Morphism\Parse;
 
 /**
  * Represents a dump of one or more databases.

@@ -5,10 +5,12 @@ namespace Graze\Morphism\Console\Command;
 use Graze\Morphism\Configuration\ConfigurationParser;
 use Graze\Morphism\Connection\ConnectionResolver;
 use Graze\Morphism\Console\Output\OutputHelper;
-use Graze\Morphism\Dump\FileDumper;
-use Graze\Morphism\Dump\StdOutDumper;
+use Graze\Morphism\Dump\Dumper;
+use Graze\Morphism\Dump\Output\FileOutput;
+use Graze\Morphism\Dump\Output\StdOutOutput;
 use Graze\Morphism\ExtractorFactory;
 use Graze\Morphism\Parse\TokenStreamFactory;
+use Graze\Morphism\Specification\TableSpecification;
 use Illuminate\Filesystem\Filesystem;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -27,6 +29,13 @@ class DumpCommand extends Command
             ->addOption('write', null, InputOption::VALUE_NONE, 'Write the files to the schema-path.');
     }
 
+    /**
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     *
+     * @return int|null|void
+     * @throws \Exception
+     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $outputHelper = new OutputHelper($output);
@@ -45,14 +54,18 @@ class DumpCommand extends Command
         foreach ($connectionNames as $connectionName) {
             $outputHelper->title('Connection: ' . $connectionName);
             $connection = $connectionResolver->resolveFromName($connectionName);
+            $stream = $streamFactory->buildFromConnection($connection);
+            $entry = $config->getEntry($connectionName);
+            $dumper = new Dumper(new TableSpecification($entry['morphism']['include'], $entry['morphism']['exclude']));
+            $dumpOutput = null;
 
             if ($input->getOption('write')) {
-                $dumper = new FileDumper($config, $streamFactory, $input->getOption('schema-path'), new Filesystem());
-                $dumper->dump($connection);
+                $dumpOutput = new FileOutput(new Filesystem(), $input->getOption('schema-path'));
             } else {
-                $dumper = new StdOutDumper($config, $streamFactory, $output);
-                $dumper->dump($connection);
+                $dumpOutput = new StdOutOutput(new OutputHelper($output));
             }
+
+            $dumper->dump($stream, $dumpOutput);
         }
     }
 }

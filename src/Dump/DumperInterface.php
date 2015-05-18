@@ -2,12 +2,16 @@
 
 namespace Graze\Morphism\Dump;
 
-use Doctrine\DBAL\Connection;
+use Graze\Morphism\Dump\Output\OutputInterface;
+use Graze\Morphism\Parse\TokenStream;
 
 interface DumperInterface
 {
     /**
-     * @param Connection $connection
+     * @param TokenStream $stream
+     * @param OutputInterface $output
+     *
+     * @return mixed
      */
-    public function dump(Connection $connection);
+    public function dump(TokenStream $stream, OutputInterface $output);
 }

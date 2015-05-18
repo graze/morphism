@@ -12,8 +12,14 @@ use RuntimeException;
 
 class Dumper implements DumperInterface
 {
+    /**
+     * @var TableSpecification
+     */
     private $specification;
 
+    /**
+     * @param TableSpecification $specification
+     */
     public function __construct(TableSpecification $specification)
     {
         $this->specification = $specification;

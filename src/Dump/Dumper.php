@@ -2,57 +2,47 @@
 
 namespace Graze\Morphism\Dump;
 
-use Doctrine\DBAL\Connection;
 use Exception;
-use Graze\Morphism\Configuration\Configuration;
-use Graze\Morphism\Parse\MysqlDump;
-use Graze\Morphism\Parse\TokenStreamFactory;
+use Graze\Morphism\Dump\Output\OutputInterface;
+use Graze\Morphism\Parse\CollationInfo;
+use Graze\Morphism\Parse\StreamParser;
+use Graze\Morphism\Parse\TokenStream;
+use Graze\Morphism\Specification\TableSpecification;
 use RuntimeException;
 
-abstract class Dumper implements DumperInterface
+class Dumper implements DumperInterface
 {
     /**
-     * @var Configuration
+     * @var TableSpecification
      */
-    protected $config;
+    private $specification;
 
     /**
-     * @var TokenStreamFactory
+     * @param TableSpecification $specification
      */
-    private $streamFactory;
-
-    /**
-     * @param Configuration $config
-     * @param TokenStreamFactory $streamFactory
-     */
-    public function __construct(Configuration $config, TokenStreamFactory $streamFactory)
+    public function __construct(TableSpecification $specification)
     {
-        $this->config = $config;
-        $this->streamFactory = $streamFactory;
+        $this->specification = $specification;
     }
 
     /**
-     * @param Connection $connection
+     * @param TokenStream $stream
+     * @param OutputInterface $output
      *
-     * @return MysqlDump
+     * @return void
      * @throws Exception
      */
-    public function dump(Connection $connection)
+    public function dump(TokenStream $stream, OutputInterface $output)
     {
-        $stream = $this->streamFactory->buildFromConnection($connection);
+        $streamParser = new StreamParser(new CollationInfo(), '', 'InnoDB');
 
-        $entry = $this->config->getEntry($connection->getDatabase());
-        $matchTables = $entry['morphism']['matchTables'];
-
-        $dump = new MysqlDump();
         try {
-            $dump->parse($stream, ['matchTables' => $matchTables]);
+            $dump = $streamParser->parse($stream, $this->specification);
+            $output->output($dump);
         } catch(RuntimeException $e) {
             throw new RuntimeException($stream->contextualise($e->getMessage()));
         } catch(Exception $e) {
             throw new Exception($e->getMessage() . "\n\n" . $e->getTraceAsString());
         }
-
-        return $dump;
     }
 }

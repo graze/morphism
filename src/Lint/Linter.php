@@ -3,7 +3,9 @@
 namespace Graze\Morphism\Lint;
 
 use Graze\Morphism\Console\Output\OutputHelper;
+use Graze\Morphism\Parse\CollationInfo;
 use Graze\Morphism\Parse\MysqlDump;
+use Graze\Morphism\Parse\StreamParser;
 use Graze\Morphism\Parse\TokenStreamFactory;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -36,7 +38,7 @@ class Linter
      */
     public function lint($path)
     {
-        $dump = new MysqlDump();
+        $dump = new StreamParser(new CollationInfo(), '', 'InnoDB');
 
         $files = [];
         if (is_dir($path)) {

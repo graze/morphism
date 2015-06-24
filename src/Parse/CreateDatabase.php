@@ -1,6 +1,8 @@
 <?php
 namespace Graze\Morphism\Parse;
 
+use Graze\Morphism\Specification\TableSpecification;
+
 /**
  * Represents the definition of a database.
  */
@@ -9,9 +11,9 @@ class CreateDatabase
     /** @var string */
     public $name = '';
 
-    /** 
+    /**
      * @var CreateTable[]
-     * 
+     *
      * indexed by (string) table name; when enumerated, reflects the order
      * in which the table definitions were parsed.
      */
@@ -33,7 +35,7 @@ class CreateDatabase
      * Parses a database declaration from $stream.
      *
      * Declarations must be of the form 'CREATE DATABASE ...' or
-     * 'CREATE DATABASE IF NOT EXISTS ...'. Anything else will cause 
+     * 'CREATE DATABASE IF NOT EXISTS ...'. Anything else will cause
      * an exception to be thrown.
      *
      * @throws \RuntimeException
@@ -136,16 +138,12 @@ class CreateDatabase
      *
      * @return string[]
      */
-    public function diff(self $that, array $flags = [])
+    public function diff(self $that, array $flags = [], TableSpecification $tableSpecification = null)
     {
         $flags += [
             'createTable' => true,
             'dropTable'   => true,
             'alterEngine' => true,
-            'matchTables' => [
-                'include' => '',
-                'exclude' => '',
-            ],
         ];
 
         $thisTableNames = array_keys($this->tables);
@@ -157,15 +155,10 @@ class CreateDatabase
 
         $diff = [];
 
-        $includeTablesRegex = $flags['matchTables']['include'];
-        $excludeTablesRegex = $flags['matchTables']['exclude'];
-
         if ($flags['dropTable'] && count($droppedTableNames) > 0) {
             foreach($droppedTableNames as $tableName) {
-                if (
-                    ($includeTablesRegex == '' || preg_match($includeTablesRegex, $tableName)) &&
-                    ($excludeTablesRegex == '' || !preg_match($excludeTablesRegex, $tableName))
-                ) {
+                if (is_null($tableSpecification)
+                    || ($tableSpecification && $tableSpecification->isSatisfiedBy($this->tables[$tableName]))) {
                     $diff[] = "DROP TABLE IF EXISTS " . Token::escapeIdentifier($tableName);
                 }
             }
@@ -173,20 +166,16 @@ class CreateDatabase
 
         if ($flags['createTable'] && count($createdTableNames) > 0) {
             foreach($createdTableNames as $tableName) {
-                if (
-                    ($includeTablesRegex == '' || preg_match($includeTablesRegex, $tableName)) &&
-                    ($excludeTablesRegex == '' || !preg_match($excludeTablesRegex, $tableName))
-                ) {
+                if (is_null($tableSpecification)
+                    || ($tableSpecification && $tableSpecification->isSatisfiedBy($this->tables[$tableName]))) {
                     $diff = array_merge($diff, $that->tables[$tableName]->getDDL());
                 }
             }
         }
 
         foreach($commonTableNames as $tableName) {
-            if (
-                ($includeTablesRegex == '' || preg_match($includeTablesRegex, $tableName)) &&
-                ($excludeTablesRegex == '' || !preg_match($excludeTablesRegex, $tableName))
-            ) {
+            if (is_null($tableSpecification)
+                || ($tableSpecification && $tableSpecification->isSatisfiedBy($this->tables[$tableName]))) {
                 $thisTable = $this->tables[$tableName];
                 $thatTable = $that->tables[$tableName];
                 $tableDiff = $thisTable->diff($thatTable, [

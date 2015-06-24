@@ -3,12 +3,12 @@
 namespace Graze\Morphism\Diff;
 
 use Doctrine\DBAL\Connection;
-use Graze\Morphism\Configuration\Configuration;
 use Graze\Morphism\Parse\CollationInfo;
 use Graze\Morphism\Parse\MysqlDump;
 use Graze\Morphism\Parse\PathParser;
 use Graze\Morphism\Parse\StreamParser;
 use Graze\Morphism\Parse\TokenStreamFactory;
+use Graze\Morphism\Specification\TableSpecification;
 
 class Differ
 {
@@ -16,11 +16,6 @@ class Differ
      * @var DifferConfiguration
      */
     private $differConfig;
-
-    /**
-     * @var Configuration
-     */
-    private $config;
 
     /**
      * @var TokenStreamFactory
@@ -34,36 +29,29 @@ class Differ
 
     /**
      * @param DifferConfiguration $differConfig
-     * @param Configuration $config
      * @param TokenStreamFactory $streamFactory
      * @param PathParser $pathParser
      */
     public function __construct(
         DifferConfiguration $differConfig,
-        Configuration $config,
         TokenStreamFactory $streamFactory,
         PathParser $pathParser
     ) {
         $this->differConfig = $differConfig;
-        $this->config = $config;
         $this->streamFactory = $streamFactory;
         $this->pathParser = $pathParser;
     }
 
     /**
      * @param Connection $connection
+     * @param TableSpecification $tableSpecification
      *
      * @return Diff
      */
-    public function diff(Connection $connection)
+    public function diff(Connection $connection, TableSpecification $tableSpecification = null)
     {
         $currentSchema = $this->getCurrentSchema($connection);
         $targetSchema = $this->getTargetSchema($connection);
-
-        $entry = $this->config->getEntry($connection->getDatabase());
-        $matchTables = [
-            $connection->getDatabase() => $entry['morphism']['matchTables']
-        ];
 
         $diff = $currentSchema->diff(
             $targetSchema,
@@ -73,8 +61,8 @@ class Differ
                 'createTable'    => $this->differConfig->isCreateTable(),
                 'dropTable'      => $this->differConfig->isDropTable(),
                 'alterEngine'    => $this->differConfig->isAlterEngine(),
-                'matchTables'    => $matchTables
-            ]
+            ],
+            $tableSpecification
         );
 
         if (count($diff) > 0) {

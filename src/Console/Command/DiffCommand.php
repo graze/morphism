@@ -13,6 +13,7 @@ use Graze\Morphism\ExtractorFactory;
 use Graze\Morphism\Listener\LogListener;
 use Graze\Morphism\Parse\PathParser;
 use Graze\Morphism\Parse\TokenStreamFactory;
+use Graze\Morphism\Specification\TableSpecification;
 use Illuminate\Filesystem\Filesystem;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -132,7 +133,7 @@ class DiffCommand extends Command
         $differConfig = DifferConfiguration::buildFromInput($input);
         $streamFactory = new TokenStreamFactory(new ExtractorFactory(), new Filesystem());
         $pathParser = new PathParser();
-        $differ = new Differ($differConfig, $config, $streamFactory, $pathParser);
+        $differ = new Differ($differConfig, $streamFactory, $pathParser);
 
         // setup listeners
         if ($differConfig->getLogDir()) {
@@ -147,7 +148,11 @@ class DiffCommand extends Command
             $outputHelper->title('Connection: ' . $connectionName);
 
             $connection = $connectionResolver->resolveFromName($connectionName);
-            $diff = $differ->diff($connection);
+            $entry = $config->getEntry($connectionName);
+            $diff = $differ->diff(
+                $connection,
+                new TableSpecification($entry['morphism']['include'], $entry['morphism']['exclude'])
+            );
 
             if ($diff) {
                 foreach ($diff->getQueries() as $query) {

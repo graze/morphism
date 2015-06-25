@@ -5,6 +5,7 @@ require __DIR__.'/../vendor/autoload.php';
 
 use Graze\Morphism\Console\Command\DiffCommand;
 use Graze\Morphism\Console\Command\DumpCommand;
+use Graze\Morphism\Console\Command\ExtractCommand;
 use Graze\Morphism\Console\Command\LintCommand;
 use Symfony\Component\Console\Application;
 use Symfony\Component\EventDispatcher\EventDispatcher;
@@ -15,4 +16,5 @@ $application = new Application();
 $application->add(new DiffCommand($dispatcher));
 $application->add(new LintCommand());
 $application->add(new DumpCommand());
+$application->add(new ExtractCommand());
 $application->run();

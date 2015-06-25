@@ -2,7 +2,7 @@
 
 namespace Graze\Morphism\Console\Command;
 
-use Graze\Morphism\ExtractorFactory;
+use Graze\Morphism\Extractor\ExtractorFactory;
 use Graze\Morphism\Lint\Linter;
 use Graze\Morphism\Parse\TokenStreamFactory;
 use Illuminate\Filesystem\Filesystem;

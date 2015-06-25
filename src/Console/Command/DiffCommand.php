@@ -9,7 +9,7 @@ use Graze\Morphism\Diff\ConfirmableDiffApplier;
 use Graze\Morphism\Diff\DiffApplier;
 use Graze\Morphism\Diff\Differ;
 use Graze\Morphism\Diff\DifferConfiguration;
-use Graze\Morphism\ExtractorFactory;
+use Graze\Morphism\Extractor\ExtractorFactory;
 use Graze\Morphism\Listener\LogListener;
 use Graze\Morphism\Parse\PathParser;
 use Graze\Morphism\Parse\TokenStreamFactory;

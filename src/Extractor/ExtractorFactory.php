@@ -1,6 +1,6 @@
 <?php
 
-namespace Graze\Morphism;
+namespace Graze\Morphism\Extractor;
 
 use Doctrine\DBAL\Connection;
 

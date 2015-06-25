@@ -1,6 +1,6 @@
 <?php
 
-namespace Graze\Morphism;
+namespace Graze\Morphism\Extractor;
 
 use Graze\Morphism\Parse\Token;
 
@@ -400,7 +400,7 @@ class Extractor
             if ($constraint->DELETE_RULE != 'RESTRICT') {
                 $options .= " ON DELETE " . $constraint->DELETE_RULE;
             }
-            $defReferences[] = 
+            $defReferences[] =
                 "  CONSTRAINT $constraintName" .
                 " FOREIGN KEY (" . implode(',', $defForeignParts) . ")" .
                 " REFERENCES $referencedTable (" . implode(',', $defReferenceParts) . ")" .

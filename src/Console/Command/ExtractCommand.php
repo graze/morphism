@@ -6,7 +6,7 @@ use Graze\Morphism\Console\Output\OutputHelper;
 use Graze\Morphism\Dump\Dumper;
 use Graze\Morphism\Dump\Output\FileOutput;
 use Graze\Morphism\Dump\Output\StdOutOutput;
-use Graze\Morphism\ExtractorFactory;
+use Graze\Morphism\Extractor\ExtractorFactory;
 use Graze\Morphism\Parse\TokenStreamFactory;
 use Graze\Morphism\Specification\TableSpecification;
 use Illuminate\Filesystem\Filesystem;

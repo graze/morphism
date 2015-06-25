@@ -3,7 +3,7 @@
 namespace Graze\Morphism\Parse;
 
 use Doctrine\DBAL\Connection;
-use Graze\Morphism\ExtractorFactory;
+use Graze\Morphism\Extractor\ExtractorFactory;
 use Illuminate\Filesystem\Filesystem;
 
 class TokenStreamFactory

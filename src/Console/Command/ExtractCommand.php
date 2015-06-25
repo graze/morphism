@@ -2,13 +2,14 @@
 
 namespace Graze\Morphism\Console\Command;
 
+use Exception;
 use Graze\Morphism\Console\Output\OutputHelper;
-use Graze\Morphism\Dump\Dumper;
 use Graze\Morphism\Dump\Output\FileOutput;
 use Graze\Morphism\Dump\Output\StdOutOutput;
 use Graze\Morphism\Extractor\ExtractorFactory;
+use Graze\Morphism\Parse\CollationInfo;
+use Graze\Morphism\Parse\StreamParser;
 use Graze\Morphism\Parse\TokenStreamFactory;
-use Graze\Morphism\Specification\TableSpecification;
 use Illuminate\Filesystem\Filesystem;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -45,7 +46,9 @@ class ExtractCommand extends Command
             $dumpOutput = new StdOutOutput(new OutputHelper($output));
         }
 
-        $dumper = new Dumper(new TableSpecification());
-        $dumper->dump($stream, $dumpOutput);
+        $streamParser = new StreamParser(new CollationInfo(), '', 'InnoDB');
+        $dump = $streamParser->parse($stream);
+
+        $dumpOutput->output($dump);
     }
 }

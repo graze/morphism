@@ -5,10 +5,11 @@ namespace Graze\Morphism\Console\Command;
 use Graze\Morphism\Configuration\ConfigurationParser;
 use Graze\Morphism\Connection\ConnectionResolver;
 use Graze\Morphism\Console\Output\OutputHelper;
-use Graze\Morphism\Dump\Dumper;
 use Graze\Morphism\Dump\Output\FileOutput;
 use Graze\Morphism\Dump\Output\StdOutOutput;
 use Graze\Morphism\Extractor\ExtractorFactory;
+use Graze\Morphism\Parse\CollationInfo;
+use Graze\Morphism\Parse\StreamParser;
 use Graze\Morphism\Parse\TokenStreamFactory;
 use Graze\Morphism\Specification\TableSpecification;
 use Illuminate\Filesystem\Filesystem;
@@ -56,7 +57,6 @@ class DumpCommand extends Command
             $connection = $connectionResolver->resolveFromName($connectionName);
             $stream = $streamFactory->buildFromConnection($connection);
             $entry = $config->getEntry($connectionName);
-            $dumper = new Dumper(new TableSpecification($entry['morphism']['include'], $entry['morphism']['exclude']));
             $dumpOutput = null;
 
             if ($input->getOption('write')) {
@@ -65,7 +65,10 @@ class DumpCommand extends Command
                 $dumpOutput = new StdOutOutput(new OutputHelper($output));
             }
 
-            $dumper->dump($stream, $dumpOutput);
+            $streamParser = new StreamParser(new CollationInfo(), '', 'InnoDB');
+            $dump = $streamParser->parse($stream, new TableSpecification($entry['morphism']['include'], $entry['morphism']['exclude']));
+
+            $dumpOutput->output($dump);
         }
     }
 }

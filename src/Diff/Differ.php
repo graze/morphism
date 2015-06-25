@@ -95,7 +95,7 @@ class Differ
                 foreach($thatDatabase->tables as $table) {
                     if (is_null($tableSpecification)
                         || ($tableSpecification && $tableSpecification->isSatisfiedBy($table))) {
-                        $diff[] = $table->getDDL($thatDatabase->getCollation());
+                        $diff[] = $table->getDDL();
                     }
                 }
             }

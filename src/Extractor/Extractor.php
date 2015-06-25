@@ -2,6 +2,7 @@
 
 namespace Graze\Morphism\Extractor;
 
+use Doctrine\DBAL\Connection;
 use Graze\Morphism\Parse\Token;
 
 /**
@@ -10,15 +11,17 @@ use Graze\Morphism\Parse\Token;
  */
 class Extractor
 {
-    private $dbh = null;
-    private $databases = null;
+    private $dbh;
+    private $databases;
     private $createDatabase = true;
     private $quoteNames = true;
 
     /**
      * Constructor
+     *
+     * @param Connection $dbh
      */
-    public function __construct(\Doctrine\DBAL\Connection $dbh)
+    public function __construct(Connection $dbh)
     {
         $this->dbh = $dbh;
     }

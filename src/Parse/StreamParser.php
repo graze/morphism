@@ -72,7 +72,6 @@ class StreamParser
         }
 
         $dump = new MysqlDump($databases);
-        $dump->setDefaultDatabase($this->defaultDatabaseName);
         return $dump;
     }
 

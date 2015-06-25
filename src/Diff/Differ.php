@@ -4,9 +4,11 @@ namespace Graze\Morphism\Diff;
 
 use Doctrine\DBAL\Connection;
 use Graze\Morphism\Parse\CollationInfo;
+use Graze\Morphism\Parse\CreateDatabase;
 use Graze\Morphism\Parse\MysqlDump;
 use Graze\Morphism\Parse\PathParser;
 use Graze\Morphism\Parse\StreamParser;
+use Graze\Morphism\Parse\Token;
 use Graze\Morphism\Parse\TokenStreamFactory;
 use Graze\Morphism\Specification\TableSpecification;
 
@@ -48,26 +50,75 @@ class Differ
      *
      * @return Diff
      */
-    public function diff(Connection $connection, TableSpecification $tableSpecification = null)
+    public function diffFromConnection(Connection $connection, TableSpecification $tableSpecification = null)
     {
         $currentSchema = $this->getCurrentSchema($connection);
         $targetSchema = $this->getTargetSchema($connection);
 
-        $diff = $currentSchema->diff(
-            $targetSchema,
-            [
-                'createDatabase' => false,
-                'dropDatabase'   => false,
-                'createTable'    => $this->differConfig->isCreateTable(),
-                'dropTable'      => $this->differConfig->isDropTable(),
-                'alterEngine'    => $this->differConfig->isAlterEngine(),
-            ],
-            $tableSpecification
-        );
+        return $this->diff($currentSchema, $targetSchema, $connection->getDatabase(), $tableSpecification);
+    }
 
-        if (count($diff) > 0) {
-            return new Diff($diff);
+    /**
+     * @param MysqlDump $a
+     * @param MysqlDump $b
+     * @param $defaultDatabaseName
+     * @param TableSpecification $tableSpecification
+     *
+     * @return Diff
+     */
+    public function diff(MysqlDump $a, MysqlDump $b, $defaultDatabaseName, TableSpecification $tableSpecification = null)
+    {
+        $dropDatabase = false;
+        $createDatabase = false;
+
+        $thisDatabaseNames = array_keys($a->databases);
+        $thatDatabaseNames = array_keys($b->databases);
+
+        $commonDatabaseNames  = array_intersect($thisDatabaseNames, $thatDatabaseNames);
+        $droppedDatabaseNames = array_diff($thisDatabaseNames, $thatDatabaseNames);
+        $createdDatabaseNames = array_diff($thatDatabaseNames, $thisDatabaseNames);
+
+        $diff = [];
+
+        if ($dropDatabase && count($droppedDatabaseNames) > 0) {
+            foreach($droppedDatabaseNames as $databaseName) {
+                $diff[] = 'DROP DATABASE IF EXISTS ' . Token::escapeIdentifier($databaseName);
+            }
         }
+
+        if ($createDatabase) {
+            foreach($createdDatabaseNames as $databaseName) {
+                /** @var CreateDatabase $thatDatabase */
+                $thatDatabase = $b->databases[$databaseName];
+                $diff[] = $thatDatabase->getDDL();
+                $diff[] = 'USE ' . Token::escapeIdentifier($databaseName);
+                foreach($thatDatabase->tables as $table) {
+                    if (is_null($tableSpecification)
+                        || ($tableSpecification && $tableSpecification->isSatisfiedBy($table))) {
+                        $diff[] = $table->getDDL($thatDatabase->getCollation());
+                    }
+                }
+            }
+        }
+
+        foreach($commonDatabaseNames as $databaseName) {
+            $thisDatabase = $a->databases[$databaseName];
+            $thatDatabase = $b->databases[$databaseName];
+            $databaseDiff = $thisDatabase->diff($thatDatabase, [
+                'createTable' => $this->differConfig->isCreateTable(),
+                'dropTable'   => $this->differConfig->isDropTable(),
+                'alterEngine' => $this->differConfig->isAlterEngine(),
+            ], $tableSpecification);
+
+            if ($databaseDiff !== '') {
+                if ($databaseName !== $defaultDatabaseName) {
+                    $diff[] = 'USE ' . Token::escapeIdentifier($databaseName);
+                }
+                $diff = array_merge($diff, $databaseDiff);
+            }
+        }
+
+        return new Diff($diff);
     }
 
     /**

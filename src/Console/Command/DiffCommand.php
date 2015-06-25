@@ -149,7 +149,7 @@ class DiffCommand extends Command
 
             $connection = $connectionResolver->resolveFromName($connectionName);
             $entry = $config->getEntry($connectionName);
-            $diff = $differ->diff(
+            $diff = $differ->diffFromConnection(
                 $connection,
                 new TableSpecification($entry['morphism']['include'], $entry['morphism']['exclude'])
             );

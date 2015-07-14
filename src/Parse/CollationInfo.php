@@ -45,6 +45,8 @@ class CollationInfo
      *
      * @param string|null $charset    name of a character set, e.g. latin1, utf8, binary
      * @param string|null $collation  name of a collation, e.g. latin1_general_ci, utf8_unicode_ci, binary
+     *
+     * @throws \RuntimeException
      */
     public function __construct($charset = null, $collation = null)
     {
@@ -76,7 +78,7 @@ class CollationInfo
     public function getCharset()
     {
         if (is_null($this->charset)) {
-            throw new \LogicException("getCharset called when collation is unspecified");
+            throw new \LogicException('getCharset called when collation is unspecified');
         }
         return $this->charset;
     }
@@ -91,7 +93,7 @@ class CollationInfo
     public function getCollation()
     {
         if (is_null($this->charset)) {
-            throw new \LogicException("getCollation called when collation is unspecified");
+            throw new \LogicException('getCollation called when collation is unspecified');
         }
         if ($this->isBinaryCollation) {
             return self::getCharsetBinaryCollation($this->charset);
@@ -109,7 +111,7 @@ class CollationInfo
     public function isBinaryCharset()
     {
         if (is_null($this->charset)) {
-            throw new \LogicException("isBinaryCharset called when collation is unspecified");
+            throw new \LogicException('isBinaryCharset called when collation is unspecified');
         }
         return $this->charset === 'binary';
     }
@@ -124,7 +126,7 @@ class CollationInfo
     public function isDefaultCollation()
     {
         if (is_null($this->charset)) {
-            throw new \LogicException("isDefaultCollation called when collation is unspecified");
+            throw new \LogicException('isDefaultCollation called when collation is unspecified');
         }
         return $this->getCollation() === self::getCharsetDefaultCollation($this->charset);
     }
@@ -149,7 +151,7 @@ class CollationInfo
         if (!is_null($this->charset) &&
             $this->charset !== $charset
         ) {
-            throw new \RuntimeException("Conflicting CHARACTER SET declarations");
+            throw new \RuntimeException('Conflicting CHARACTER SET declarations');
         }
         $this->charset = $charset;
         $this->collation = $defaultCollation;
@@ -172,9 +174,7 @@ class CollationInfo
         if (is_null($charset)) {
             throw new \RuntimeException("unknown collation '$collation'");
         }
-        if (!is_null($this->charset) &&
-            $this->charset !== $charset
-        ) {
+        if ($this->charset !== $charset && !is_null($this->charset)) {
             throw new \RuntimeException("COLLATION '$collation' is not valid for CHARACTER SET '$charset'");
         }
         $this->charset = $charset;

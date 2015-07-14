@@ -475,9 +475,6 @@ class Extractor
      */
     public function extract()
     {
-        $text = '';
-        Token::setQuoteNames($this->quoteNames);
-
         $schemata = $this->getSchemata();
         $databases = array_keys($schemata);
         $tables = $this->getTables($databases);

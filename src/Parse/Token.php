@@ -7,9 +7,9 @@ namespace Graze\Morphism\Parse;
 
 class Token
 {
-    /** 
+    /**
      * @var string  'symbol' | 'identifier' | 'number' | 'bin' | 'hex' |
-     *              'whitespace' | 'comment' | 'conditional-start' | 
+     *              'whitespace' | 'comment' | 'conditional-start' |
      *              'conditional-end' | 'EOF'
      */
     public $type;
@@ -29,32 +29,6 @@ class Token
     {
         $this->type = $type;
         $this->text = (string) $text;
-    }
-
-    /**
-     * Controls the behaviour of escapeIdentifier().
-     *
-     * If $quoteNames is true, future calls to escapeIdentifier will use 
-     * backquotes to delimit all identifiers. If false, no quoting will take
-     * place.
-     *
-     * $param bool $quoteNames  whether to quote identifiers
-     */
-    public static function setQuoteNames($quoteNames)
-    {
-        self::$_quoteNames = !!$quoteNames;
-    }
-
-    /**
-     * Returns the current state of behaviour for escapeIdentifier().
-     * True indicate that identifiers will be delimited with backquotes;
-     * false indicates that no quoting will take place.
-     *
-     * @return bool
-     */
-    public static function getQuoteNames()
-    {
-        return self::$_quoteNames;
     }
 
     /**
@@ -175,7 +149,7 @@ class Token
         if (!self::$_quoteNames) {
             return $string;
         }
-        $string = strtr($string, [ "`" => "``" ]); 
+        $string = strtr($string, [ "`" => "``" ]);
         return "`" . $string . "`";
     }
 
@@ -228,7 +202,7 @@ class Token
     }
 
     /**
-     * Returns the 
+     * Returns the
      */
     public function asNumber()
     {
@@ -242,7 +216,7 @@ class Token
 
         case 'hex':
             return hexdec($this->text);
-            
+
         case 'bin':
             return bindec($this->text);
 
@@ -285,7 +259,7 @@ class Token
 
 
     public function asDateTime()
-    {   
+    {
         $text = $this->text;
         if ($text === '0') {
             return '0000-00-00 00:00:00';

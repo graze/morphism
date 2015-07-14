@@ -54,17 +54,18 @@ class DumpCommand extends Command
         $streamFactory = new TokenStreamFactory(new ExtractorFactory(), new Filesystem());
         foreach ($connectionNames as $connectionName) {
             $outputHelper->title('Connection: ' . $connectionName);
+
             $connection = $connectionResolver->resolveFromName($connectionName);
             $stream = $streamFactory->buildFromConnection($connection);
-            $entry = $config->getEntry($connectionName);
-            $dumpOutput = null;
 
+            $dumpOutput = null;
             if ($input->getOption('write')) {
                 $dumpOutput = new FileOutput(new Filesystem(), $input->getOption('schema-path'));
             } else {
                 $dumpOutput = new StdOutOutput(new OutputHelper($output));
             }
 
+            $entry = $config->getEntry($connectionName);
             $streamParser = new StreamParser(new CollationInfo(), '', 'InnoDB');
             $dump = $streamParser->parse($stream, new TableSpecification($entry['morphism']['include'], $entry['morphism']['exclude']));
 

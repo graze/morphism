@@ -66,7 +66,7 @@ class DumpCommand extends Command
             }
 
             $entry = $config->getEntry($connectionName);
-            $streamParser = new StreamParser(new CollationInfo(), '', 'InnoDB');
+            $streamParser = new StreamParser(new CollationInfo(), $connectionName, 'InnoDB');
             $dump = $streamParser->parse($stream, new TableSpecification($entry['morphism']['include'], $entry['morphism']['exclude']));
 
             $dumpOutput->output($dump);

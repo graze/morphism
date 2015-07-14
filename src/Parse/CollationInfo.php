@@ -9,7 +9,7 @@ class CollationInfo
     // only bothering to detail the charsets + collations we're actually likely to use
     private static $data = [
         // In the list of collations for each charset, the entry
-        // for the default collation must come first, and the 
+        // for the default collation must come first, and the
         // binary collation last:
         'latin1' => [
             'latin1_swedish_ci',
@@ -31,9 +31,9 @@ class CollationInfo
         ],
     ];
 
-    private $_charset = null;
-    private $_collation = null;
-    private $_isBinaryCollation = null;
+    private $charset;
+    private $collation;
+    private $isBinaryCollation;
 
     /**
      * If neither parameter is specified, creates an object representing an
@@ -63,7 +63,7 @@ class CollationInfo
      */
     public function isSpecified()
     {
-        return !is_null($this->_charset);
+        return !is_null($this->charset);
     }
 
     /**
@@ -75,10 +75,10 @@ class CollationInfo
      */
     public function getCharset()
     {
-        if (is_null($this->_charset)) {
+        if (is_null($this->charset)) {
             throw new \LogicException("getCharset called when collation is unspecified");
         }
-        return $this->_charset;
+        return $this->charset;
     }
 
     /**
@@ -90,13 +90,13 @@ class CollationInfo
      */
     public function getCollation()
     {
-        if (is_null($this->_charset)) {
+        if (is_null($this->charset)) {
             throw new \LogicException("getCollation called when collation is unspecified");
         }
-        if ($this->_isBinaryCollation) {
-            return self::_getCharsetBinaryCollation($this->_charset);
+        if ($this->isBinaryCollation) {
+            return self::getCharsetBinaryCollation($this->charset);
         }
-        return $this->_collation;
+        return $this->collation;
     }
 
     /**
@@ -108,10 +108,10 @@ class CollationInfo
      */
     public function isBinaryCharset()
     {
-        if (is_null($this->_charset)) {
+        if (is_null($this->charset)) {
             throw new \LogicException("isBinaryCharset called when collation is unspecified");
         }
-        return $this->_charset === 'binary';
+        return $this->charset === 'binary';
     }
 
     /**
@@ -123,10 +123,10 @@ class CollationInfo
      */
     public function isDefaultCollation()
     {
-        if (is_null($this->_charset)) {
+        if (is_null($this->charset)) {
             throw new \LogicException("isDefaultCollation called when collation is unspecified");
         }
-        return $this->getCollation() === self::_getCharsetDefaultCollation($this->_charset);
+        return $this->getCollation() === self::getCharsetDefaultCollation($this->charset);
     }
 
     /**
@@ -142,17 +142,17 @@ class CollationInfo
     public function setCharset($charset)
     {
         $charset = strtolower($charset);
-        $defaultCollation = self::_getCharsetDefaultCollation($charset);
+        $defaultCollation = self::getCharsetDefaultCollation($charset);
         if (is_null($defaultCollation)) {
             throw new \RuntimeException("unknown character set '$charset'");
         }
-        if (!is_null($this->_charset) &&
-            $this->_charset !== $charset
+        if (!is_null($this->charset) &&
+            $this->charset !== $charset
         ) {
             throw new \RuntimeException("Conflicting CHARACTER SET declarations");
         }
-        $this->_charset = $charset;
-        $this->_collation = $defaultCollation;
+        $this->charset = $charset;
+        $this->collation = $defaultCollation;
     }
 
     /**
@@ -168,17 +168,17 @@ class CollationInfo
     public function setCollation($collation)
     {
         $collation = strtolower($collation);
-        $charset = self::_getCollationCharset($collation);
+        $charset = self::getCollationCharset($collation);
         if (is_null($charset)) {
             throw new \RuntimeException("unknown collation '$collation'");
         }
-        if (!is_null($this->_charset) &&
-            $this->_charset !== $charset
+        if (!is_null($this->charset) &&
+            $this->charset !== $charset
         ) {
             throw new \RuntimeException("COLLATION '$collation' is not valid for CHARACTER SET '$charset'");
         }
-        $this->_charset = $charset;
-        $this->_collation = $collation;
+        $this->charset = $charset;
+        $this->collation = $collation;
     }
 
     /**
@@ -190,33 +190,33 @@ class CollationInfo
      */
     public function setBinaryCollation()
     {
-        $this->_isBinaryCollation = true;
+        $this->isBinaryCollation = true;
     }
 
-    private static function _getCharsetCollations($charset)
+    private static function getCharsetCollations($charset)
     {
         return array_key_exists($charset, self::$data)
             ? self::$data[$charset]
             : null;
     }
 
-    private static function _getCharsetDefaultCollation($charset)
+    private static function getCharsetDefaultCollation($charset)
     {
-        if (null !== ($collations = self::_getCharsetCollations($charset))) {
+        if (null !== ($collations = self::getCharsetCollations($charset))) {
             return $collations[0];
         }
         return null;
     }
 
-    private static function _getCharsetBinaryCollation($charset)
+    private static function getCharsetBinaryCollation($charset)
     {
-        if (null !== ($collations = self::_getCharsetCollations($charset))) {
+        if (null !== ($collations = self::getCharsetCollations($charset))) {
             return $collations[count($collations) - 1];
         }
         return null;
     }
 
-    private static function _getCollationCharset($collation)
+    private static function getCollationCharset($collation)
     {
         foreach (self::$data as $charset => $collations) {
             if (in_array($collation, $collations)) {

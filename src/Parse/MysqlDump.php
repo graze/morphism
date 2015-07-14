@@ -32,12 +32,12 @@ class MysqlDump
     {
         $ddl = [];
 
-        foreach($this->databases as $database) {
+        foreach ($this->databases as $database) {
             if ($database->name !== '') {
                 $ddl = array_merge($ddl, $database->getDDL());
                 $ddl[] = 'USE ' . Token::escapeIdentifier($database->name);
             }
-            foreach($database->tables as $table) {
+            foreach ($database->tables as $table) {
                 $ddl = array_merge($ddl, $table->getDDL());
             }
         }

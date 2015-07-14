@@ -56,7 +56,7 @@ class Linter
             try {
                 $dump->parse($stream);
                 $this->outputHelper->writelnVerbose('<success> OK </success> ' . $file);
-            } catch(\RuntimeException $e) {
+            } catch (\RuntimeException $e) {
                 $errorFiles[] = $file;
                 $message = $stream->contextualise($e->getMessage());
                 $this->outputHelper->writeln('<error> ERROR </error> ' . $message);

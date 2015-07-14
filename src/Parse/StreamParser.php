@@ -48,7 +48,7 @@ class StreamParser
             $databases = [];
             $database = null;
 
-            while(true) {
+            while (true) {
                 if ($stream->peek('CREATE DATABASE')) {
                     $database = new CreateDatabase($this->defaultCollation);
                     $database->parse($stream);
@@ -77,9 +77,9 @@ class StreamParser
 
             $dump = new MysqlDump($databases);
             return $dump;
-        } catch(RuntimeException $e) {
+        } catch (RuntimeException $e) {
             throw new RuntimeException($stream->contextualise($e->getMessage()));
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             throw new Exception($e->getMessage() . "\n\n" . $e->getTraceAsString());
         }
     }

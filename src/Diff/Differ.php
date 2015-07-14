@@ -81,18 +81,18 @@ class Differ
         $diff = [];
 
         if ($dropDatabase && count($droppedDatabaseNames) > 0) {
-            foreach($droppedDatabaseNames as $databaseName) {
+            foreach ($droppedDatabaseNames as $databaseName) {
                 $diff[] = 'DROP DATABASE IF EXISTS ' . Token::escapeIdentifier($databaseName);
             }
         }
 
         if ($createDatabase) {
-            foreach($createdDatabaseNames as $databaseName) {
+            foreach ($createdDatabaseNames as $databaseName) {
                 /** @var CreateDatabase $thatDatabase */
                 $thatDatabase = $b->databases[$databaseName];
                 $diff[] = $thatDatabase->getDDL();
                 $diff[] = 'USE ' . Token::escapeIdentifier($databaseName);
-                foreach($thatDatabase->tables as $table) {
+                foreach ($thatDatabase->tables as $table) {
                     if (is_null($tableSpecification)
                         || ($tableSpecification && $tableSpecification->isSatisfiedBy($table))) {
                         $diff[] = $table->getDDL();
@@ -101,7 +101,7 @@ class Differ
             }
         }
 
-        foreach($commonDatabaseNames as $databaseName) {
+        foreach ($commonDatabaseNames as $databaseName) {
             $thisDatabase = $a->databases[$databaseName];
             $thatDatabase = $b->databases[$databaseName];
             $databaseDiff = $thisDatabase->diff($thatDatabase, [

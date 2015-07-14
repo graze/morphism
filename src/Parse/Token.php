@@ -17,7 +17,7 @@ class Token
     /** @var string  the textual content of the token */
     public $text;
 
-    static private $_quoteNames = false;
+    private static $_quoteNames = false;
 
     /**
      * Constructor
@@ -78,7 +78,7 @@ class Token
     {
         $text = '';
         $n = strlen($string);
-        for($i = 0; $i < $n; ++$i) {
+        for ($i = 0; $i < $n; ++$i) {
             $ch = $string[$i];
             if ($ch === $quoteChar) {
                 ++$i;
@@ -86,7 +86,7 @@ class Token
             if ($ch === '\\') {
                 ++$i;
                 $ch = $string[$i];
-                switch($ch) {
+                switch ($ch) {
                     case '0': $ch = chr(0); break;
                     case 'b': $ch = chr(8); break;
                     case 'n': $ch = chr(10); break;
@@ -168,7 +168,7 @@ class Token
      */
     public function asString()
     {
-        switch($this->type) {
+        switch ($this->type) {
         case 'string':
             return $this->text;
 
@@ -177,8 +177,7 @@ class Token
             list(, $sign, $value) = $pregMatch;
             if ($value == '') {
                 $value = '0';
-            }
-            else if ($value[0] == '.') {
+            } elseif ($value[0] == '.') {
                 $value = '0' . $value;
             }
             if ($sign == '-') {
@@ -191,7 +190,7 @@ class Token
 
         case 'bin':
             $bytes = '';
-            for($text = $this->text; $text !== ''; $text = substr($text, 0, -8)) {
+            for ($text = $this->text; $text !== ''; $text = substr($text, 0, -8)) {
                 $bytes = chr(bindec(substr($text, -8))) . $bytes;
             }
             return $bytes;
@@ -206,7 +205,7 @@ class Token
      */
     public function asNumber()
     {
-        switch($this->type) {
+        switch ($this->type) {
         case 'number':
             return 0 + $this->text;
 
@@ -235,8 +234,7 @@ class Token
         // but YYYY-MM-DD is the only one we're prepared to accept.
         if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $text, $pregMatch)) {
             return $text;
-        }
-        else {
+        } else {
             throw new \RuntimeException("expected a date");
         }
     }
@@ -251,8 +249,7 @@ class Token
         // but HH:MM:SS is the only one we're prepared to accept.
         if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $text)) {
             return $text;
-        }
-        else {
+        } else {
             throw new \RuntimeException("expected a time");
         }
     }

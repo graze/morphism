@@ -15,7 +15,7 @@ class TableOptions
     /**
      * @var array
      * maps option names to values (string|int|null)
-     */ 
+     */
     public $options = [];
 
     private $_defaultEngine = null;
@@ -62,7 +62,7 @@ class TableOptions
         $this->engine = $this->_defaultEngine;
         $this->options = $this->_defaultOptions;
 
-        while(true) {
+        while (true) {
             $mark = $stream->getMark();
             $token = $stream->nextToken();
             if ($token->type !== 'identifier') {
@@ -89,7 +89,7 @@ class TableOptions
 
     private function _parseOption(TokenStream $stream, $option)
     {
-        switch($option) {
+        switch ($option) {
         case 'ENGINE':
         case 'COLLATE':
         case 'CHARSET':
@@ -152,7 +152,7 @@ class TableOptions
     private static function normaliseEngine($engine)
     {
         $engine = strtoupper($engine);
-        switch($engine) {
+        switch ($engine) {
             case 'INNODB':
                 return 'InnoDB';
             case 'MYISAM':
@@ -164,7 +164,7 @@ class TableOptions
 
     private function setOption($option, $value)
     {
-        switch($option) {
+        switch ($option) {
         case 'ENGINE':
             $this->engine = self::normaliseEngine($value);
             break;
@@ -172,8 +172,7 @@ class TableOptions
         case 'CHARSET':
             if (strtoupper($value) === 'DEFAULT') {
                 $this->collation = new CollationInfo();
-            }
-            else {
+            } else {
                 $this->collation->setCharset($value);
             }
             break;
@@ -181,8 +180,7 @@ class TableOptions
         case 'COLLATE':
             if (strtoupper($value) === 'DEFAULT') {
                 $this->collation = new CollationInfo();
-            }
-            else {
+            } else {
                 $this->collation->setCollation($value);
             }
             break;
@@ -252,7 +250,7 @@ class TableOptions
             }
         }
 
-        foreach([
+        foreach ([
             'MIN_ROWS',
             'MAX_ROWS',
             'AVG_ROW_LENGTH',
@@ -317,7 +315,7 @@ class TableOptions
             }
         }
                 
-        foreach([
+        foreach ([
             'MIN_ROWS',
             'MAX_ROWS',
             'AVG_ROW_LENGTH',
@@ -335,7 +333,6 @@ class TableOptions
             'COMMENT',
             'CONNECTION',
         ] as $option) {
-
             $thisValue = $this->options[$option];
             $thatValue = $that->options[$option];
             if (in_array($option, ['COMMENT', 'CONNECTION'])) {

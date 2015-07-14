@@ -59,7 +59,7 @@ class IndexDefinition
     {
         $this->type = $type;
 
-        switch($type) {
+        switch ($type) {
             case 'PRIMARY KEY':
                 $this->_parseOptionalIndexType($stream);
                 $this->_parseIndexColumns($stream);
@@ -99,8 +99,7 @@ class IndexDefinition
         $token = $stream->nextToken();
         if ($token->type === 'identifier') {
             $this->name = $token->text;
-        }
-        else {
+        } else {
             $stream->rewind($mark);
         }
     }
@@ -116,11 +115,9 @@ class IndexDefinition
     {
         if ($stream->consume('BTREE')) {
             $using = 'BTREE';
-        }
-        else if ($stream->consume('HASH')) {
+        } elseif ($stream->consume('HASH')) {
             $using = 'HASH';
-        }
-        else {
+        } else {
             throw new \RuntimeException("expected BTREE or HASH");
         }
         $this->options['USING'] = $using;
@@ -135,7 +132,7 @@ class IndexDefinition
     {
         $columns = [];
         $stream->expect('symbol', '(');
-        while(true) {
+        while (true) {
             $column = [
                 'name'   => $stream->expectName(),
                 'length' => null,
@@ -147,8 +144,7 @@ class IndexDefinition
             }
             if ($stream->consume('ASC')) {
                 $column['sort'] = 'ASC';
-            }
-            else if ($stream->consume('DESC')) {
+            } elseif ($stream->consume('DESC')) {
                 $column['sort'] = 'DESC';
             }
             $columns[] = $column;
@@ -164,21 +160,17 @@ class IndexDefinition
 
     private function _parseIndexOptions(TokenStream $stream)
     {
-        while(true) {
+        while (true) {
             if ($stream->consume('KEY_BLOCK_SIZE')) {
                 $stream->consume([['symbol', '=']]);
                 $this->options['KEY_BLOCK_SIZE'] = $stream->expectNumber();
-            }
-            else if ($stream->consume('WITH PARSER')) {
+            } elseif ($stream->consume('WITH PARSER')) {
                 $this->options['WITH PARSER'] = $stream->expectName();
-            }
-            else if ($stream->consume('COMMENT')) {
+            } elseif ($stream->consume('COMMENT')) {
                 $this->options['COMMENT'] = $stream->expectString();
-            }
-            else if ($stream->consume('USING')) {
+            } elseif ($stream->consume('USING')) {
                 $this->_parseIndexType($stream);
-            }
-            else {
+            } else {
                 break;
             }
         }
@@ -192,8 +184,7 @@ class IndexDefinition
         if ($stream->consume([['symbol', '.']])) {
             $schema = $tableOrSchema;
             $table = $stream->expectName();
-        }
-        else {
+        } else {
             $schema = null;
             $table = $tableOrSchema;
         }
@@ -204,17 +195,14 @@ class IndexDefinition
         $this->reference['ON DELETE'] = 'RESTRICT';
         $this->reference['ON UPDATE'] = 'RESTRICT';
 
-        while(true) {
+        while (true) {
             if ($stream->consume('MATCH')) {
                 throw new \RuntimeException("MATCH clause is not supported in this tool, or in MySQL itself!");
-            }
-            else if ($stream->consume('ON DELETE')) {
+            } elseif ($stream->consume('ON DELETE')) {
                 $this->_parseReferenceOption($stream, 'ON DELETE');
-            }
-            else if ($stream->consume('ON UPDATE')) {
+            } elseif ($stream->consume('ON UPDATE')) {
                 $this->_parseReferenceOption($stream, 'ON UPDATE');
-            }
-            else {
+            } else {
                 break;
             }
         }
@@ -222,7 +210,7 @@ class IndexDefinition
 
     private function _parseReferenceOption(TokenStream $stream, $clause)
     {
-        foreach(['RESTRICT', 'CASCADE', 'SET NULL', 'NO ACTION'] as $option) {
+        foreach (['RESTRICT', 'CASCADE', 'SET NULL', 'NO ACTION'] as $option) {
             if ($stream->consume($option)) {
                 $this->reference[$clause] = $option;
                 return;
@@ -250,7 +238,7 @@ class IndexDefinition
         //
         $covers = [];
         $cover = [];
-        foreach($this->columns as $column) {
+        foreach ($this->columns as $column) {
             $name = $column['name'];
             if ($column['length']) {
                 $name .= '(' . $column['length'] . ')';
@@ -271,7 +259,7 @@ class IndexDefinition
     public function getColumns()
     {
         $columns = [];
-        foreach($this->columns as $column) {
+        foreach ($this->columns as $column) {
             $name = $column['name'];
             if ($column['length']) {
                 $name .= '(' . $column['length'] . ')';
@@ -297,7 +285,7 @@ class IndexDefinition
             $line .= " " . Token::escapeIdentifier($this->name);
         }
         $cols = [];
-        foreach($this->columns as $column) {
+        foreach ($this->columns as $column) {
             $col = Token::escapeIdentifier($column['name']);
             if (!is_null($column['length'])) {
                 $col .= "(" . $column['length'] . ")";
@@ -326,7 +314,7 @@ class IndexDefinition
             }
             $line .= " REFERENCES $reference";
             $cols = [];
-            foreach($this->reference['columns'] as $column) {
+            foreach ($this->reference['columns'] as $column) {
                 $col = Token::escapeIdentifier($column['name']);
                 if (!is_null($column['length'])) {
                     $col .= "(" . $column['length'] . ")";
@@ -334,7 +322,7 @@ class IndexDefinition
                 $cols[] = $col;
             }
             $line .= " (" . implode(',', $cols) . ")";
-            foreach(['ON DELETE', 'ON UPDATE'] as $clause) {
+            foreach (['ON DELETE', 'ON UPDATE'] as $clause) {
                 $action = $this->reference[$clause];
                 if ($action !== 'RESTRICT') {
                     $line .= " $clause $action";

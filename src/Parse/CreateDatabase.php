@@ -44,13 +44,12 @@ class CreateDatabase
     {
         if ($stream->consume('CREATE DATABASE')) {
             $stream->consume('IF NOT EXISTS');
-        }
-        else {
+        } else {
             throw new \RuntimeException("expected CREATE DATABASE");
         }
 
         $this->name = $stream->expectName();
-        while(true) {
+        while (true) {
             $stream->consume('DEFAULT');
             if ($stream->consume('CHARSET') ||
                 $stream->consume('CHARACTER SET')
@@ -59,22 +58,18 @@ class CreateDatabase
                 $charset = $stream->expectName();
                 if (strtoupper($charset) === 'DEFAULT') {
                     $this->_collation = new CollationInfo();
-                }
-                else {
+                } else {
                     $this->_collation->setCharset($charset);
                 }
-            }
-            else if ($stream->consume('COLLATE')) {
+            } elseif ($stream->consume('COLLATE')) {
                 $stream->consume([['symbol', '=']]);
                 $collation = $stream->expectName();
                 if (strtoupper($collation) === 'DEFAULT') {
                     $this->_collation = new CollationInfo();
-                }
-                else {
+                } else {
                     $this->_collation->setCollation($collation);
                 }
-            }
-            else {
+            } else {
                 break;
             }
         }
@@ -156,7 +151,7 @@ class CreateDatabase
         $diff = [];
 
         if ($flags['dropTable'] && count($droppedTableNames) > 0) {
-            foreach($droppedTableNames as $tableName) {
+            foreach ($droppedTableNames as $tableName) {
                 if (is_null($tableSpecification)
                     || ($tableSpecification && $tableSpecification->isSatisfiedBy($this->tables[$tableName]))) {
                     $diff[] = "DROP TABLE IF EXISTS " . Token::escapeIdentifier($tableName);
@@ -165,7 +160,7 @@ class CreateDatabase
         }
 
         if ($flags['createTable'] && count($createdTableNames) > 0) {
-            foreach($createdTableNames as $tableName) {
+            foreach ($createdTableNames as $tableName) {
                 if (is_null($tableSpecification)
                     || ($tableSpecification && $tableSpecification->isSatisfiedBy($this->tables[$tableName]))) {
                     $diff = array_merge($diff, $that->tables[$tableName]->getDDL());
@@ -173,7 +168,7 @@ class CreateDatabase
             }
         }
 
-        foreach($commonTableNames as $tableName) {
+        foreach ($commonTableNames as $tableName) {
             if (is_null($tableSpecification)
                 || ($tableSpecification && $tableSpecification->isSatisfiedBy($this->tables[$tableName]))) {
                 $thisTable = $this->tables[$tableName];

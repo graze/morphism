@@ -25,7 +25,7 @@ class PathParser
         $files = [];
         foreach ($paths as $path) {
             if (is_dir($path)) {
-                foreach(new \GlobIterator("$path/*.sql") as $fileInfo) {
+                foreach (new \GlobIterator("$path/*.sql") as $fileInfo) {
                     $files[] = $fileInfo->getPathname();
                 }
             } else {

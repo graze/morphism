@@ -41,8 +41,7 @@ class TokenStream
         if ($this->offset >= $this->len) {
             $token = new Token('EOF');
             $this->offset = $this->len;
-        }
-        else {
+        } else {
             list($token, $offset) = $this->_nextTokenRaw($this->text, $this->offset);
             $this->offset = $offset;
         }
@@ -64,7 +63,7 @@ class TokenStream
         //      temporal literals, e.g. DATE'2014-07-08'
         //      the null literal, i.e. \N
 
-        switch($text[$offset]) {
+        switch ($text[$offset]) {
             case " ":
             case "\n":
             case "\r":
@@ -213,7 +212,7 @@ class TokenStream
     private function _getMultilineComment($text, $offset)
     {
         if (substr($text, $offset, 2) === '/*') {
-            if (($pos = strpos($text, '*/', $offset)) !== FALSE) {
+            if (($pos = strpos($text, '*/', $offset)) !== false) {
                 return [
                     new Token('comment', substr($text, $offset, $pos - $offset + 2)),
                     $pos + 2
@@ -227,7 +226,7 @@ class TokenStream
     private function _getComment($text, $offset)
     {
         if (preg_match('/\A(?:#|--\s)/ms', substr($text, $offset, 3))) {
-            if (($pos = strpos($text, "\n", $offset)) !== FALSE) {
+            if (($pos = strpos($text, "\n", $offset)) !== false) {
                 return [
                     new Token('comment', substr($text, $offset, $pos - $offset)),
                     $pos + 1
@@ -333,7 +332,7 @@ class TokenStream
 
     public function nextToken()
     {
-        while(true) {
+        while (true) {
             $token = $this->nextTokenRaw();
             if (!isset(self::$skipTokenTypes[$token->type])) {
                 return $token;
@@ -362,7 +361,7 @@ class TokenStream
         $markInConditional = $this->inConditional;
 
         if (is_string($spec)) {
-            foreach(explode(' ', $spec) as $text) {
+            foreach (explode(' ', $spec) as $text) {
                 $token = $this->nextToken();
                 // inline $token->eq(...)
                 if (
@@ -375,9 +374,8 @@ class TokenStream
                     return false;
                 }
             }
-        }
-        else {
-            foreach($spec as $match) {
+        } else {
+            foreach ($spec as $match) {
                 list($type, $text) = $match;
                 $token = $this->nextToken();
                 // inline $token->eq(...)
@@ -459,7 +457,7 @@ class TokenStream
     public function expectStringExtended()
     {
         $token = $this->nextToken();
-        switch($token->type) {
+        switch ($token->type) {
         case 'string':
             return $token->text;
         case 'hex':
@@ -509,7 +507,7 @@ class TokenStream
 
         $context = '';
         $width = strlen($lineNo + 1 + $postContextLines);
-        foreach($contextLines as $i => $line) {
+        foreach ($contextLines as $i => $line) {
             $context .= sprintf("\n%{$width}d: %s", $i + 1, $line);
         }
 

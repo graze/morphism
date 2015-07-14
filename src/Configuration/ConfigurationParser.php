@@ -21,7 +21,7 @@ class ConfigurationParser
         }
 
         $entries = [];
-        foreach($config['databases'] as $connectionName => $entry) {
+        foreach ($config['databases'] as $connectionName => $entry) {
             if (empty($entry['morphism']['enable'])) {
                 continue;
             }

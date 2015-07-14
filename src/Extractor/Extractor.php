@@ -106,8 +106,7 @@ class Extractor
                 FROM INFORMATION_SCHEMA.SCHEMATA
                 WHERE SCHEMA_NAME NOT IN ('mysql', 'information_schema')
             ");
-        }
-        else {
+        } else {
             $binds = $this->databases;
             $placeholders = self::placeholders($binds);
             $rows = $this->query("
@@ -120,7 +119,7 @@ class Extractor
         }
 
         $schemata = [];
-        foreach($rows as $schema) {
+        foreach ($rows as $schema) {
             $schemata[$schema->SCHEMA_NAME] = $schema;
         }
         return $schemata;
@@ -143,7 +142,7 @@ class Extractor
             $databases
         );
         $tables = [];
-        foreach($rows as $table) {
+        foreach ($rows as $table) {
             $tables[$table->TABLE_SCHEMA][$table->TABLE_NAME] = $table;
         }
         return $tables;
@@ -168,7 +167,7 @@ class Extractor
             $databases
         );
         $columns = [];
-        foreach($rows as $column) {
+        foreach ($rows as $column) {
             $columns[$column->TABLE_SCHEMA][$column->TABLE_NAME][$column->ORDINAL_POSITION] = $column;
         }
         return $columns;
@@ -195,7 +194,7 @@ class Extractor
             $databases
         );
         $keys = [];
-        foreach($rows as $key) {
+        foreach ($rows as $key) {
             $keys[$key->TABLE_SCHEMA][$key->TABLE_NAME][$key->INDEX_NAME][] = $key;
         }
         return $keys;
@@ -222,7 +221,7 @@ class Extractor
             $databases
         );
         $references = [];
-        foreach($rows as $reference) {
+        foreach ($rows as $reference) {
             $references[$reference->TABLE_SCHEMA][$reference->TABLE_NAME][$reference->CONSTRAINT_NAME][] = $reference;
         }
         return $references;
@@ -243,7 +242,7 @@ class Extractor
             $databases
         );
         $constraints = [];
-        foreach($rows as $constraint) {
+        foreach ($rows as $constraint) {
             $constraints[$constraint->CONSTRAINT_SCHEMA][$constraint->TABLE_NAME][$constraint->CONSTRAINT_NAME] = $constraint;
         }
         return $constraints;
@@ -290,7 +289,7 @@ class Extractor
     private function getColumnDefs(array $columns)
     {
         $defColumns = [];
-        foreach($columns as $column) {
+        foreach ($columns as $column) {
             $defColumn = "$column->COLUMN_NAME";
             $defColumn .= " $column->COLUMN_TYPE";
             if (!is_null($column->CHARACTER_SET_NAME)) {
@@ -301,8 +300,7 @@ class Extractor
             }
             if ($column->IS_NULLABLE == 'NO') {
                 $defColumn .= " NOT NULL";
-            }
-            else {
+            } else {
                 $defColumn .= " NULL";
             }
             if (!is_null($column->COLUMN_DEFAULT)) {
@@ -311,8 +309,7 @@ class Extractor
                     $column->COLUMN_DEFAULT == 'CURRENT_TIMESTAMP'
                 ) {
                     $defColumn .= " DEFAULT $column->COLUMN_DEFAULT";
-                }
-                else {
+                } else {
                     $defColumn .= " DEFAULT " . Token::escapeString($column->COLUMN_DEFAULT);
                 }
             }
@@ -337,26 +334,23 @@ class Extractor
     private function getKeyDefs(array $keys)
     {
         $defKeys = [];
-        foreach($keys as $key) {
+        foreach ($keys as $key) {
             $defKey = '';
             $firstKeyPart = $key[0];
             if ($firstKeyPart->INDEX_NAME == 'PRIMARY') {
                 $defKey = 'PRIMARY KEY';
-            }
-            else {
+            } else {
                 $escapedIndexName = Token::escapeIdentifier($firstKeyPart->INDEX_NAME);
                 if ($firstKeyPart->INDEX_TYPE == 'FULLTEXT') {
                     $defKey = "FULLTEXT $escapedIndexName";
-                }
-                else if ($firstKeyPart->NON_UNIQUE) {
+                } elseif ($firstKeyPart->NON_UNIQUE) {
                     $defKey = "KEY $escapedIndexName";
-                }
-                else {
+                } else {
                     $defKey = "UNIQUE KEY $escapedIndexName";
                 }
             }
             $defKeyParts = [];
-            foreach($key as $keyPart) {
+            foreach ($key as $keyPart) {
                 $defKeyPart = $keyPart->COLUMN_NAME;
                 if (!is_null($keyPart->SUB_PART)) {
                     $defKeyPart .= "($keyPart->SUB_PART)";
@@ -379,7 +373,7 @@ class Extractor
     private function getReferenceDefs(array $references, array $constraints)
     {
         $defReferences = [];
-        foreach($references as $reference) {
+        foreach ($references as $reference) {
             $firstRefPart = $reference[0];
             $constraintName = Token::escapeIdentifier($firstRefPart->CONSTRAINT_NAME);
             $referencedTable = Token::escapeIdentifier($firstRefPart->REFERENCED_TABLE_NAME);
@@ -388,7 +382,7 @@ class Extractor
             }
             $defForeignParts = [];
             $defReferenceParts = [];
-            foreach($reference as $referencePart) {
+            foreach ($reference as $referencePart) {
                 $defForeignParts[] = Token::escapeIdentifier($referencePart->COLUMN_NAME);
                 $defReferenceParts[] = Token::escapeIdentifier($referencePart->REFERENCED_COLUMN_NAME);
             }
@@ -484,7 +478,7 @@ class Extractor
         $constraints = $this->getConstraints($databases);
 
         $statements = [];
-        foreach($schemata as $database => $schema) {
+        foreach ($schemata as $database => $schema) {
             if ($this->createDatabase) {
                 $statements = array_merge(
                     $statements,
@@ -493,7 +487,7 @@ class Extractor
                 );
             }
 
-            foreach(isset($tables[$database]) ? $tables[$database] : [] as $tableName => $table) {
+            foreach (isset($tables[$database]) ? $tables[$database] : [] as $tableName => $table) {
                 $tableColumns = $columns[$database][$tableName];
                 $tableKeys = isset($keys[$database][$tableName]) ? $keys[$database][$tableName] : [];
                 $tableReferences = isset($references[$database][$tableName]) ? $references[$database][$tableName] : [];

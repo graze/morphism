@@ -218,7 +218,7 @@ class CollationInfo
 
     private static function _getCollationCharset($collation)
     {
-        foreach(self::$data as $charset => $collations) {
+        foreach (self::$data as $charset => $collations) {
             if (in_array($collation, $collations)) {
                 return $charset;
             }

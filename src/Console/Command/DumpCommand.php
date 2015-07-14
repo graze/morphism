@@ -50,6 +50,14 @@ class DumpCommand extends Command
             $connectionNames = [$input->getArgument('connection')];
         }
 
+        // setup the output
+        $dumpOutput = null;
+        if ($input->getOption('write')) {
+            $dumpOutput = new FileOutput(new Filesystem(), $input->getOption('schema-path'));
+        } else {
+            $dumpOutput = new StdOutOutput(new OutputHelper($output));
+        }
+
         $connectionResolver = new ConnectionResolver($config);
         $streamFactory = new TokenStreamFactory(new ExtractorFactory(), new Filesystem());
         foreach ($connectionNames as $connectionName) {
@@ -57,13 +65,6 @@ class DumpCommand extends Command
 
             $connection = $connectionResolver->resolveFromName($connectionName);
             $stream = $streamFactory->buildFromConnection($connection);
-
-            $dumpOutput = null;
-            if ($input->getOption('write')) {
-                $dumpOutput = new FileOutput(new Filesystem(), $input->getOption('schema-path'));
-            } else {
-                $dumpOutput = new StdOutOutput(new OutputHelper($output));
-            }
 
             $entry = $config->getEntry($connectionName);
             $streamParser = new StreamParser(new CollationInfo(), $connectionName, 'InnoDB');

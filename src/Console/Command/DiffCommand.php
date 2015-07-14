@@ -165,8 +165,12 @@ class DiffCommand extends Command
                         $output->writeln('');
                         $output->writeln('<comment>-- Confirm changes to ' . $connection->getDatabase() . ':</comment>');
 
-                        $applier = new ConfirmableDiffApplier($this->dispatcher, $input, $output,
-                            $this->getHelper('question'));
+                        $applier = new ConfirmableDiffApplier(
+                            $this->dispatcher,
+                            $input,
+                            $output,
+                            $this->getHelper('question')
+                        );
                         $applier->apply($diff, $connection);
                     } else {
                         $applier = new DiffApplier($this->dispatcher);

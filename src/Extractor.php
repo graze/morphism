@@ -132,7 +132,9 @@ class Extractor
         $rows = $this->query("
             SELECT *
             FROM INFORMATION_SCHEMA.TABLES
-            WHERE TABLE_SCHEMA IN ($placeholders)
+            WHERE
+                TABLE_SCHEMA IN ($placeholders) AND
+                TABLE_TYPE = 'BASE TABLE'
             ORDER BY
                 TABLE_SCHEMA,
                 TABLE_NAME

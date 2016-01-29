@@ -50,7 +50,7 @@ class Fastdump implements Argv\Consumer
             case '--no-quote-names':
                 $this->quoteNames = $option->bool();
                 break;
-            
+
             case '--schema-path':
                 $this->schemaPath = $option->required();
                 break;
@@ -59,7 +59,7 @@ class Fastdump implements Argv\Consumer
             case '--no-write':
                 $this->write = $option->bool();
                 break;
-            
+
             default:
                 $option->unrecognised();
                 break;
@@ -81,22 +81,24 @@ class Fastdump implements Argv\Consumer
         $config->parse();
 
         foreach($this->connectionNames as $connectionName) {
-            // the connection name does double duty as the database name
-            // but it should really be specified in the config file itself
-            $databaseName = $connectionName;
+            $connection = $config->getConnection($connectionName);
+            $entry = $config->getEntry($connectionName);
+            $dbName = $entry['connection']['dbname'];
+            $matchTables = $entry['morphism']['matchTables'];
 
             if (!$this->write) {
                 echo "\n";
-                echo "/********* Connection: $connectionName Database: $databaseName *********/\n";
+                echo "/********* Connection: $connectionName Database: $dbName *********/\n";
                 echo "\n";
             }
 
-            $dbh = $config->getConnection($connectionName);
+            $connection = $config->getConnection($connectionName);
             $entry = $config->getEntry($connectionName);
             $matchTables = $entry['morphism']['matchTables'];
+            $directory = $entry['morphism']['definition'];
 
-            $extractor = new Extractor($dbh);
-            $extractor->setDatabases([$databaseName]);
+            $extractor = new Extractor($connection);
+            $extractor->setDatabases([$dbName]);
             $extractor->setCreateDatabases(false);
             $extractor->setQuoteNames($this->quoteNames);
             $text = '';
@@ -117,7 +119,7 @@ class Fastdump implements Argv\Consumer
             }
 
             if ($this->write) {
-                $output = "{$this->schemaPath}/$databaseName";
+                $output = "{$this->schemaPath}/$directory";
 
                 if (!is_dir($output)) {
                     if (!@mkdir($output, 0777, true)) {

@@ -147,9 +147,15 @@ class Diff implements Argv\Consumer
         return $dump;
     }
 
-    private function getTargetSchema($connectionName, $dbName)
+    /**
+     * @param string $filename
+     * @param string $directory
+     *
+     * @return MysqlDump
+     */
+    private function getTargetSchema($directory, $dbName)
     {
-        $path = $this->schemaPath . "/" . $connectionName;
+        $path = $this->schemaPath . "/" . $directory;
 
         return MysqlDump::parseFromPaths(
             [$path],
@@ -206,7 +212,7 @@ class Diff implements Argv\Consumer
 
             switch($response) {
                 case 'y':
-                    $apply = true; 
+                    $apply = true;
                     break;
 
                 case 'n':
@@ -214,7 +220,7 @@ class Diff implements Argv\Consumer
                     break;
 
                 case 'a':
-                    $apply = true; 
+                    $apply = true;
                     $confirm = false;
                     $defaultResponse = 'y';
                     break;
@@ -233,7 +239,7 @@ class Diff implements Argv\Consumer
                 $connection->executeQuery($query);
             }
             else if ($logHandle && $this->logSkipped) {
-                fwrite($logHandle, 
+                fwrite($logHandle,
                     "-- [SKIPPED]\n" .
                     preg_replace('/^/xms', '-- ', $query) .  ";\n" .
                     "\n"
@@ -249,8 +255,8 @@ class Diff implements Argv\Consumer
             $config->parse();
 
             $connectionNames =
-                (count($this->connectionNames) > 0) 
-                    ? $this->connectionNames 
+                (count($this->connectionNames) > 0)
+                    ? $this->connectionNames
                     : $config->getConnectionNames();
 
             Token::setQuoteNames($this->quoteNames);
@@ -271,12 +277,13 @@ class Diff implements Argv\Consumer
                 $connection = $config->getConnection($connectionName);
                 $entry = $config->getEntry($connectionName);
                 $dbName = $entry['connection']['dbname'];
+                $directory = $entry['morphism']['definition'];
                 $matchTables = [
                     $dbName => $entry['morphism']['matchTables'],
                 ];
 
                 $currentSchema = $this->getCurrentSchema($connection, $dbName);
-                $targetSchema = $this->getTargetSchema($connectionName, $dbName);
+                $targetSchema = $this->getTargetSchema($directory, $dbName);
 
                 $diff = $currentSchema->diff(
                     $targetSchema,
@@ -305,5 +312,3 @@ class Diff implements Argv\Consumer
         }
     }
 }
-
-

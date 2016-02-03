@@ -206,7 +206,7 @@ class Diff implements Argv\Consumer
 
             switch($response) {
                 case 'y':
-                    $apply = true; 
+                    $apply = true;
                     break;
 
                 case 'n':
@@ -214,7 +214,7 @@ class Diff implements Argv\Consumer
                     break;
 
                 case 'a':
-                    $apply = true; 
+                    $apply = true;
                     $confirm = false;
                     $defaultResponse = 'y';
                     break;
@@ -233,7 +233,7 @@ class Diff implements Argv\Consumer
                 $connection->executeQuery($query);
             }
             else if ($logHandle && $this->logSkipped) {
-                fwrite($logHandle, 
+                fwrite($logHandle,
                     "-- [SKIPPED]\n" .
                     preg_replace('/^/xms', '-- ', $query) .  ";\n" .
                     "\n"
@@ -249,8 +249,8 @@ class Diff implements Argv\Consumer
             $config->parse();
 
             $connectionNames =
-                (count($this->connectionNames) > 0) 
-                    ? $this->connectionNames 
+                (count($this->connectionNames) > 0)
+                    ? $this->connectionNames
                     : $config->getConnectionNames();
 
             Token::setQuoteNames($this->quoteNames);
@@ -281,8 +281,6 @@ class Diff implements Argv\Consumer
                 $diff = $currentSchema->diff(
                     $targetSchema,
                     [
-                        'createDatabase' => false,
-                        'dropDatabase'   => false,
                         'createTable'    => $this->createTable,
                         'dropTable'      => $this->dropTable,
                         'alterEngine'    => $this->alterEngine,
@@ -290,11 +288,23 @@ class Diff implements Argv\Consumer
                     ]
                 );
 
-                foreach($diff as $query) {
+                $statements = array_reduce($diff, function ($acc, $item) {
+                    if (is_array($item)) {
+                        foreach ($item as $statement) {
+                            $acc[] = $statement;
+                        }
+                    } else {
+                        $acc[] = $item;
+                    }
+
+                    return $acc;
+                }, []);
+
+                foreach($statements as $query) {
                     echo "$query;\n\n";
                 }
 
-                $this->applyChanges($connection, $connectionName, $diff);
+                $this->applyChanges($connection, $connectionName, $statements);
             }
         }
         catch(\RuntimeException $e) {
@@ -305,5 +315,3 @@ class Diff implements Argv\Consumer
         }
     }
 }
-
-

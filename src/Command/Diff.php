@@ -16,7 +16,6 @@ class Diff implements Argv\Consumer
     private $createTable = true;
     private $dropTable = true;
     private $alterEngine = true;
-    private $schemaPath = './schema';
     private $configFile = null;
     private $connectionNames = [];
     private $applyChanges = 'no';
@@ -91,10 +90,6 @@ class Diff implements Argv\Consumer
                 $this->alterEngine = $option->bool();
                 break;
 
-            case '--schema-path':
-                $this->schemaPath = $option->required();
-                break;
-
             case '--apply-changes':
                 $applyChanges = $option->required();
                 if (!in_array($applyChanges, ['yes', 'no', 'confirm'])) {
@@ -155,10 +150,8 @@ class Diff implements Argv\Consumer
      */
     private function getTargetSchema($directory, $dbName)
     {
-        $path = $this->schemaPath . "/" . $directory;
-
         return MysqlDump::parseFromPaths(
-            [$path],
+            [$directory],
             $this->engine,
             $this->collation,
             $dbName

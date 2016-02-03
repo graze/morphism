@@ -11,7 +11,6 @@ class Fastdump implements Argv\Consumer
 {
     private $quoteNames = true;
     private $configFile = null;
-    private $schemaPath = './schema';
     private $write = false;
     private $connectionNames = [];
 
@@ -49,10 +48,6 @@ class Fastdump implements Argv\Consumer
             case '--quote-names':
             case '--no-quote-names':
                 $this->quoteNames = $option->bool();
-                break;
-
-            case '--schema-path':
-                $this->schemaPath = $option->required();
                 break;
 
             case '--write':
@@ -119,16 +114,14 @@ class Fastdump implements Argv\Consumer
             }
 
             if ($this->write) {
-                $output = "{$this->schemaPath}/$directory";
-
-                if (!is_dir($output)) {
-                    if (!@mkdir($output, 0777, true)) {
-                        throw new \RuntimeException("could not make directory $output");
+                if (!is_dir($directory)) {
+                    if (!@mkdir($directory, 0777, true)) {
+                        throw new \RuntimeException("could not make directory $directory");
                     }
                 }
                 $database = reset($dump->databases);
                 foreach($database->tables as $table) {
-                    $path = "$output/{$table->name}.sql";
+                    $path = "$directory/{$table->name}.sql";
                     $text = '';
                     foreach($table->getDDL() as $query) {
                         $text .= "$query;\n\n";

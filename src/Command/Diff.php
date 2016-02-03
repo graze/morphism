@@ -39,7 +39,6 @@ class Diff implements Argv\Consumer
             "  --[no-]create-table    output CREATE TABLE statements; default: yes\n" .
             "  --[no-]drop-table      output DROP TABLE statements; default: yes\n" .
             "  --[no-]alter-engine    output ALTER TABLE ... ENGINE=...; default: yes\n" .
-            "  --schema-path=PATH     location of schemas; default: ./schema\n" .
             "  --apply-changes=WHEN   apply changes (yes/no/confirm); default: no\n" .
             "  --log-dir=DIR          log applied changes to DIR - one log file will be\n" .
             "                         created per connection; default: none\n" .
@@ -144,14 +143,14 @@ class Diff implements Argv\Consumer
 
     /**
      * @param string $filename
-     * @param string $directory
+     * @param string $schemaDefinitionPath
      *
      * @return MysqlDump
      */
-    private function getTargetSchema($directory, $dbName)
+    private function getTargetSchema($schemaDefinitionPath, $dbName)
     {
         return MysqlDump::parseFromPaths(
-            [$directory],
+            [$schemaDefinitionPath],
             $this->engine,
             $this->collation,
             $dbName
@@ -270,13 +269,13 @@ class Diff implements Argv\Consumer
                 $connection = $config->getConnection($connectionName);
                 $entry = $config->getEntry($connectionName);
                 $dbName = $entry['connection']['dbname'];
-                $directory = $entry['morphism']['definition'];
+                $schemaDefinitionPath = $entry['morphism']['schemaDefinitionPath'];
                 $matchTables = [
                     $dbName => $entry['morphism']['matchTables'],
                 ];
 
                 $currentSchema = $this->getCurrentSchema($connection, $dbName);
-                $targetSchema = $this->getTargetSchema($directory, $dbName);
+                $targetSchema = $this->getTargetSchema($schemaDefinitionPath, $dbName);
 
                 $diff = $currentSchema->diff(
                     $targetSchema,

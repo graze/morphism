@@ -2,7 +2,7 @@
 
 <img src="http://i.imgur.com/FuzIxpl.jpg" alt="Keep Moving" align="right" width="240"/>
 
-This package provides a set of tools for parsing, extracting, and diffing mysqldump 
+This package provides a set of tools for parsing, extracting, and diffing mysqldump
 files.
 
 A typical application of this is for managing schema changes during application
@@ -18,15 +18,15 @@ on several different possible versions of the future state of the schema in
 parallel as you switch between different development branches.
 
 After some discussion with interested parties, we agreed to develop a tool that
-would allow us to store the complete database schema in the repo. When a branch 
+would allow us to store the complete database schema in the repo. When a branch
 requires a schema update to work properly, you should edit your checkout's schema
 and run the new tool to figure out the necessary ALTER / CREATE / DROP statements
 to run, and apply them. Similarly, when switching branches you can simply run the
 tool and it will apply the necessary changes automatically.
 
 This has the additional benefit that the complete history of the schema is stored
-under version control, instead of a series of incremental change scripts. If more 
-than one party changes the same table, git will merge the changes automatically, 
+under version control, instead of a series of incremental change scripts. If more
+than one party changes the same table, git will merge the changes automatically,
 or generate a conflict for manual merging where it cannot. All the usual git tools
 become useful - e.g. a simple "git annotate schema/live_web/product.sql" can tell
 you who added a redundant index on 'pr\_name'.
@@ -63,7 +63,6 @@ than mysqldump, especially for large schemas. You might use this tool to
 OPTIONS
   -h, -help, --help   display this message, and exit
   --[no-]quote-names  [do not] quote names with `...`; default: no
-  --schema-path=PATH  location of schemas; default: ./schema
   --[no-]write        write schema files to schema path; default: no
 
 CONFIG-FILE
@@ -102,7 +101,6 @@ GENERAL OPTIONS:
   --[no-]create-table    output CREATE TABLE statements; default: yes
   --[no-]drop-table      output DROP TABLE statements; default: yes
   --[no-]alter-engine    output ALTER TABLE ... ENGINE=...; default: yes
-  --schema-path=PATH     location of schemas; default: ./schema
   --apply-changes=WHEN   apply changes (yes/no/confirm); default: no
   --log-dir=DIR          log applied changes to DIR - one log file will be
                          created per connection; default: none
@@ -158,7 +156,7 @@ databases:
 (master) $ vendor/bin/morphism-dump --write config.yml catalog
 (master) $ git add schema/catalog
 (master) $ git commit -m "initial checkin of catalog schema"
-(master) $ 
+(master) $
 (master) $ # start work on changes to the catalog...
 (master) $ git checkout -b catalog-fixes
 (catalog-fixes) $ vi schema/catalog/product.sql             # edit table definition

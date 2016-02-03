@@ -25,7 +25,6 @@ class Fastdump implements Argv\Consumer
             "OPTIONS\n" .
             "  -h, -help, --help   display this message, and exit\n" .
             "  --[no-]quote-names  [do not] quote names with `...`; default: no\n" .
-            "  --schema-path=PATH  location of schemas; default: ./schema\n" .
             "  --[no-]write        write schema files to schema path; default: no\n" .
             "\n" .
             "CONFIG-FILE\n" .
@@ -90,7 +89,7 @@ class Fastdump implements Argv\Consumer
             $connection = $config->getConnection($connectionName);
             $entry = $config->getEntry($connectionName);
             $matchTables = $entry['morphism']['matchTables'];
-            $directory = $entry['morphism']['definition'];
+            $schemaDefinitionPath = $entry['morphism']['schemaDefinitionPath'];
 
             $extractor = new Extractor($connection);
             $extractor->setDatabases([$dbName]);
@@ -114,14 +113,14 @@ class Fastdump implements Argv\Consumer
             }
 
             if ($this->write) {
-                if (!is_dir($directory)) {
-                    if (!@mkdir($directory, 0777, true)) {
-                        throw new \RuntimeException("could not make directory $directory");
+                if (!is_dir($schemaDefinitionPath)) {
+                    if (!@mkdir($schemaDefinitionPath, 0777, true)) {
+                        throw new \RuntimeException("could not make directory $schemaDefinitionPath");
                     }
                 }
                 $database = reset($dump->databases);
                 foreach($database->tables as $table) {
-                    $path = "$directory/{$table->name}.sql";
+                    $path = "$schemaDefinitionPath/{$table->name}.sql";
                     $text = '';
                     foreach($table->getDDL() as $query) {
                         $text .= "$query;\n\n";

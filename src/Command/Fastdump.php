@@ -11,7 +11,6 @@ class Fastdump implements Argv\Consumer
 {
     private $quoteNames = true;
     private $configFile = null;
-    private $schemaPath = './schema';
     private $write = false;
     private $connectionNames = [];
 
@@ -26,7 +25,6 @@ class Fastdump implements Argv\Consumer
             "OPTIONS\n" .
             "  -h, -help, --help   display this message, and exit\n" .
             "  --[no-]quote-names  [do not] quote names with `...`; default: no\n" .
-            "  --schema-path=PATH  location of schemas; default: ./schema\n" .
             "  --[no-]write        write schema files to schema path; default: no\n" .
             "\n" .
             "CONFIG-FILE\n" .
@@ -50,16 +48,12 @@ class Fastdump implements Argv\Consumer
             case '--no-quote-names':
                 $this->quoteNames = $option->bool();
                 break;
-            
-            case '--schema-path':
-                $this->schemaPath = $option->required();
-                break;
 
             case '--write':
             case '--no-write':
                 $this->write = $option->bool();
                 break;
-            
+
             default:
                 $option->unrecognised();
                 break;
@@ -81,22 +75,21 @@ class Fastdump implements Argv\Consumer
         $config->parse();
 
         foreach($this->connectionNames as $connectionName) {
-            // the connection name does double duty as the database name
-            // but it should really be specified in the config file itself
-            $databaseName = $connectionName;
+            $connection = $config->getConnection($connectionName);
+
+            $entry = $config->getEntry($connectionName);
+            $dbName = $entry['connection']['dbname'];
+            $matchTables = $entry['morphism']['matchTables'];
+            $schemaDefinitionPath = $entry['morphism']['schemaDefinitionPath'];
 
             if (!$this->write) {
                 echo "\n";
-                echo "/********* Connection: $connectionName Database: $databaseName *********/\n";
+                echo "/********* Connection: $connectionName Database: $dbName *********/\n";
                 echo "\n";
             }
 
-            $dbh = $config->getConnection($connectionName);
-            $entry = $config->getEntry($connectionName);
-            $matchTables = $entry['morphism']['matchTables'];
-
-            $extractor = new Extractor($dbh);
-            $extractor->setDatabases([$databaseName]);
+            $extractor = new Extractor($connection);
+            $extractor->setDatabases([$dbName]);
             $extractor->setCreateDatabases(false);
             $extractor->setQuoteNames($this->quoteNames);
             $text = '';
@@ -117,16 +110,14 @@ class Fastdump implements Argv\Consumer
             }
 
             if ($this->write) {
-                $output = "{$this->schemaPath}/$databaseName";
-
-                if (!is_dir($output)) {
-                    if (!@mkdir($output, 0777, true)) {
-                        throw new \RuntimeException("could not make directory $output");
+                if (!is_dir($schemaDefinitionPath)) {
+                    if (!@mkdir($schemaDefinitionPath, 0777, true)) {
+                        throw new \RuntimeException("could not make directory $schemaDefinitionPath");
                     }
                 }
                 $database = reset($dump->databases);
                 foreach($database->tables as $table) {
-                    $path = "$output/{$table->name}.sql";
+                    $path = "$schemaDefinitionPath/{$table->name}.sql";
                     $text = '';
                     foreach($table->getDDL() as $query) {
                         $text .= "$query;\n\n";

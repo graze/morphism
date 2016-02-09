@@ -142,10 +142,10 @@ class Diff implements Argv\Consumer
     }
 
     /**
-     * @param string $filename
      * @param string $schemaDefinitionPath
+     * @param string $dbName
      *
-     * @return MysqlDump
+     * @return MySqlDump
      */
     private function getTargetSchema($schemaDefinitionPath, $dbName)
     {

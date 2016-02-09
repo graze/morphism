@@ -76,20 +76,17 @@ class Fastdump implements Argv\Consumer
 
         foreach($this->connectionNames as $connectionName) {
             $connection = $config->getConnection($connectionName);
+
             $entry = $config->getEntry($connectionName);
             $dbName = $entry['connection']['dbname'];
             $matchTables = $entry['morphism']['matchTables'];
+            $schemaDefinitionPath = $entry['morphism']['schemaDefinitionPath'];
 
             if (!$this->write) {
                 echo "\n";
                 echo "/********* Connection: $connectionName Database: $dbName *********/\n";
                 echo "\n";
             }
-
-            $connection = $config->getConnection($connectionName);
-            $entry = $config->getEntry($connectionName);
-            $matchTables = $entry['morphism']['matchTables'];
-            $schemaDefinitionPath = $entry['morphism']['schemaDefinitionPath'];
 
             $extractor = new Extractor($connection);
             $extractor->setDatabases([$dbName]);

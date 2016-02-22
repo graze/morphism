@@ -253,8 +253,8 @@ class MysqlDump
                 $diff[] = "USE " . Token::escapeIdentifier($databaseName);
                 foreach($thatDatabase->tables as $table) {
                     if (
-                        ($includeTablesRegex == '' || preg_match($includeTablesRegex, $tableName)) &&
-                        ($excludeTablesRegex == '' || !preg_match($excludeTablesRegex, $tableName))
+                        ($includeTablesRegex == '' || preg_match($includeTablesRegex, $table->name)) &&
+                        ($excludeTablesRegex == '' || !preg_match($excludeTablesRegex, $table->name))
                     ) {
                         $diff[] = $table->getDDL($thatDatabase->getCollation());
                     }

@@ -3,6 +3,9 @@ default:
 
 .PHONY: test default
 
+install:
+	@ composer install
+
 # Run test suite
 test:
 	@./vendor/bin/phpunit --testsuite tests

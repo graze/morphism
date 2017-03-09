@@ -1,4 +1,4 @@
-# Graze\morphism #
+# morphism
 
 <img src="http://i.imgur.com/FuzIxpl.jpg" alt="Keep Moving" align="right" width="240"/>
 
@@ -10,17 +10,17 @@ development (keeping schemas in sync with code when switching branches), and dur
 deployment (migrating the schema to match the deployed code).
 
 We were previously using an internally developed database migration tool ("migrant")
-which relies on 'up' and 'down' scripts to manage migration between schema versions.
-This has a number of issues however. In particular it assumes that schema evolution
+which relied on 'up' and 'down' scripts to manage migration between schema versions.
+This had a number of issues however. In particular it assumes that schema evolution
 is linear - you can only ever move forward in time to a newer version, or back to
 an older version. In practice, modern development is such that you may be working
 on several different possible versions of the future state of the schema in
 parallel as you switch between different development branches.
 
-After some discussion with interested parties, we agreed to develop a tool that
-would allow us to store the complete database schema in the repo. When a branch
+We decide to develop a tool that
+would allow us to store the complete database schema in the repository. When a branch
 requires a schema update to work properly, you should edit your checkout's schema
-and run the new tool to figure out the necessary ALTER / CREATE / DROP statements
+and run the new tool to figure out the necessary `ALTER` / `CREATE` / `DROP` statements
 to run, and apply them. Similarly, when switching branches you can simply run the
 tool and it will apply the necessary changes automatically.
 
@@ -28,16 +28,16 @@ This has the additional benefit that the complete history of the schema is store
 under version control, instead of a series of incremental change scripts. If more
 than one party changes the same table, git will merge the changes automatically,
 or generate a conflict for manual merging where it cannot. All the usual git tools
-become useful - e.g. a simple "git annotate schema/live_web/product.sql" can tell
-you who added a redundant index on 'pr\_name'.
+become useful - e.g. a simple `git annotate schema/catalog/product.sql` can tell
+you who added a redundant index on `pr_name`.
 
-### Unit tests ###
+## Unit tests
 
-Execute ```make test``` from a shell prompt to run this package's unit test suite.
+Execute ```make test``` from a shell prompt to run the unit test suite.
 
-### Tools ###
+## Tools
 
-#### morphism-extract ####
+### morphism-extract
 ```
 Usage: morphism-extract [OPTIONS] [MYSQL-DUMP-FILE]
 Extracts schema definition(s) from a mysqldump file. Multiple databases may
@@ -53,7 +53,7 @@ OPTIONS
   --[no-]write        write schema files to schema path; default: no
 ```
 
-#### morphism-dump ####
+### morphism-dump
 ```
 Usage: morphism-dump [OPTIONS] CONFIG-FILE CONN [CONN ...]
 Dumps database schemas for named connections. This tool is considerably faster
@@ -70,7 +70,7 @@ A YAML file mapping connection names to parameters. See the morphism project's
 README.md file for detailed information.
 ```
 
-#### morphism-lint ####
+### morphism-lint
 ```
 Usage: morphism-lint [OPTIONS] PATH ...
 Checks all schema files below the specified paths for correctness. If no PATH
@@ -85,7 +85,7 @@ EXIT STATUS
 The exit status will be 1 if any errors were detected, or 0 otherwise.
 ```
 
-#### morphism-diff ####
+### morphism-diff
 ```
 Usage: morphism-diff [OPTION] CONFIG-FILE [CONN] ...
 Extracts schema definitions from the named connections, and outputs the
@@ -111,7 +111,7 @@ A YAML file mapping connection names to parameters. See the morphism project's
 README.md file for detailed information.
 ```
 
-### Config File ###
+## Config File
 
 The config file used by some of morphism's tools uses yaml format, as follows:
 
@@ -148,7 +148,7 @@ databases:
 ...
 ```
 
-### Example Usage ###
+## Example Usage
 
 ```
 (master) $ # create a baseline for the schema
@@ -161,12 +161,12 @@ databases:
 (master) $ git checkout -b catalog-fixes
 (catalog-fixes) $ vi schema/catalog/product.sql             # edit table definition
 (catalog-fixes) $ vi schema/catalog/product_dimensions.sql  # add new table
-(catalog-fixes) $ vendor/bin/morphism-lint schema/live_web # check syntax
+(catalog-fixes) $ vendor/bin/morphism-lint schema/catalog   # check syntax
 ERROR schema/catalog/product_dimensions.sql, line 2: unknown datatype 'intt'
 1: CREATE TABLE product_dimensions (
 2:   `pd_id` intt<<HERE>>(10) unsigned NOT NULL AUTO_INCREMENT,
 (catalog-fixes) $ vi schema/catalog/product_dimensions.sql  # fix table definition
-(catalog-fixes) $ vendor/bin/morphism-lint schema/live_web # check syntax
+(catalog-fixes) $ vendor/bin/morphism-lint schema/catalog   # check syntax
 (catalog-fixes) $ git add schema/catalog
 (catalog-fixes) $ git rm schema/catalog/discontinued.sql    # delete a table
 (catalog-fixes) $ git commit -m "various changes to catalog schema"
@@ -221,7 +221,7 @@ CREATE TABLE `product_dimensions` (
 ```
 
 
-### License ###
+## License
 The content of this library is released under the **MIT License** by **Nature Delivered Ltd**.<br/>
 You can find a copy of this license at http://www.opensource.org/licenses/mit or in [`LICENSE`][license]
 

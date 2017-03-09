@@ -48,79 +48,12 @@ $ composer require graze/morphism
 
 ## Tools
 
-### morphism-extract
-```
-Usage: morphism-extract [OPTIONS] [MYSQL-DUMP-FILE]
-Extracts schema definition(s) from a mysqldump file. Multiple databases may
-be defined in the dump, and they will be extracted to separate directories.
-You might use this tool when initialising the schema directory from a dump
-created on a production server with 'mysqldump --no-data'.
+All commands support the `--help` parameter which give more information on usage.
 
-OPTIONS
-  -h, -help, --help   display this message, and exit
-  --[no-]quote-names  [do not] quote names with `...`; default: no
-  --schema-path=PATH  location of schemas; default: ./schema
-  --database=NAME     name of database if not specified in dump
-  --[no-]write        write schema files to schema path; default: no
-```
-
-### morphism-dump
-```
-Usage: morphism-dump [OPTIONS] CONFIG-FILE CONN [CONN ...]
-Dumps database schemas for named connections. This tool is considerably faster
-than mysqldump, especially for large schemas. You might use this tool to
-(re-)initalise your project's schema directory from a local database.
-
-OPTIONS
-  -h, -help, --help   display this message, and exit
-  --[no-]quote-names  [do not] quote names with `...`; default: no
-  --[no-]write        write schema files to schema path; default: no
-
-CONFIG-FILE
-A YAML file mapping connection names to parameters. See the morphism project's
-README.md file for detailed information.
-```
-
-### morphism-lint
-```
-Usage: morphism-lint [OPTIONS] PATH ...
-Checks all schema files below the specified paths for correctness. If no PATH
-is given, checks standard input. By default output is only produced if errors
-are detected.
-
-OPTIONS
-  -h, -help, --help   display this message, and exit
-  --[no-]verbose      include valid files in output; default: no
-
-EXIT STATUS
-The exit status will be 1 if any errors were detected, or 0 otherwise.
-```
-
-### morphism-diff
-```
-Usage: morphism-diff [OPTION] CONFIG-FILE [CONN] ...
-Extracts schema definitions from the named connections, and outputs the
-necessary ALTER TABLE statements to transform them into what is defined
-under the schema path. If no connections are specified, all connections
-in the config with 'morphism: enable: true' will be used.
-
-GENERAL OPTIONS:
-  -h, -help, --help      display this message, and exit
-  --engine=ENGINE        set the default database engine
-  --collation=COLLATION  set the default collation
-  --[no-]quote-names     quote names with `...`; default: yes
-  --[no-]create-table    output CREATE TABLE statements; default: yes
-  --[no-]drop-table      output DROP TABLE statements; default: yes
-  --[no-]alter-engine    output ALTER TABLE ... ENGINE=...; default: yes
-  --apply-changes=WHEN   apply changes (yes/no/confirm); default: no
-  --log-dir=DIR          log applied changes to DIR - one log file will be
-                         created per connection; default: none
-  --[no-]log-skipped     log skipped queries (commented out); default: yes
-
-CONFIG-FILE
-A YAML file mapping connection names to parameters. See the morphism project's
-README.md file for detailed information.
-```
+* **morphism-extract**: Extract schema definitions from a mysqldump file.
+* **morphism-dump**: Dump database schema for a named database connection.
+* **morphism-lint**: Check database schema files for correctness.
+* **morphism-diff**: Show necessary DDL statements to make a given database match the schema files. Optionally apply the changes too.
 
 ## Config File
 

@@ -1,6 +1,11 @@
 # morphism
 
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/graze/morphism.svg?style=flat-square)](https://packagist.org/packages/graze/morphism)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
+[![Build Status](https://img.shields.io/travis/graze/morphism/master.svg?style=flat-square)](https://travis-ci.org/graze/morphism)
+[![Coverage Status](https://img.shields.io/scrutinizer/coverage/g/graze/morphism.svg?style=flat-square)](https://scrutinizer-ci.com/g/graze/morphism/code-structure)
+[![Quality Score](https://img.shields.io/scrutinizer/g/graze/morphism.svg?style=flat-square)](https://scrutinizer-ci.com/g/graze/morphism)
+[![Total Downloads](https://img.shields.io/packagist/dt/graze/morphism.svg?style=flat-square)](https://packagist.org/packages/graze/morphism)
 
 <img src="http://i.imgur.com/FuzIxpl.jpg" alt="Keep Moving" align="right" width="240"/>
 
@@ -40,10 +45,6 @@ Via Composer
 ``` bash
 $ composer require graze/morphism
 ```
-
-## Unit tests
-
-Execute ```make test``` from a shell prompt to run the unit test suite.
 
 ## Tools
 
@@ -230,11 +231,21 @@ CREATE TABLE `product_dimensions` (
 (master) $ vendor/bin/morphism-diff --apply-changes=yes config.yml catalog
 ```
 
+## Testing
+
+``` bash
+$ make test
+```
+
+
+## Security
+
+If you discover any security related issues, please email security@graze.com instead of using the issue tracker.
+
+## Credits
+
+- [All Contributors](../../contributors)
 
 ## License
-The content of this library is released under the **MIT License** by **Nature Delivered Ltd**.<br/>
-You can find a copy of this license at http://www.opensource.org/licenses/mit or in [`LICENSE`][license]
 
-
-<!-- Links -->
-[license]: /LICENSE
+The MIT License (MIT). Please see [License File](LICENSE.md) for more information.

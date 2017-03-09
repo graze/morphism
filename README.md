@@ -33,6 +33,14 @@ or generate a conflict for manual merging where it cannot. All the usual git too
 become useful - e.g. a simple `git annotate schema/catalog/product.sql` can tell
 you who added a redundant index on `pr_name`.
 
+## Install
+
+Via Composer
+
+``` bash
+$ composer require graze/morphism
+```
+
 ## Unit tests
 
 Execute ```make test``` from a shell prompt to run the unit test suite.

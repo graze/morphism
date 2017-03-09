@@ -1,6 +1,13 @@
-# Graze\morphism #
+# morphism
 
-<img src="http://i.imgur.com/FuzIxpl.jpg" alt="Keep Moving" align="right" width="240"/>
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/graze/morphism.svg?style=flat-square)](https://packagist.org/packages/graze/morphism)
+[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
+[![Build Status](https://img.shields.io/travis/graze/morphism/master.svg?style=flat-square)](https://travis-ci.org/graze/morphism)
+[![Coverage Status](https://img.shields.io/scrutinizer/coverage/g/graze/morphism.svg?style=flat-square)](https://scrutinizer-ci.com/g/graze/morphism/code-structure)
+[![Quality Score](https://img.shields.io/scrutinizer/g/graze/morphism.svg?style=flat-square)](https://scrutinizer-ci.com/g/graze/morphism)
+[![Total Downloads](https://img.shields.io/packagist/dt/graze/morphism.svg?style=flat-square)](https://packagist.org/packages/graze/morphism)
+
+<img src="http://i.imgur.com/QSX6EUj.gif" alt="Morph and Chas" align="right" />
 
 This package provides a set of tools for parsing, extracting, and diffing mysqldump
 files.
@@ -9,18 +16,10 @@ A typical application of this is for managing schema changes during application
 development (keeping schemas in sync with code when switching branches), and during
 deployment (migrating the schema to match the deployed code).
 
-We were previously using an internally developed database migration tool ("migrant")
-which relies on 'up' and 'down' scripts to manage migration between schema versions.
-This has a number of issues however. In particular it assumes that schema evolution
-is linear - you can only ever move forward in time to a newer version, or back to
-an older version. In practice, modern development is such that you may be working
-on several different possible versions of the future state of the schema in
-parallel as you switch between different development branches.
-
-After some discussion with interested parties, we agreed to develop a tool that
-would allow us to store the complete database schema in the repo. When a branch
+Using this tool allows you to store the complete database schema in the repository.
+When a branch
 requires a schema update to work properly, you should edit your checkout's schema
-and run the new tool to figure out the necessary ALTER / CREATE / DROP statements
+and run the new tool to figure out the necessary `ALTER` / `CREATE` / `DROP` statements
 to run, and apply them. Similarly, when switching branches you can simply run the
 tool and it will apply the necessary changes automatically.
 
@@ -28,90 +27,27 @@ This has the additional benefit that the complete history of the schema is store
 under version control, instead of a series of incremental change scripts. If more
 than one party changes the same table, git will merge the changes automatically,
 or generate a conflict for manual merging where it cannot. All the usual git tools
-become useful - e.g. a simple "git annotate schema/live_web/product.sql" can tell
-you who added a redundant index on 'pr\_name'.
+become useful - e.g. a simple `git annotate schema/catalog/product.sql` can tell
+you who added a redundant index on `pr_name`.
 
-### Unit tests ###
+## Install
 
-Execute ```make test``` from a shell prompt to run this package's unit test suite.
+Via Composer
 
-### Tools ###
-
-#### morphism-extract ####
-```
-Usage: morphism-extract [OPTIONS] [MYSQL-DUMP-FILE]
-Extracts schema definition(s) from a mysqldump file. Multiple databases may
-be defined in the dump, and they will be extracted to separate directories.
-You might use this tool when initialising the schema directory from a dump
-created on a production server with 'mysqldump --no-data'.
-
-OPTIONS
-  -h, -help, --help   display this message, and exit
-  --[no-]quote-names  [do not] quote names with `...`; default: no
-  --schema-path=PATH  location of schemas; default: ./schema
-  --database=NAME     name of database if not specified in dump
-  --[no-]write        write schema files to schema path; default: no
+``` bash
+$ composer require graze/morphism
 ```
 
-#### morphism-dump ####
-```
-Usage: morphism-dump [OPTIONS] CONFIG-FILE CONN [CONN ...]
-Dumps database schemas for named connections. This tool is considerably faster
-than mysqldump, especially for large schemas. You might use this tool to
-(re-)initalise your project's schema directory from a local database.
+## Tools
 
-OPTIONS
-  -h, -help, --help   display this message, and exit
-  --[no-]quote-names  [do not] quote names with `...`; default: no
-  --[no-]write        write schema files to schema path; default: no
+All commands support the `--help` parameter which give more information on usage.
 
-CONFIG-FILE
-A YAML file mapping connection names to parameters. See the morphism project's
-README.md file for detailed information.
-```
+* **morphism-extract**: Extract schema definitions from a mysqldump file.
+* **morphism-dump**: Dump database schema for a named database connection.
+* **morphism-lint**: Check database schema files for correctness.
+* **morphism-diff**: Show necessary DDL statements to make a given database match the schema files. Optionally apply the changes too.
 
-#### morphism-lint ####
-```
-Usage: morphism-lint [OPTIONS] PATH ...
-Checks all schema files below the specified paths for correctness. If no PATH
-is given, checks standard input. By default output is only produced if errors
-are detected.
-
-OPTIONS
-  -h, -help, --help   display this message, and exit
-  --[no-]verbose      include valid files in output; default: no
-
-EXIT STATUS
-The exit status will be 1 if any errors were detected, or 0 otherwise.
-```
-
-#### morphism-diff ####
-```
-Usage: morphism-diff [OPTION] CONFIG-FILE [CONN] ...
-Extracts schema definitions from the named connections, and outputs the
-necessary ALTER TABLE statements to transform them into what is defined
-under the schema path. If no connections are specified, all connections
-in the config with 'morphism: enable: true' will be used.
-
-GENERAL OPTIONS:
-  -h, -help, --help      display this message, and exit
-  --engine=ENGINE        set the default database engine
-  --collation=COLLATION  set the default collation
-  --[no-]quote-names     quote names with `...`; default: yes
-  --[no-]create-table    output CREATE TABLE statements; default: yes
-  --[no-]drop-table      output DROP TABLE statements; default: yes
-  --[no-]alter-engine    output ALTER TABLE ... ENGINE=...; default: yes
-  --apply-changes=WHEN   apply changes (yes/no/confirm); default: no
-  --log-dir=DIR          log applied changes to DIR - one log file will be
-                         created per connection; default: none
-  --[no-]log-skipped     log skipped queries (commented out); default: yes
-
-CONFIG-FILE
-A YAML file mapping connection names to parameters. See the morphism project's
-README.md file for detailed information.
-```
-
-### Config File ###
+## Config File
 
 The config file used by some of morphism's tools uses yaml format, as follows:
 
@@ -148,7 +84,9 @@ databases:
 ...
 ```
 
-### Example Usage ###
+## Example Usage
+
+This example uses `morphism-dump` to generate schema files from a database, `morphism-lint` for checking the files and `morphism-diff` to apply changes both interactively and automatically.
 
 ```
 (master) $ # create a baseline for the schema
@@ -161,12 +99,12 @@ databases:
 (master) $ git checkout -b catalog-fixes
 (catalog-fixes) $ vi schema/catalog/product.sql             # edit table definition
 (catalog-fixes) $ vi schema/catalog/product_dimensions.sql  # add new table
-(catalog-fixes) $ vendor/bin/morphism-lint schema/live_web # check syntax
+(catalog-fixes) $ vendor/bin/morphism-lint schema/catalog   # check syntax
 ERROR schema/catalog/product_dimensions.sql, line 2: unknown datatype 'intt'
 1: CREATE TABLE product_dimensions (
 2:   `pd_id` intt<<HERE>>(10) unsigned NOT NULL AUTO_INCREMENT,
 (catalog-fixes) $ vi schema/catalog/product_dimensions.sql  # fix table definition
-(catalog-fixes) $ vendor/bin/morphism-lint schema/live_web # check syntax
+(catalog-fixes) $ vendor/bin/morphism-lint schema/catalog   # check syntax
 (catalog-fixes) $ git add schema/catalog
 (catalog-fixes) $ git rm schema/catalog/discontinued.sql    # delete a table
 (catalog-fixes) $ git commit -m "various changes to catalog schema"
@@ -220,11 +158,21 @@ CREATE TABLE `product_dimensions` (
 (master) $ vendor/bin/morphism-diff --apply-changes=yes config.yml catalog
 ```
 
+## Testing
 
-### License ###
-The content of this library is released under the **MIT License** by **Nature Delivered Ltd**.<br/>
-You can find a copy of this license at http://www.opensource.org/licenses/mit or in [`LICENSE`][license]
+``` bash
+$ make test
+```
 
 
-<!-- Links -->
-[license]: /LICENSE
+## Security
+
+If you discover any security related issues, please email security@graze.com instead of using the issue tracker.
+
+## Credits
+
+- [All Contributors](../../contributors)
+
+## License
+
+The MIT License (MIT). Please see [License File](LICENSE.md) for more information.

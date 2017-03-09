@@ -1,5 +1,7 @@
 # morphism
 
+[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
+
 <img src="http://i.imgur.com/FuzIxpl.jpg" alt="Keep Moving" align="right" width="240"/>
 
 This package provides a set of tools for parsing, extracting, and diffing mysqldump

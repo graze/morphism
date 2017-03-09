@@ -7,7 +7,7 @@
 [![Quality Score](https://img.shields.io/scrutinizer/g/graze/morphism.svg?style=flat-square)](https://scrutinizer-ci.com/g/graze/morphism)
 [![Total Downloads](https://img.shields.io/packagist/dt/graze/morphism.svg?style=flat-square)](https://packagist.org/packages/graze/morphism)
 
-<img src="http://i.imgur.com/FuzIxpl.jpg" alt="Keep Moving" align="right" width="240"/>
+<img src="http://i.imgur.com/QSX6EUj.gif" alt="Morph and Chas" align="right" />
 
 This package provides a set of tools for parsing, extracting, and diffing mysqldump
 files.

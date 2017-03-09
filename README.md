@@ -16,16 +16,8 @@ A typical application of this is for managing schema changes during application
 development (keeping schemas in sync with code when switching branches), and during
 deployment (migrating the schema to match the deployed code).
 
-We were previously using an internally developed database migration tool ("migrant")
-which relied on 'up' and 'down' scripts to manage migration between schema versions.
-This had a number of issues however. In particular it assumes that schema evolution
-is linear - you can only ever move forward in time to a newer version, or back to
-an older version. In practice, modern development is such that you may be working
-on several different possible versions of the future state of the schema in
-parallel as you switch between different development branches.
-
-We decide to develop a tool that
-would allow us to store the complete database schema in the repository. When a branch
+Using this tool allows you to store the complete database schema in the repository.
+When a branch
 requires a schema update to work properly, you should edit your checkout's schema
 and run the new tool to figure out the necessary `ALTER` / `CREATE` / `DROP` statements
 to run, and apply them. Similarly, when switching branches you can simply run the

@@ -94,6 +94,8 @@ databases:
 
 ## Example Usage
 
+This example uses `morphism-dump` to generate schema files from a database, `morphism-lint` for checking the files and `morphism-diff` to apply changes both interactively and automatically.
+
 ```
 (master) $ # create a baseline for the schema
 (master) $ mkdir schema

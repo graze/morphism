@@ -91,7 +91,7 @@ This example uses `morphism-dump` to generate schema files from a database, `mor
 ```
 (master) $ # create a baseline for the schema
 (master) $ mkdir schema
-(master) $ vendor/bin/morphism-dump --write config.yml catalog
+(master) $ bin/morphism-dump --write config.yml catalog
 (master) $ git add schema/catalog
 (master) $ git commit -m "initial checkin of catalog schema"
 (master) $
@@ -99,17 +99,17 @@ This example uses `morphism-dump` to generate schema files from a database, `mor
 (master) $ git checkout -b catalog-fixes
 (catalog-fixes) $ vi schema/catalog/product.sql             # edit table definition
 (catalog-fixes) $ vi schema/catalog/product_dimensions.sql  # add new table
-(catalog-fixes) $ vendor/bin/morphism-lint schema/catalog   # check syntax
+(catalog-fixes) $ bin/morphism-lint schema/catalog   # check syntax
 ERROR schema/catalog/product_dimensions.sql, line 2: unknown datatype 'intt'
 1: CREATE TABLE product_dimensions (
 2:   `pd_id` intt<<HERE>>(10) unsigned NOT NULL AUTO_INCREMENT,
 (catalog-fixes) $ vi schema/catalog/product_dimensions.sql  # fix table definition
-(catalog-fixes) $ vendor/bin/morphism-lint schema/catalog   # check syntax
+(catalog-fixes) $ bin/morphism-lint schema/catalog   # check syntax
 (catalog-fixes) $ git add schema/catalog
 (catalog-fixes) $ git rm schema/catalog/discontinued.sql    # delete a table
 (catalog-fixes) $ git commit -m "various changes to catalog schema"
 (catalog-fixes) $ # alter the database to match the schema files
-(catalog-fixes) $ vendor/bin/morphism-diff --apply-changes=confirm config.yml catalog
+(catalog-fixes) $ bin/morphism-diff --apply-changes=confirm config.yml catalog
 -- --------------------------------
 --   Connection: catalog
 -- --------------------------------
@@ -155,7 +155,7 @@ CREATE TABLE `product_dimensions` (
 (catalog-fixes) $ # do some work back on master...
 (catalog-fixes) $ git checkout master
 (master) $ # restore schema to previous state
-(master) $ vendor/bin/morphism-diff --apply-changes=yes config.yml catalog
+(master) $ bin/morphism-diff --apply-changes=yes config.yml catalog
 ```
 
 ## Testing

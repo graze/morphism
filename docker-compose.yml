@@ -12,3 +12,21 @@ services:
         volumes:
             - .:/usr/src/app
         working_dir: /usr/src/app
+
+    php-70:
+        image: php:7.0-alpine
+        volumes:
+            - .:/usr/src/app
+        working_dir: /usr/src/app
+
+    php-56:
+        image: php:5.6-alpine
+        volumes:
+            - .:/usr/src/app
+        working_dir: /usr/src/app
+
+    php-55:
+        image: php:5.5-alpine
+        volumes:
+            - .:/usr/src/app
+        working_dir: /usr/src/app

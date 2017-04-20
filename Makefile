@@ -2,7 +2,7 @@
 .PHONY: test default
 
 install: ## Install dependencies
-	@composer install
+	@docker-compose run --rm composer install
 
 test: ## Run test suite
 	@./vendor/bin/phpunit --testsuite tests

@@ -1,19 +1,23 @@
-default:
-	@echo >&2 "please specify one of these targets: test"
-
+.DEFAULT_GOAL:= help
 .PHONY: test default
 
-install:
-	@composer install
+install: ## Install dependencies
+	@docker-compose run --rm composer install
 
-# Run test suite
-test:
-	@./vendor/bin/phpunit --testsuite tests
+test: ## Run test suite
+	@test -f ./vendor/bin/phpunit || ${MAKE} install
+	@docker-compose run --rm php ./vendor/bin/phpunit --testsuite tests
 
 clean: ## Remove all generated files
-clean:
 	@git clean -d -X -f
 
-dist-clean: ## Remove all non-repo files.
-dist-clean:
+dist-clean: ## Remove all non-repo files
 	@git clean -d -x -f -f
+
+.SILENT: help
+help: ## Show this help message
+	set -x
+	echo "Usage: make [target] ..."
+	echo ""
+	echo "Available targets:"
+	egrep '^(.+)\:\ ##\ (.+)' ${MAKEFILE_LIST} | column -t -c 2 -s ':#'

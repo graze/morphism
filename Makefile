@@ -1,19 +1,16 @@
 .DEFAULT_GOAL:= help
 .PHONY: test default
 
-install:
+install: ## Install dependencies
 	@composer install
 
-# Run test suite
-test:
+test: ## Run test suite
 	@./vendor/bin/phpunit --testsuite tests
 
 clean: ## Remove all generated files
-clean:
 	@git clean -d -X -f
 
-dist-clean: ## Remove all non-repo files.
-dist-clean:
+dist-clean: ## Remove all non-repo files
 	@git clean -d -x -f -f
 
 .SILENT: help

@@ -1,6 +1,4 @@
-default:
-	@echo >&2 "please specify one of these targets: test"
-
+.DEFAULT_GOAL:= help
 .PHONY: test default
 
 install:

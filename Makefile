@@ -5,8 +5,8 @@ install: ## Install dependencies
 	@docker-compose run --rm composer install
 
 test: ## Run test suite
-	test -f ./vendor/bin/phpunit || ${MAKE} install
-	@./vendor/bin/phpunit --testsuite tests
+	@test -f ./vendor/bin/phpunit || ${MAKE} install
+	@docker-compose run --rm php ./vendor/bin/phpunit --testsuite tests
 
 clean: ## Remove all generated files
 	@git clean -d -X -f

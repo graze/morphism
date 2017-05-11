@@ -12,20 +12,21 @@ test: ## Run test suite
 	@docker-compose run --rm php-56 ./vendor/bin/phpunit --testsuite tests
 	@docker-compose run --rm php-55 ./vendor/bin/phpunit --testsuite tests
 
-start-db:
+start-db: ## Start up the test database
 	@docker-compose up -d db
 
-stop:
+stop: ## Stop all docker containers
 	@docker-compose stop
 
+clean-docker: ## Remove all docker containers
 clean-docker: stop
 	@docker-compose rm -f
 
-clean: ## Remove all generated files
+clean: ## Remove docker containers and all generated files
 clean: clean-docker
 	@git clean -d -X -f
 
-dist-clean: ## Remove all non-repo files
+dist-clean: ## Remove docker containers and all non-repo files
 dist-clean: clean-docker
 	@git clean -d -x -f -f
 

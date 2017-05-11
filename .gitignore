@@ -1,5 +1,5 @@
-composer.lock
-morphism.conf
-phpunit.xml
-schema
-vendor
+/composer.lock
+/morphism.conf
+/phpunit.xml
+/schema
+/vendor

@@ -1,7 +1,7 @@
 .DEFAULT_GOAL:= help
 .PHONY: test default
 
-install: ## Install dependencies
+setup: ## Install dependencies
 	@docker-compose run --rm composer install
 
 test: ## Run test suite

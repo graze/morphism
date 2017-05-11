@@ -1,0 +1,36 @@
+# All connection definitions appear under the 'databases' key
+databases:
+    # name of connection
+    morphism-test:
+        # Connection details - this is just an example, you may want to specify
+        # different properties, e.g. if connecting to a remote server. You are
+        # advised to refer to the 'pdo' documentation for further details.
+        user: 'morphism'
+        password: 'morphism'
+        driver: 'pdo_mysql'
+        # database on a remote host
+        host: '192.168.99.100'
+        port: 33333
+        # local database
+        unix_socket: '/var/lib/mysql/catalog.sock'
+        # morphism specific options
+        morphism:
+            # morphism-diff only operates on connections with 'enable: true'
+            enable: true
+            # Path where schema files live.
+            # Defaults to "schema/<connection-name>"
+            schemaDefinitionPath: schema/morphism-test
+            # you may optionally specify one or more regexes matching tables
+            # to exclude (any changes, creation or deletion of matching tables
+            # will be ignored). The regex must match the entire table name, i.e.
+            # it is implicitly anchored with ^...$
+            exclude:
+                - temp_.*
+                - page_load_\d{4}-\d{2}-\d{2}
+            # similarly, you may optionally specify tables for explicit inclusion.
+            include:
+                # ...
+    # you may specify more connections
+    # ...
+# other top level keys are ignored
+# ...

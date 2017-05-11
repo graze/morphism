@@ -17,10 +17,15 @@ start-db:
 stop:
 	@docker-compose stop
 
+clean-docker: stop
+	@docker-compose rm -f
+
 clean: ## Remove all generated files
+clean: clean-docker
 	@git clean -d -X -f
 
 dist-clean: ## Remove all non-repo files
+dist-clean: clean-docker
 	@git clean -d -x -f -f
 
 .SILENT: help

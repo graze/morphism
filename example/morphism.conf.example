@@ -9,10 +9,10 @@ databases:
         password: 'morphism'
         driver: 'pdo_mysql'
         # database on a remote host
-        host: '192.168.99.100'
+        host: 'DOCKER_HOST'
         port: 33333
         # local database
-        unix_socket: '/var/lib/mysql/catalog.sock'
+        #unix_socket: '/var/lib/mysql/foo.sock'
         # morphism specific options
         morphism:
             # morphism-diff only operates on connections with 'enable: true'

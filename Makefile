@@ -1,8 +1,9 @@
 .DEFAULT_GOAL:= help
 .PHONY: test default
 
-setup: ## Install dependencies
+setup: ## Install dependencies and set up example conf file
 	@docker-compose run --rm composer install
+	@test -f morphism.conf || sed "s/DOCKER_HOST/$$(docker-machine ip)/" example/morphism.conf.example > morphism.conf
 
 test: ## Run test suite
 	@test -f ./vendor/bin/phpunit || ${MAKE} install

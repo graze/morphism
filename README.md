@@ -68,6 +68,9 @@ databases:
         morphism:
             # morphism-diff only operates on connections with 'enable: true'
             enable: true
+            # Path where schema files live.
+            # Defaults to "schema/<connection-name>"
+            schemaDefinitionPath: schema/catalog
             # you may optionally specify one or more regexes matching tables
             # to exclude (any changes, creation or deletion of matching tables
             # will be ignored). The regex must match the entire table name, i.e.

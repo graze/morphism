@@ -55,6 +55,9 @@ class Config
             }
 
             $schemaDefinitionPath = $morphism['schemaDefinitionPath'];
+            if (!$schemaDefinitionPath) {
+                $schemaDefinitionPath = 'schema/'.$connectionName;
+            }
 
             $entries[$connectionName] = [
                 'connection' => $entry,

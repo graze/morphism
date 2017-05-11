@@ -30,3 +30,15 @@ services:
         volumes:
             - .:/usr/src/app
         working_dir: /usr/src/app
+
+    db:
+        image: mysql
+        volumes:
+            - ./example/schema:/docker-entrypoint-initdb.d
+        environment:
+            - MYSQL_DATABASE=morphism-test
+            - MYSQL_USER=morphism
+            - MYSQL_PASSWORD=morphism
+            - MYSQL_ROOT_PASSWORD=morphism
+        ports:
+            - 33333:3306

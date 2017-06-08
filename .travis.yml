@@ -1,4 +1,7 @@
 language: php
 
+before_script:
+  - travis_retry composer update --no-interaction
+
 script:
     ./vendor/bin/phpunit --testsuite tests

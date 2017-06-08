@@ -1,2 +1,4 @@
 language: php
 
+script:
+    ./vendor/bin/phpunit --testsuite tests

@@ -12,8 +12,15 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "Graze tech team",
-            "homepage": "https://github.com/graze/morphism/graphs/contributors"
+            "name": "Burhan Ali",
+            "email": "burhan@graze.com",
+            "role": "Developer"
+        },
+        {
+            "name": "Graze Developers",
+            "email": "developers@graze.com",
+            "homepage": "http://www.graze.com",
+            "role": "Development Team"
         }
     ],
     "require": {

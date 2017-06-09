@@ -4,13 +4,15 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased](https://github.com/graze/morphism/compare/v2.0.0...HEAD)
+## [v2.1.0](https://github.com/graze/morphism/compare/v2.0.0...v2.1.0)
 
 - README and other documents cleaned up in preparation for open sourcing.
 - Docker-ised the development and testing.
 - Added basic support for multiple PHP versions.
 - Added the ability to test the commands locally via docker.
 - `schemaDefinitionPath` now defaults to `schema/<connectionName>`.
+- Code made open source.
+- Travis CI support added.
 
 ## [v2.0.0](https://github.com/graze/morphism/compare/v1.1.6...v2.0.0)
 

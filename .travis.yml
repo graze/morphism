@@ -7,7 +7,8 @@ php:
     - 7.1
 
 before_script:
-  - travis_retry composer update --no-interaction
+    - travis_retry composer update --no-interaction
 
 script:
-    ./vendor/bin/phpunit --testsuite tests
+    - vendor/bin/phpunit --testsuite tests
+    - vendor/bin/phpunit --coverage-clover=./tests/report/coverage.clover

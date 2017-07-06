@@ -38,7 +38,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Graze\\Morphism\\Test\\" : "test/"
+            "Graze\\Morphism\\Test\\" : "tests/"
         }
     },
     "bin": [

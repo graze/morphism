@@ -7,9 +7,10 @@ namespace Graze\Morphism\Parse;
 class CollationInfo
 {
     // only bothering to detail the charsets + collations we're actually likely to use
+    /** @var array */
     private static $data = [
         // In the list of collations for each charset, the entry
-        // for the default collation must come first, and the 
+        // for the default collation must come first, and the
         // binary collation last:
         'latin1' => [
             'latin1_swedish_ci',
@@ -31,8 +32,11 @@ class CollationInfo
         ],
     ];
 
+    /** @var string|null */
     private $_charset = null;
+    /** @var string|null */
     private $_collation = null;
+    /** @var bool|null */
     private $_isBinaryCollation = null;
 
     /**
@@ -193,6 +197,10 @@ class CollationInfo
         $this->_isBinaryCollation = true;
     }
 
+    /**
+     * @param string $charset
+     * @return string|null
+     */
     private static function _getCharsetCollations($charset)
     {
         return array_key_exists($charset, self::$data)
@@ -200,25 +208,39 @@ class CollationInfo
             : null;
     }
 
+    /**
+     * @param string $charset
+     * @return string|null
+     */
     private static function _getCharsetDefaultCollation($charset)
     {
-        if (null !== ($collations = self::_getCharsetCollations($charset))) {
+        $collations = self::_getCharsetCollations($charset);
+        if (null !== $collations) {
             return $collations[0];
         }
         return null;
     }
 
+    /**
+     * @param string $charset
+     * @return string|null
+     */
     private static function _getCharsetBinaryCollation($charset)
     {
-        if (null !== ($collations = self::_getCharsetCollations($charset))) {
+        $collations = self::_getCharsetCollations($charset);
+        if (null !== $collations) {
             return $collations[count($collations) - 1];
         }
         return null;
     }
 
+    /**
+     * @param string $collation
+     * @return string|null
+     */
     private static function _getCollationCharset($collation)
     {
-        foreach(self::$data as $charset => $collations) {
+        foreach (self::$data as $charset => $collations) {
             if (in_array($collation, $collations)) {
                 return $charset;
             }

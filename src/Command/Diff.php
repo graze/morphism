@@ -8,20 +8,34 @@ use Graze\Morphism\Parse\MysqlDump;
 use Graze\Morphism\Extractor;
 use Graze\Morphism\Config;
 
-class Diff implements Argv\Consumer
+class Diff implements Argv\ConsumerInterface
 {
+    /** @var string */
     private $engine = 'InnoDB';
+    /** @var string|null */
     private $collation = null;
+    /** @var bool */
     private $quoteNames = true;
+    /** @var bool */
     private $createTable = true;
+    /** @var bool */
     private $dropTable = true;
+    /** @var bool */
     private $alterEngine = true;
+    /** @var string|null */
     private $configFile = null;
+    /** @var array */
     private $connectionNames = [];
+    /** @var string */
     private $applyChanges = 'no';
+    /** @var string null */
     private $logDir = null;
+    /** @var bool */
     private $logSkipped = true;
 
+    /**
+     * @param string $prog
+     */
     public function consumeHelp($prog)
     {
         printf(
@@ -52,15 +66,21 @@ class Diff implements Argv\Consumer
         );
     }
 
+    /**
+     * @param array $argv
+     */
     public function argv(array $argv)
     {
         $argvParser = new Argv\Parser($argv);
         $argvParser->consumeWith($this);
     }
 
+    /**
+     * @param Argv\Option $option
+     */
     public function consumeOption(Argv\Option $option)
     {
-        switch($option->getOption()) {
+        switch ($option->getOption()) {
             case '--engine':
                 $this->engine = $option->required();
                 break;
@@ -112,6 +132,9 @@ class Diff implements Argv\Consumer
         }
     }
 
+    /**
+     * @param array $args
+     */
     public function consumeArgs(array $args)
     {
         if (count($args) < 1) {
@@ -121,6 +144,11 @@ class Diff implements Argv\Consumer
         $this->connectionNames = $args;
     }
 
+    /**
+     * @param string $connection
+     * @param string $dbName
+     * @return MysqlDump
+     */
     private function getCurrentSchema($connection, $dbName)
     {
         $extractor = new Extractor($connection);
@@ -129,7 +157,7 @@ class Diff implements Argv\Consumer
         $extractor->setQuoteNames($this->quoteNames);
 
         $text = '';
-        foreach($extractor->extract() as $query) {
+        foreach ($extractor->extract() as $query) {
             $text .= "$query;\n";
         }
         $stream = TokenStream::newFromText($text, '');
@@ -157,7 +185,13 @@ class Diff implements Argv\Consumer
         );
     }
 
-    private function applyChanges($connection, $connectionName, $diff)
+    /**
+     * @param string $connection
+     * @param string $connectionName
+     * @param array $diff
+     * @throws \Exception
+     */
+    private function applyChanges($connection, $connectionName, array $diff)
     {
         if (count($diff) == 0) {
             return;
@@ -184,7 +218,7 @@ class Diff implements Argv\Consumer
             echo "-- Confirm changes to $connectionName:\n";
         }
 
-        foreach($diff as $query) {
+        foreach ($diff as $query) {
             $response = $defaultResponse;
             $apply = false;
 
@@ -198,11 +232,10 @@ class Diff implements Argv\Consumer
                         throw new \Exception("could not read response");
                     }
                     $response = rtrim($response);
-                }
-                while(!in_array($response, ['y', 'n', 'a', 'q']));
+                } while (!in_array($response, ['y', 'n', 'a', 'q']));
             }
 
-            switch($response) {
+            switch ($response) {
                 case 'y':
                     $apply = true;
                     break;
@@ -229,9 +262,9 @@ class Diff implements Argv\Consumer
                     fwrite($logHandle, "$query;\n\n");
                 }
                 $connection->executeQuery($query);
-            }
-            else if ($logHandle && $this->logSkipped) {
-                fwrite($logHandle,
+            } elseif ($logHandle && $this->logSkipped) {
+                fwrite(
+                    $logHandle,
                     "-- [SKIPPED]\n" .
                     preg_replace('/^/xms', '-- ', $query) .  ";\n" .
                     "\n"
@@ -240,6 +273,9 @@ class Diff implements Argv\Consumer
         }
     }
 
+    /**
+     * @throws \Exception
+     */
     public function run()
     {
         try {
@@ -262,7 +298,7 @@ class Diff implements Argv\Consumer
                 }
             }
 
-            foreach($connectionNames as $connectionName) {
+            foreach ($connectionNames as $connectionName) {
                 echo "-- --------------------------------\n";
                 echo "--   Connection: $connectionName\n";
                 echo "-- --------------------------------\n";
@@ -299,17 +335,15 @@ class Diff implements Argv\Consumer
                     return $acc;
                 }, []);
 
-                foreach($statements as $query) {
+                foreach ($statements as $query) {
                     echo "$query;\n\n";
                 }
 
                 $this->applyChanges($connection, $connectionName, $statements);
             }
-        }
-        catch(\RuntimeException $e) {
+        } catch (\RuntimeException $e) {
             throw $e;
-        }
-        catch(\Exception $e) {
+        } catch (\Exception $e) {
             throw new \Exception($e->getMessage() . "\n\n" . $e->getTraceAsString());
         }
     }

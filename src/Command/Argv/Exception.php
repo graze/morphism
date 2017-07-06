@@ -2,4 +2,7 @@
 
 namespace Graze\Morphism\Command\Argv;
 
-class Exception extends \RuntimeException { }
+class Exception extends \RuntimeException
+{
+
+}

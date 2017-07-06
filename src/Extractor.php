@@ -2,6 +2,7 @@
 
 namespace Graze\Morphism;
 
+use Doctrine\DBAL\Connection;
 use Graze\Morphism\Parse\Token;
 
 /**
@@ -10,15 +11,20 @@ use Graze\Morphism\Parse\Token;
  */
 class Extractor
 {
+    /** @var Connection|null */
     private $dbh = null;
+    /** @var array */
     private $databases = null;
+    /** @var bool */
     private $createDatabase = true;
+    /** @var bool */
     private $quoteNames = true;
 
     /**
      * Constructor
+     * @param Connection$dbh
      */
-    public function __construct(\Doctrine\DBAL\Connection $dbh)
+    public function __construct(Connection $dbh)
     {
         $this->dbh = $dbh;
     }
@@ -27,7 +33,7 @@ class Extractor
      * If $flag is true, the extractor will output CREATE DATABASE and USE
      * statements. Defaults to true.
      *
-     * @param $flag bool
+     * @param bool $flag
      */
     public function setCreateDatabases($flag)
     {
@@ -50,7 +56,7 @@ class Extractor
      * If $flags is true, the extractor will enclose names of database objects
      * (schemas, tables, columns, etc) in backquotes. Defaults to true.
      *
-     * @param $flag bool
+     * @param bool $flag
      */
     public function setQuoteNames($flag)
     {
@@ -61,11 +67,11 @@ class Extractor
      * Prepare, bind, and execute the specified query against the current
      * connection, and return the result set as an array of objects.
      *
-     * @param $sql string
-     * @param $binds mixed[]
+     * @param string $sql
+     * @param mixed[] $binds
      * @return result-row-object[]
      */
-    private function query($sql, $binds = [])
+    private function query($sql, array $binds = [])
     {
         $sth = $this->dbh->prepare($sql);
         $sth->execute($binds);
@@ -78,7 +84,7 @@ class Extractor
      * or "NULL" if $count is zero, suitable for use with an IN() clause in
      * a prepared query.
      *
-     * @param $count integer
+     * @param int $count
      * @return string
      */
     private static function placeholders($count)
@@ -103,11 +109,11 @@ class Extractor
                 FROM INFORMATION_SCHEMA.SCHEMATA
                 WHERE SCHEMA_NAME NOT IN ('mysql', 'information_schema')
             ");
-        }
-        else {
+        } else {
             $binds = $this->databases;
             $placeholders = self::placeholders($binds);
-            $rows = $this->query("
+            $rows = $this->query(
+                "
                 SELECT *
                 FROM INFORMATION_SCHEMA.SCHEMATA
                 WHERE SCHEMA_NAME IN ($placeholders)
@@ -117,19 +123,21 @@ class Extractor
         }
 
         $schemata = [];
-        foreach($rows as $schema) {
+        foreach ($rows as $schema) {
             $schemata[$schema->SCHEMA_NAME] = $schema;
         }
         return $schemata;
     }
 
     /**
-     * @return [$schema => [$table => TABLES-object, ...], ...]
+     * @param array $databases
+     * @return array [$schema => [$table => TABLES-object, ...], ...]
      */
     private function getTables(array $databases)
     {
         $placeholders = self::placeholders($databases);
-        $rows = $this->query("
+        $rows = $this->query(
+            "
             SELECT *
             FROM INFORMATION_SCHEMA.TABLES
             WHERE
@@ -142,20 +150,21 @@ class Extractor
             $databases
         );
         $tables = [];
-        foreach($rows as $table) {
+        foreach ($rows as $table) {
             $tables[$table->TABLE_SCHEMA][$table->TABLE_NAME] = $table;
         }
         return $tables;
     }
 
     /**
-     * @param $databases string[]
+     * @param string[] $databases
      * @return [$schema => [$table => [COLUMNS-object, ...], ...], ...]
      */
     private function getColumns(array $databases)
     {
         $placeholders = self::placeholders($databases);
-        $rows = $this->query("
+        $rows = $this->query(
+            "
             SELECT *
             FROM INFORMATION_SCHEMA.COLUMNS
             WHERE TABLE_SCHEMA IN ($placeholders)
@@ -167,20 +176,21 @@ class Extractor
             $databases
         );
         $columns = [];
-        foreach($rows as $column) {
+        foreach ($rows as $column) {
             $columns[$column->TABLE_SCHEMA][$column->TABLE_NAME][$column->ORDINAL_POSITION] = $column;
         }
         return $columns;
     }
 
     /**
-     * @param $databases string[]
+     * @param string[] $databases
      * @return [$schema => [$table => [$index => [STATISTICS-object, ...], ...], ...], ...]
      */
     private function getKeys(array $databases)
     {
         $placeholders = self::placeholders($databases);
-        $rows = $this->query("
+        $rows = $this->query(
+            "
             SELECT *
             FROM INFORMATION_SCHEMA.STATISTICS
             WHERE TABLE_SCHEMA IN ($placeholders)
@@ -194,20 +204,21 @@ class Extractor
             $databases
         );
         $keys = [];
-        foreach($rows as $key) {
+        foreach ($rows as $key) {
             $keys[$key->TABLE_SCHEMA][$key->TABLE_NAME][$key->INDEX_NAME][] = $key;
         }
         return $keys;
     }
 
     /**
-     * @param $databases string[]
+     * @param string[] $databases
      * @return [$schema => [$table => [$constraint => [KEY_COLUMN_USAGE-object, ...], ...], ...], ...]
      */
     private function getReferences(array $databases)
     {
         $placeholders = self::placeholders($databases);
-        $rows = $this->query("
+        $rows = $this->query(
+            "
             SELECT *
             FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
             WHERE TABLE_SCHEMA IN ($placeholders)
@@ -221,16 +232,21 @@ class Extractor
             $databases
         );
         $references = [];
-        foreach($rows as $reference) {
+        foreach ($rows as $reference) {
             $references[$reference->TABLE_SCHEMA][$reference->TABLE_NAME][$reference->CONSTRAINT_NAME][] = $reference;
         }
         return $references;
     }
 
+    /**
+     * @param array $databases
+     * @return array
+     */
     private function getConstraints(array $databases)
     {
         $placeholders = self::placeholders($databases);
-        $rows = $this->query("
+        $rows = $this->query(
+            "
             SELECT *
             FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
             WHERE CONSTRAINT_SCHEMA IN ($placeholders)
@@ -242,7 +258,7 @@ class Extractor
             $databases
         );
         $constraints = [];
-        foreach($rows as $constraint) {
+        foreach ($rows as $constraint) {
             $constraints[$constraint->CONSTRAINT_SCHEMA][$constraint->TABLE_NAME][$constraint->CONSTRAINT_NAME] = $constraint;
         }
         return $constraints;
@@ -251,7 +267,7 @@ class Extractor
     /**
      * Returns an array of SQL DDL statements to create the specified database.
      *
-     * @param $schema SCHEMA-object
+     * @param object $schema SCHEMA-object
      * @return string[]
      */
     private function getCreateDatabase($schema)
@@ -268,7 +284,7 @@ class Extractor
      * Returns an array of SQL statements to select the specified database
      * as the default for the connection.
      *
-     * @param $schema SCHEMA-object
+     * @param object $schema SCHEMA-object
      * @return string[]
      */
     private function getUseDatabase($schema)
@@ -283,13 +299,13 @@ class Extractor
      * Returns an array of clauses that will form part of a CREATE TABLE statement
      * to create the specified columns.
      *
-     * @param $columns COLUMNS-object[]
+     * @param array $columns COLUMNS-object[]
      * @return string[]
      */
     private function getColumnDefs(array $columns)
     {
         $defColumns = [];
-        foreach($columns as $column) {
+        foreach ($columns as $column) {
             $defColumn = "$column->COLUMN_NAME";
             $defColumn .= " $column->COLUMN_TYPE";
             if (!is_null($column->CHARACTER_SET_NAME)) {
@@ -300,18 +316,15 @@ class Extractor
             }
             if ($column->IS_NULLABLE == 'NO') {
                 $defColumn .= " NOT NULL";
-            }
-            else {
+            } else {
                 $defColumn .= " NULL";
             }
             if (!is_null($column->COLUMN_DEFAULT)) {
-                if (
-                    in_array($column->DATA_TYPE, ['timestamp', 'datetime']) &&
+                if (in_array($column->DATA_TYPE, ['timestamp', 'datetime']) &&
                     $column->COLUMN_DEFAULT == 'CURRENT_TIMESTAMP'
                 ) {
                     $defColumn .= " DEFAULT $column->COLUMN_DEFAULT";
-                }
-                else {
+                } else {
                     $defColumn .= " DEFAULT " . Token::escapeString($column->COLUMN_DEFAULT);
                 }
             }
@@ -330,32 +343,29 @@ class Extractor
      * Returns an array of clauses that will form part of a CREATE TABLE statement
      * to create the specified indexes.
      *
-     * @param $keys [$index => STATISTICS-object[]]
+     * @param array $keys [$index => STATISTICS-object[]]
      * @return string[]
      */
     private function getKeyDefs(array $keys)
     {
         $defKeys = [];
-        foreach($keys as $key) {
+        foreach ($keys as $key) {
             $defKey = '';
             $firstKeyPart = $key[0];
             if ($firstKeyPart->INDEX_NAME == 'PRIMARY') {
                 $defKey = 'PRIMARY KEY';
-            }
-            else {
+            } else {
                 $escapedIndexName = Token::escapeIdentifier($firstKeyPart->INDEX_NAME);
                 if ($firstKeyPart->INDEX_TYPE == 'FULLTEXT') {
                     $defKey = "FULLTEXT $escapedIndexName";
-                }
-                else if ($firstKeyPart->NON_UNIQUE) {
+                } elseif ($firstKeyPart->NON_UNIQUE) {
                     $defKey = "KEY $escapedIndexName";
-                }
-                else {
+                } else {
                     $defKey = "UNIQUE KEY $escapedIndexName";
                 }
             }
             $defKeyParts = [];
-            foreach($key as $keyPart) {
+            foreach ($key as $keyPart) {
                 $defKeyPart = $keyPart->COLUMN_NAME;
                 if (!is_null($keyPart->SUB_PART)) {
                     $defKeyPart .= "($keyPart->SUB_PART)";
@@ -371,14 +381,14 @@ class Extractor
      * Returns an array of clauses that will form part of a CREATE TABLE statement
      * to create the specified foreign key constraints.
      *
-     * @param $references [$constraint => [KEY_COLUMN_USAGE-object, ...], ...]
-     * @param $constraints [$constraint => REFERENTIAL_CONSTRAINTS-object, ...]
+     * @param array $references [$constraint => [KEY_COLUMN_USAGE-object, ...], ...]
+     * @param array $constraints [$constraint => REFERENTIAL_CONSTRAINTS-object, ...]
      * @return string[]
      */
     private function getReferenceDefs(array $references, array $constraints)
     {
         $defReferences = [];
-        foreach($references as $reference) {
+        foreach ($references as $reference) {
             $firstRefPart = $reference[0];
             $constraintName = Token::escapeIdentifier($firstRefPart->CONSTRAINT_NAME);
             $referencedTable = Token::escapeIdentifier($firstRefPart->REFERENCED_TABLE_NAME);
@@ -387,7 +397,7 @@ class Extractor
             }
             $defForeignParts = [];
             $defReferenceParts = [];
-            foreach($reference as $referencePart) {
+            foreach ($reference as $referencePart) {
                 $defForeignParts[] = Token::escapeIdentifier($referencePart->COLUMN_NAME);
                 $defReferenceParts[] = Token::escapeIdentifier($referencePart->REFERENCED_COLUMN_NAME);
             }
@@ -402,7 +412,7 @@ class Extractor
             if ($constraint->DELETE_RULE != 'RESTRICT') {
                 $options .= " ON DELETE " . $constraint->DELETE_RULE;
             }
-            $defReferences[] = 
+            $defReferences[] =
                 "  CONSTRAINT $constraintName" .
                 " FOREIGN KEY (" . implode(',', $defForeignParts) . ")" .
                 " REFERENCES $referencedTable (" . implode(',', $defReferenceParts) . ")" .
@@ -415,10 +425,10 @@ class Extractor
      * Returns an array of table options which will form part of the DDL
      * necessary to create the specified table.
      *
-     * @param $table TABLES-object[]
+     * @param array $table TABLES-object[]
      * @return string[]
      */
-    private function getTableOptionDefs($table)
+    private function getTableOptionDefs(array $table)
     {
         $defTableOptions = [];
         $defTableOptions[] = "ENGINE=$table->ENGINE";
@@ -443,14 +453,14 @@ class Extractor
     /**
      * Returns an array of SQL DDL statements to create the specified table.
      *
-     * @param $table TABLES-object
-     * @param $columns COLUMNS-object[]
-     * @param $keys [$index => STATISTICS-object[]]
-     * @param $references [$constraint => [KEY_COLUMN_USAGE-object, ...], ...]
-     * @param $constraints [$constraint => REFERENTIAL_CONSTRAINTS-object, ...]
+     * @param object $table TABLES-object
+     * @param array $columns COLUMNS-object[]
+     * @param array $keys [$index => STATISTICS-object[]]
+     * @param array $references [$constraint => [KEY_COLUMN_USAGE-object, ...], ...]
+     * @param array $constraints [$constraint => REFERENTIAL_CONSTRAINTS-object, ...]
      * @return string
      */
-    private function getCreateTable($table, $columns, $keys, $references, $constraints)
+    private function getCreateTable($table, array $columns, array $keys, array $references, array $constraints)
     {
         $tableName = $table->TABLE_NAME;
 
@@ -486,7 +496,7 @@ class Extractor
         $constraints = $this->getConstraints($databases);
 
         $statements = [];
-        foreach($schemata as $database => $schema) {
+        foreach ($schemata as $database => $schema) {
             if ($this->createDatabase) {
                 $statements = array_merge(
                     $statements,
@@ -495,7 +505,7 @@ class Extractor
                 );
             }
 
-            foreach(isset($tables[$database]) ? $tables[$database] : [] as $tableName => $table) {
+            foreach (isset($tables[$database]) ? $tables[$database] : [] as $tableName => $table) {
                 $tableColumns = $columns[$database][$tableName];
                 $tableKeys = isset($keys[$database][$tableName]) ? $keys[$database][$tableName] : [];
                 $tableReferences = isset($references[$database][$tableName]) ? $references[$database][$tableName] : [];

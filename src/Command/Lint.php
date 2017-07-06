@@ -5,10 +5,14 @@ namespace Graze\Morphism\Command;
 use Graze\Morphism\Parse\MysqlDump;
 use Graze\Morphism\Parse\TokenStream;
 
-class Lint implements Argv\Consumer
+class Lint implements Argv\ConsumerInterface
 {
+    /** @var bool */
     private $verbose = false;
 
+    /**
+     * @param string $prog
+     */
     public function consumeHelp($prog)
     {
         printf(
@@ -28,15 +32,21 @@ class Lint implements Argv\Consumer
         );
     }
 
+    /**
+     * @param array $argv
+     */
     public function argv(array $argv)
     {
         $argvParser = new Argv\Parser($argv);
         $argvParser->consumeWith($this);
     }
 
+    /**
+     * @param Argv\Option $option
+     */
     public function consumeOption(Argv\Option $option)
     {
-        switch($option->getOption()) {
+        switch ($option->getOption()) {
             case '--verbose':
             case '--no-verbose':
                 $this->verbose = $option->bool();
@@ -48,11 +58,17 @@ class Lint implements Argv\Consumer
         }
     }
 
+    /**
+     * @param array $args
+     */
     public function consumeArgs(array $args)
     {
         $this->paths = count($args) == 0 ? ['php://stdin'] : $args;
     }
 
+    /**
+     * @return bool
+     */
     public function run()
     {
         $success = true;
@@ -62,7 +78,7 @@ class Lint implements Argv\Consumer
 
         $errorFiles = [];
 
-        foreach($this->paths as $path) {
+        foreach ($this->paths as $path) {
             $dump = new MysqlDump;
 
             $files = [];
@@ -70,23 +86,21 @@ class Lint implements Argv\Consumer
                 if ($this->verbose) {
                     echo "$path\n";
                 }
-                foreach(new \GlobIterator("$path/*.sql") as $fileInfo) {
+                foreach (new \GlobIterator("$path/*.sql") as $fileInfo) {
                     $files[] = $fileInfo->getPathname();
                 }
-            }
-            else {
+            } else {
                 $files[] = $path;
             }
 
-            foreach($files as $file) {
+            foreach ($files as $file) {
                 $stream = TokenStream::newFromFile($file);
                 try {
                     $dump->parse($stream);
                     if ($this->verbose) {
                         echo "OK    $file\n";
                     }
-                }
-                catch(\RuntimeException $e) {
+                } catch (\RuntimeException $e) {
                     $errorFiles[] = $file;
                     $message = $stream->contextualise($e->getMessage());
                     echo "ERROR $message\n";

@@ -10,4 +10,8 @@
         <exclude name="Squiz.Commenting.FunctionComment.InvalidReturnVoid" />
     </rule>
 
+    <rule ref="Squiz.NamingConventions.ValidVariableName.NotCamelCaps">
+        <!-- excluded because it's handling raw database query results -->
+        <exclude-pattern>*/src/Extractor.php</exclude-pattern>
+    </rule>
 </ruleset>

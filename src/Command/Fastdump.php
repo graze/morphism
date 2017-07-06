@@ -7,13 +7,20 @@ use Graze\Morphism\Parse\MysqlDump;
 use Graze\Morphism\Extractor;
 use Graze\Morphism\Config;
 
-class Fastdump implements Argv\Consumer
+class Fastdump implements Argv\ConsumerInterface
 {
+    /** @var bool */
     private $quoteNames = true;
+    /** @var string|null */
     private $configFile = null;
+    /** @var bool */
     private $write = false;
+    /** @var array */
     private $connectionNames = [];
 
+    /**
+     * @param string $prog
+     */
     public function consumeHelp($prog)
     {
         printf(
@@ -35,15 +42,21 @@ class Fastdump implements Argv\Consumer
         );
     }
 
+    /**
+     * @param array $argv
+     */
     public function argv(array $argv)
     {
         $argvParser = new Argv\Parser($argv);
         $argvParser->consumeWith($this);
     }
 
+    /**
+     * @param Argv\Option $option
+     */
     public function consumeOption(Argv\Option $option)
     {
-        switch($option->getOption()) {
+        switch ($option->getOption()) {
             case '--quote-names':
             case '--no-quote-names':
                 $this->quoteNames = $option->bool();
@@ -60,6 +73,9 @@ class Fastdump implements Argv\Consumer
         }
     }
 
+    /**
+     * @param array $args
+     */
     public function consumeArgs(array $args)
     {
         if (count($args) < 2) {
@@ -69,12 +85,15 @@ class Fastdump implements Argv\Consumer
         $this->connectionNames = $args;
     }
 
+    /**
+     * @throws \Exception
+     */
     public function run()
     {
         $config = new Config($this->configFile);
         $config->parse();
 
-        foreach($this->connectionNames as $connectionName) {
+        foreach ($this->connectionNames as $connectionName) {
             $connection = $config->getConnection($connectionName);
 
             $entry = $config->getEntry($connectionName);
@@ -93,7 +112,7 @@ class Fastdump implements Argv\Consumer
             $extractor->setCreateDatabases(false);
             $extractor->setQuoteNames($this->quoteNames);
             $text = '';
-            foreach($extractor->extract() as $query) {
+            foreach ($extractor->extract() as $query) {
                 $text .= "$query;\n";
             }
             $stream = TokenStream::newFromText($text, '');
@@ -101,11 +120,9 @@ class Fastdump implements Argv\Consumer
             $dump = new MysqlDump();
             try {
                 $dump->parse($stream, ['matchTables' => $matchTables]);
-            }
-            catch(\RuntimeException $e) {
+            } catch (\RuntimeException $e) {
                 throw new \RuntimeException($stream->contextualise($e->getMessage()));
-            }
-            catch(\Exception $e) {
+            } catch (\Exception $e) {
                 throw new \Exception($e->getMessage() . "\n\n" . $e->getTraceAsString());
             }
 
@@ -116,10 +133,10 @@ class Fastdump implements Argv\Consumer
                     }
                 }
                 $database = reset($dump->databases);
-                foreach($database->tables as $table) {
+                foreach ($database->tables as $table) {
                     $path = "$schemaDefinitionPath/{$table->name}.sql";
                     $text = '';
-                    foreach($table->getDDL() as $query) {
+                    foreach ($table->getDDL() as $query) {
                         $text .= "$query;\n\n";
                     }
                     if (false === @file_put_contents($path, $text)) {
@@ -127,9 +144,8 @@ class Fastdump implements Argv\Consumer
                     }
                     fprintf(STDERR, "wrote $path\n");
                 }
-            }
-            else {
-                foreach($dump->getDDL() as $query) {
+            } else {
+                foreach ($dump->getDDL() as $query) {
                     echo "$query;\n\n";
                 }
             }

@@ -6,17 +6,21 @@ namespace Graze\Morphism\Parse;
  */
 class MysqlDump
 {
-    /** 
-     * @var CreateDatabase[] 
+    /**
+     * @var CreateDatabase[]
      *
      * indexed by (string) database name; when enumerated, reflects the order
      * in which the databases declarations were parsed.
      */
     public $databases = [];
 
+    /** @var string */
     private $database = null;
+    /** @var string */
     private $_defaultDatabaseName = '';
+    /** @var string */
     private $_defaultEngine = 'InnoDB';
+    /** @var CollationInfo|null */
     private $_defaultCollation = null;
 
     /**
@@ -51,25 +55,23 @@ class MysqlDump
         if (!is_null($defaultDatabaseName)) {
             $dump->setDefaultDatabase($defaultDatabaseName);
         }
-        
+
         $files = [];
-        foreach($paths as $path) {
+        foreach ($paths as $path) {
             if (is_dir($path)) {
-                foreach(new \GlobIterator("$path/*.sql") as $fileInfo) {
+                foreach (new \GlobIterator("$path/*.sql") as $fileInfo) {
                     $files[] = $fileInfo->getPathname();
                 }
-            }
-            else {
+            } else {
                 $files[] = $path;
             }
         }
 
-        foreach($files as $file) {
+        foreach ($files as $file) {
             $stream = TokenStream::newFromFile($file);
             try {
                 $dump->parse($stream);
-            }
-            catch(\RuntimeException $e) {
+            } catch (\RuntimeException $e) {
                 $message = $stream->contextualise($e->getMessage());
                 throw new \RuntimeException($message);
             }
@@ -102,6 +104,8 @@ class MysqlDump
     /**
      * Sets the default collation to assume when no collation or charset
      * is specified in CREATE DATABASE or CREATE TABLE.
+     *
+     * @param CollationInfo $collation
      */
     public function setDefaultCollation(CollationInfo $collation)
     {
@@ -128,15 +132,14 @@ class MysqlDump
             ]
         ];
 
-        while(true) {
+        while (true) {
             if ($stream->peek('CREATE DATABASE')) {
                 $this->database = new CreateDatabase($this->_defaultCollation);
                 $this->database->parse($stream);
                 $stream->expect('symbol', ';');
 
                 $this->databases[$this->database->name] = $this->database;
-            }
-            else if ($stream->peek('CREATE TABLE')) {
+            } elseif ($stream->peek('CREATE TABLE')) {
                 if (is_null($this->database)) {
                     $name = $this->_defaultDatabaseName;
                     $this->database = new CreateDatabase($this->_defaultCollation);
@@ -150,22 +153,24 @@ class MysqlDump
 
                 $includeTablesRegex = $flags['matchTables']['include'];
                 $excludeTablesRegex = $flags['matchTables']['exclude'];
-                if (
-                    ($includeTablesRegex == '' || preg_match($includeTablesRegex, $table->name)) &&
+                if (($includeTablesRegex == '' || preg_match($includeTablesRegex, $table->name)) &&
                     ($excludeTablesRegex == '' || !preg_match($excludeTablesRegex, $table->name))
                 ) {
                     $this->database->addTable($table);
                 }
-            }
-            else if (!$this->_skipQuery($stream)) {
+            } elseif (!$this->_skipQuery($stream)) {
                 break;
             }
         }
     }
 
+    /**
+     * @param TokenStream $stream
+     * @return bool
+     */
     private function _skipQuery(TokenStream $stream)
     {
-        while(true) {
+        while (true) {
             $token = $stream->nextToken();
             if ($token->isEof()) {
                 return false;
@@ -185,12 +190,12 @@ class MysqlDump
     {
         $ddl = [];
 
-        foreach($this->databases as $database) {
+        foreach ($this->databases as $database) {
             if ($database->name !== '') {
                 $ddl = array_merge($ddl, $database->getDDL());
                 $ddl[] = "USE " . Token::escapeIdentifier($database->name);
             }
-            foreach($database->tables as $table) {
+            foreach ($database->tables as $table) {
                 $ddl = array_merge($ddl, $table->getDDL());
             }
         }
@@ -211,10 +216,11 @@ class MysqlDump
      * 'alterEngine'    | (bool) include 'ALTER TABLE ... ENGINE=' [default: true]
      * 'matchTables'    | [$database => ['include' => $regex, 'exclude' => $regex], ...] tables to include / exclude
      *
-     * @param bool[] $flags  controls what to include in the generated DDL
-     * @return string[]
+     * @param MysqlDump $that
+     * @param bool[] $flags controls what to include in the generated DDL
+     * @return \string[]
      */
-    public function diff(self $that, $flags = [])
+    public function diff(MysqlDump $that, array $flags = [])
     {
         $flags += [
             'createDatabase' => true,
@@ -238,22 +244,21 @@ class MysqlDump
         $diff = [];
 
         if ($flags['dropDatabase'] && count($droppedDatabaseNames) > 0) {
-            foreach($droppedDatabaseNames as $databaseName) {
+            foreach ($droppedDatabaseNames as $databaseName) {
                 $diff[] = "DROP DATABASE IF EXISTS " . Token::escapeIdentifier($databaseName);
             }
         }
 
         if ($flags['createDatabase']) {
-            foreach($createdDatabaseNames as $databaseName) {
+            foreach ($createdDatabaseNames as $databaseName) {
                 $matchTables = $flags['matchTables'][$databaseName];
                 $includeTablesRegex = $matchTables['include'];
                 $excludeTablesRegex = $matchTables['exclude'];
                 $thatDatabase = $that->databases[$databaseName];
                 $diff[] = $thatDatabase->getDDL();
                 $diff[] = "USE " . Token::escapeIdentifier($databaseName);
-                foreach($thatDatabase->tables as $table) {
-                    if (
-                        ($includeTablesRegex == '' || preg_match($includeTablesRegex, $table->name)) &&
+                foreach ($thatDatabase->tables as $table) {
+                    if (($includeTablesRegex == '' || preg_match($includeTablesRegex, $table->name)) &&
                         ($excludeTablesRegex == '' || !preg_match($excludeTablesRegex, $table->name))
                     ) {
                         $diff[] = $table->getDDL($thatDatabase->getCollation());
@@ -262,7 +267,7 @@ class MysqlDump
             }
         }
 
-        foreach($commonDatabaseNames as $databaseName) {
+        foreach ($commonDatabaseNames as $databaseName) {
             $matchTables = $flags['matchTables'][$databaseName];
             $thisDatabase = $this->databases[$databaseName];
             $thatDatabase = $that->databases[$databaseName];

@@ -2,19 +2,20 @@
 
 namespace Graze\Morphism;
 
-
 /**
  * A parser for config files
  */
 class Config
 {
+    /** @var array */
     private $entries = [];
+    /** @var string */
     private $path;
 
     /**
      * Constructor
      *
-     * @param $path string - path to config file.
+     * @param string $path Path to config file.
      */
     public function __construct($path)
     {
@@ -34,7 +35,7 @@ class Config
         }
 
         $entries = [];
-        foreach($config['databases'] as $connectionName => $entry) {
+        foreach ($config['databases'] as $connectionName => $entry) {
             if (empty($entry['morphism']['enable'])) {
                 continue;
             }
@@ -46,7 +47,7 @@ class Config
             }
 
             $matchTables = [];
-            foreach(['include', 'exclude'] as $key) {
+            foreach (['include', 'exclude'] as $key) {
                 $regex = '';
                 if (!empty($morphism["{$key}"])) {
                     $regex =  '/^(' . implode('|', $morphism["{$key}"]) . ')$/';
@@ -84,7 +85,7 @@ class Config
      *      'port'        => $port
      *      'unix_socket' => $socket
      *
-     * @param $connectionName string - name of the connection to look up
+     * @param string $connectionName Name of the connection to look up
      * @return ['connection' => [$param => $value, ...], 'morphism' => [ ... ] ]
      */
     public function getEntry($connectionName)
@@ -100,7 +101,7 @@ class Config
      * Returns a new database connection using the parameters named by
      * connectionName.
      *
-     * @param $connectionName string
+     * @param string $connectionName
      * @return \Doctrine\DBAL\Connection
      */
     public function getConnection($connectionName)

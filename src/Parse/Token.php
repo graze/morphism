@@ -97,7 +97,7 @@ class Token
      * The supplied string should exclude the quote delimiters.
      *
      * @param string $string   string to parse
-     * @param char $quoteChar  character that was used as the quote delimiter
+     * @param string $quoteChar  character that was used as the quote delimiter
      * @return Token
      */
     public static function fromString($string, $quoteChar)

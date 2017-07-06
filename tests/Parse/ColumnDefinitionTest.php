@@ -4,7 +4,11 @@ namespace Graze\Morphism\Parse;
 
 class ColumnDefinitionTest extends \Graze\Morphism\Test\Parse\TestCase
 {
-    /** @dataProvider parseDatatypesProvider */
+    /**
+     * @dataProvider parseDatatypesProvider
+     * @param string $text
+     * @param string $expected
+     */
     public function testParseDatatypes($text, $expected)
     {
         $stream = $this->makeStream($text);
@@ -16,21 +20,24 @@ class ColumnDefinitionTest extends \Graze\Morphism\Test\Parse\TestCase
         $this->assertSame($expected, $column->toString($collation));
     }
 
+    /**
+     * @return array
+     */
     public function parseDatatypesProvider()
     {
         return [
             ["x int",                       "`x` int(11) DEFAULT NULL"],
-            ["x int signed",                "`x` int(11) DEFAULT NULL"], 
-            ["x int unsigned",              "`x` int(10) unsigned DEFAULT NULL"], 
-            ["x int(5)",                    "`x` int(5) DEFAULT NULL"], 
+            ["x int signed",                "`x` int(11) DEFAULT NULL"],
+            ["x int unsigned",              "`x` int(10) unsigned DEFAULT NULL"],
+            ["x int(5)",                    "`x` int(5) DEFAULT NULL"],
             ["x int not null default 1",    "`x` int(11) NOT NULL DEFAULT '1'"],
-            ["x int zerofill",              "`x` int(10) unsigned zerofill DEFAULT NULL"], 
-            ["x int zerofill unsigned",     "`x` int(10) unsigned zerofill DEFAULT NULL"], 
-            ["x int unsigned zerofill",     "`x` int(10) unsigned zerofill DEFAULT NULL"], 
-            ["x int default 1",             "`x` int(11) DEFAULT '1'"], 
-            ["x int(4) zerofill default 1", "`x` int(4) unsigned zerofill DEFAULT '0001'"], 
-            ["x int auto_increment",        "`x` int(11) NOT NULL AUTO_INCREMENT"], 
-            ["x int comment 'blah'",        "`x` int(11) DEFAULT NULL COMMENT 'blah'"], 
+            ["x int zerofill",              "`x` int(10) unsigned zerofill DEFAULT NULL"],
+            ["x int zerofill unsigned",     "`x` int(10) unsigned zerofill DEFAULT NULL"],
+            ["x int unsigned zerofill",     "`x` int(10) unsigned zerofill DEFAULT NULL"],
+            ["x int default 1",             "`x` int(11) DEFAULT '1'"],
+            ["x int(4) zerofill default 1", "`x` int(4) unsigned zerofill DEFAULT '0001'"],
+            ["x int auto_increment",        "`x` int(11) NOT NULL AUTO_INCREMENT"],
+            ["x int comment 'blah'",        "`x` int(11) DEFAULT NULL COMMENT 'blah'"],
             ["x int serial default value",  "`x` int(11) NOT NULL AUTO_INCREMENT"],
 
             ["x int primary key",           "`x` int(11) NOT NULL"],
@@ -223,22 +230,30 @@ class ColumnDefinitionTest extends \Graze\Morphism\Test\Parse\TestCase
         ];
     }
 
-    /** @dataProvider parseIndexesProvider */
-    public function testParseIndexes($in, $expectCount)
+    /**
+     * @dataProvider parseIndexesProvider
+     * @param string $in
+     * @param array $expectCount
+     */
+    public function testParseIndexes($in, array $expectCount)
     {
         $stream = $this->makeStream($in);
-        $collation = new CollationInfo();
 
         $column = new ColumnDefinition();
         $column->parse($stream);
 
-        $count = array_count_values(array_map(function($e) {return $e->type;}, $column->indexes));
+        $count = array_count_values(array_map(function ($e) {
+            return $e->type;
+        }, $column->indexes));
         ksort($count);
         ksort($expectCount);
 
         $this->assertSame($expectCount, $count);
     }
 
+    /**
+     * @return array
+     */
     public function parseIndexesProvider()
     {
         return [

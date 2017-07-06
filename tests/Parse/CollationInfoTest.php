@@ -10,7 +10,13 @@ class CollationInfoTest extends \Graze\Morphism\Test\Parse\TestCase
         $this->assertThat($collation, $this->isInstanceOf(__NAMESPACE__ . '\CollationInfo'));
     }
 
-    /** @dataProvider providerConstructorWithArgs */
+    /**
+     * @dataProvider providerConstructorWithArgs
+     * @param string|null $charset
+     * @param string|null $collation
+     * @param string $expectedCharset
+     * @param string $expectedCollation
+     */
     public function testConstructorWithArgs($charset, $collation, $expectedCharset, $expectedCollation)
     {
         $collation = new CollationInfo($charset, $collation);
@@ -18,6 +24,9 @@ class CollationInfoTest extends \Graze\Morphism\Test\Parse\TestCase
         $this->assertSame($expectedCollation, $collation->getCollation());
     }
 
+    /**
+     * @return array
+     */
     public function providerConstructorWithArgs()
     {
         return [
@@ -79,7 +88,7 @@ class CollationInfoTest extends \Graze\Morphism\Test\Parse\TestCase
         $this->assertFalse((new CollationInfo('utf8', 'utf8_unicode_ci'))->isDefaultCollation());
         $this->assertFalse((new CollationInfo('latin1', 'latin1_general_ci'))->isDefaultCollation());
     }
-        
+
     public function testSetCharset()
     {
         $collation = new CollationInfo();
@@ -116,4 +125,3 @@ class CollationInfoTest extends \Graze\Morphism\Test\Parse\TestCase
         (new CollationInfo('latin1'))->setCollation('utf8_general_ci');
     }
 }
-

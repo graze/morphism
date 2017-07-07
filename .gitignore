@@ -1,5 +1,6 @@
 /composer.lock
 /morphism.conf
+/ocular.phar
 /phpunit.xml
 /schema
 /tests/report

@@ -11,5 +11,7 @@ before_script:
 
 script:
     - vendor/bin/phpcs -p --warning-severity=0 src/ tests/
-    - vendor/bin/phpunit --testsuite tests
     - vendor/bin/phpunit --coverage-clover=./tests/report/coverage.clover
+
+after_script:
+    - ./build/coverage_to_scrutinizer.sh

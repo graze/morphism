@@ -48,9 +48,12 @@ class ColumnDefinition
     /** @var IndexDefinition[] */
     public $indexes = [];
 
+    /** @var bool */
     private $_primaryKey = false;
+    /** @var bool */
     private $_uniqueKey = false;
 
+    /** @var array */
     private static $_typeInfoMap = [
         //                             format   default  allow   allow   allow   uninitialised
         // datatype       kind         Spec     Lengths  Autoinc Binary  Charset Value
@@ -83,8 +86,10 @@ class ColumnDefinition
         'enum'       => [ 'enum',      [0    ], null,    false,  false,  true,   0,    ],
         'set'        => [ 'set',       [0    ], null,    false,  false,  true,   '',   ],
     ];
+    /** @var array */
     private static $_typeInfoCache = [];
 
+    /** @var array */
     private static $_aliasMap = [
         'bool'      => 'tinyint',
         'boolean'   => 'tinyint',
@@ -115,8 +120,7 @@ class ColumnDefinition
      * An exception will be thrown if a valid column definition cannot be
      * recognised.
      *
-     * @throws \RuntimeException
-     * @return void
+     * @param TokenStream $stream
      */
     public function parse(TokenStream $stream)
     {
@@ -132,6 +136,9 @@ class ColumnDefinition
         }
     }
 
+    /**
+     * @param string $type
+     */
     private function _addIndex($type)
     {
         // TODO - crying out for an IndexPart class
@@ -145,6 +152,9 @@ class ColumnDefinition
         $this->indexes[] = $index;
     }
 
+    /**
+     * @return object|null
+     */
     private function _getTypeInfo()
     {
         if (array_key_exists($this->type, self::$_typeInfoCache)) {
@@ -173,6 +183,9 @@ class ColumnDefinition
         return $typeInfo;
     }
 
+    /**
+     * @param TokenStream $stream
+     */
     private function _parseColumnDatatype(TokenStream $stream)
     {
         $token = $stream->nextToken();
@@ -184,51 +197,47 @@ class ColumnDefinition
         $sqlType = strtolower($token->text);
         if (array_key_exists($sqlType, self::$_aliasMap)) {
             $type = self::$_aliasMap[$sqlType];
-        }
-        else {
-            switch($sqlType) {
-            case 'serial':
-                // SERIAL is an alias for  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE
-                $this->type = 'bigint';
-                $this->length = 20;
-                $this->unsigned = true;
-                $this->nullable = false;
-                $this->autoIncrement = true;
-                $this->_uniqueKey = true;
-                return;
+        } else {
+            switch ($sqlType) {
+                case 'serial':
+                    // SERIAL is an alias for  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE
+                    $this->type = 'bigint';
+                    $this->length = 20;
+                    $this->unsigned = true;
+                    $this->nullable = false;
+                    $this->autoIncrement = true;
+                    $this->_uniqueKey = true;
+                    return;
 
-            case 'character':
-                if ($stream->consume('varying')) {
-                    $sqlType .= ' varying';
-                    $type = 'varchar';
-                }
-                else {
-                    $type = 'char';
-                }
-                break;
+                case 'character':
+                    if ($stream->consume('varying')) {
+                        $sqlType .= ' varying';
+                        $type = 'varchar';
+                    } else {
+                        $type = 'char';
+                    }
+                    break;
 
-            case 'double':
-                $stream->consume('PRECISION');
-                $sqlType .= ' PRECISION';
-                $type = 'double';
-                break;
+                case 'double':
+                    $stream->consume('PRECISION');
+                    $sqlType .= ' PRECISION';
+                    $type = 'double';
+                    break;
 
-            case 'long':
-                if ($stream->consume('varbinary')) {
-                    $sqlType .= ' varbinary';
-                    $type = 'mediumblob';
-                }
-                else if ($stream->consume('varchar')) {
-                    $sqlType .= ' varchar';
-                    $type = 'mediumtext';
-                }
-                else {
-                    $type = 'mediumtext';
-                }
-                break;
+                case 'long':
+                    if ($stream->consume('varbinary')) {
+                        $sqlType .= ' varbinary';
+                        $type = 'mediumblob';
+                    } elseif ($stream->consume('varchar')) {
+                        $sqlType .= ' varchar';
+                        $type = 'mediumtext';
+                    } else {
+                        $type = 'mediumtext';
+                    }
+                    break;
 
-            default:
-                $type = $sqlType;
+                default:
+                    $type = $sqlType;
             }
         }
 
@@ -241,59 +250,57 @@ class ColumnDefinition
 
         $format = [];
 
-        switch($sqlType) {
-        case 'timestamp':
-            $this->nullable = false;
-            break;
+        switch ($sqlType) {
+            case 'timestamp':
+                $this->nullable = false;
+                break;
 
-        case 'enum':
-        case 'set':
-            $stream->expectOpenParen();
-            while(true) {
-                $this->elements[] = rtrim($stream->expectStringExtended(), " ");
-                $token = $stream->nextToken();
-                if ($token->eq('symbol', ',')) {
-                    continue;
+            case 'enum':
+            case 'set':
+                $stream->expectOpenParen();
+                while (true) {
+                    $this->elements[] = rtrim($stream->expectStringExtended(), " ");
+                    $token = $stream->nextToken();
+                    if ($token->eq('symbol', ',')) {
+                        continue;
+                    }
+                    if ($token->eq('symbol', ')')) {
+                        break;
+                    }
+                    throw new \RuntimeException("expected ',' or ')'");
                 }
-                if ($token->eq('symbol', ')')) {
-                    break;
-                }
-                throw new \RuntimeException("expected ',' or ')'");
-            }
-            break;
-           
-        case 'bool':
-        case 'boolean':
-            $format = [1];
-            $typeInfo->allowSign = false;
-            $typeInfo->allowZerofill = false;
-            break;
+                break;
 
-        default:
-            $spec = $typeInfo->formatSpec;
-            if ($stream->consume([['symbol', '(']])) {
-                if (!($spec[1] || $spec[2])) {
-                    throw new \RuntimeException("unexpected '('");
-                }
-                $format[] = $stream->expectNumber();
-                if ($stream->consume([['symbol', ',']])) {
-                    if (!$spec[2]) {
-                        throw new \RuntimeException("unexpected ','");
+            case 'bool':
+            case 'boolean':
+                $format = [1];
+                $typeInfo->allowSign = false;
+                $typeInfo->allowZerofill = false;
+                break;
+
+            default:
+                $spec = $typeInfo->formatSpec;
+                if ($stream->consume([['symbol', '(']])) {
+                    if (!($spec[1] || $spec[2])) {
+                        throw new \RuntimeException("unexpected '('");
                     }
                     $format[] = $stream->expectNumber();
+                    if ($stream->consume([['symbol', ',']])) {
+                        if (!$spec[2]) {
+                            throw new \RuntimeException("unexpected ','");
+                        }
+                        $format[] = $stream->expectNumber();
+                    } elseif (!$spec[1]) {
+                        throw new \RuntimeException("expected ',' but got ");
+                    }
+                    $stream->expectCloseParen();
+                } elseif (!$spec[0]) {
+                    throw new \RuntimeException("expected '('");
                 }
-                else if (!$spec[1]) {
-                    throw new \RuntimeException("expected ',' but got ");
-                }
-                $stream->expectCloseParen();
-            }
-            else if (!$spec[0]) {
-                throw new \RuntimeException("expected '('");
-            }
-            break;
+                break;
         }
 
-        while(true) {
+        while (true) {
             $mark = $stream->getMark();
             $token1 = $stream->nextToken();
             if ($token1->type !== 'identifier') {
@@ -306,20 +313,17 @@ class ColumnDefinition
                     throw new \RuntimeException("unexpected ZEROFILL");
                 }
                 $this->zerofill = true;
-            }
-            else if ($token1->eq('identifier', 'UNSIGNED')) {
+            } elseif ($token1->eq('identifier', 'UNSIGNED')) {
                 if (!$typeInfo->allowSign) {
                     throw new \RuntimeException("unexpected UNSIGNED");
                 }
                 $this->unsigned = true;
-            }
-            else if ($token1->eq('identifier', 'SIGNED')) {
+            } elseif ($token1->eq('identifier', 'SIGNED')) {
                 if (!$typeInfo->allowSign) {
                     throw new \RuntimeException("unexpected SIGNED");
                 }
                 $this->unsigned = false;
-            }
-            else {
+            } else {
                 $stream->rewind($mark);
                 break;
             }
@@ -334,8 +338,7 @@ class ColumnDefinition
             if (count($format) === 0) {
                 if (count($defaultLengths) === 1 || $this->unsigned) {
                     $format[0] = $defaultLengths[0];
-                }
-                else {
+                } else {
                     $format[0] = $defaultLengths[1];
                 }
             }
@@ -352,7 +355,7 @@ class ColumnDefinition
             throw new \RuntimeException("this tool will only accept 4 as a valid width for YEAR columns");
         }
 
-        while(true) {
+        while (true) {
             $mark = $stream->getMark();
             $token1 = $stream->nextToken();
             if ($token1->type !== 'identifier') {
@@ -365,9 +368,7 @@ class ColumnDefinition
                     throw new \RuntimeException("unexpected BINARY");
                 }
                 $this->collation->setBinaryCollation();
-            }
-            else if (
-                $token1->eq('identifier', 'CHARSET') ||
+            } elseif ($token1->eq('identifier', 'CHARSET') ||
                 $token1->eq('identifier', 'CHARACTER') && $stream->consume('SET')
             ) {
                 if (!$typeInfo->allowCharset) {
@@ -375,8 +376,7 @@ class ColumnDefinition
                 }
                 $charset = $stream->expectName();
                 $this->collation->setCharset($charset);
-            }
-            else {
+            } else {
                 $stream->rewind($mark);
                 break;
             }
@@ -391,9 +391,12 @@ class ColumnDefinition
         }
     }
 
+    /**
+     * @param TokenStream $stream
+     */
     private function _parseColumnOptions(TokenStream $stream)
     {
-        while(true) {
+        while (true) {
             $mark = $stream->getMark();
             $token1 = $stream->nextToken();
             if ($token1->type !== 'identifier') {
@@ -401,21 +404,16 @@ class ColumnDefinition
                 break;
             }
 
-            if (
-                $token1->eq('identifier', 'NOT') &&
+            if ($token1->eq('identifier', 'NOT') &&
                 $stream->consume('NULL')
             ) {
                 $this->nullable = false;
-            }
-            else if (
-                $token1->eq('identifier', 'NULL')
+            } elseif ($token1->eq('identifier', 'NULL')
             ) {
                 if (!$this->autoIncrement) {
                     $this->nullable = true;
                 }
-            }
-            else if (
-                $token1->eq('identifier', 'DEFAULT')
+            } elseif ($token1->eq('identifier', 'DEFAULT')
             ) {
                 $token2 = $stream->nextToken();
 
@@ -434,13 +432,10 @@ class ColumnDefinition
 
                 try {
                     $this->default = $this->_defaultValue($token2);
-                }
-                catch(Exception $e) {
+                } catch (Exception $e) {
                     throw new \RuntimeException("invalid DEFAULT for '" . $this->name . "'");
                 }
-            }
-            else if (
-                $token1->eq('identifier', 'ON') &&
+            } elseif ($token1->eq('identifier', 'ON') &&
                 $stream->consume('UPDATE')
             ) {
                 $token2 = $stream->nextToken();
@@ -458,40 +453,29 @@ class ColumnDefinition
                         throw new \RuntimeException("ON UPDATE CURRENT_TIMESTAMP only valid for TIMESTAMP and DATETIME columns");
                     }
                     $this->onUpdateCurrentTimestamp = true;
-                }
-                else {
+                } else {
                     throw new \RuntimeException("expected CURRENT_TIMESTAMP, NOW, LOCALTIME or LOCALTIMESTAMP");
                 }
-            }
-            else if (
-                $token1->eq('identifier',  'AUTO_INCREMENT')
+            } elseif ($token1->eq('identifier', 'AUTO_INCREMENT')
             ) {
                 if (!$this->_getTypeInfo()->allowAutoIncrement) {
                     throw new \RuntimeException("AUTO_INCREMENT not allowed for this datatype");
                 }
                 $this->autoIncrement = true;
                 $this->nullable = false;
-            }
-            else if (
-                $token1->eq('identifier', 'UNIQUE')
+            } elseif ($token1->eq('identifier', 'UNIQUE')
             ) {
                 $stream->consume('KEY');
                 $this->_uniqueKey = true;
-            }
-            else if (
-                $token1->eq('identifier',  'PRIMARY') && $stream->consume('KEY') ||
+            } elseif ($token1->eq('identifier', 'PRIMARY') && $stream->consume('KEY') ||
                 $token1->eq('identifier', 'KEY')
             ) {
                 $this->_primaryKey = true;
                 $this->nullable = false;
-            }
-            else if (
-                $token1->eq('identifier', 'COMMENT')
+            } elseif ($token1->eq('identifier', 'COMMENT')
             ) {
                 $this->comment = $stream->expectString();
-            }
-            else if (
-                $token1->eq('identifier', 'SERIAL') &&
+            } elseif ($token1->eq('identifier', 'SERIAL') &&
                 $stream->consume('DEFAULT VALUE')
             ) {
                 if (!$this->_getTypeInfo()->allowAutoIncrement) {
@@ -501,8 +485,7 @@ class ColumnDefinition
                 $this->autoIncrement = true;
                 $this->nullable = false;
                 $this->default = null;
-            }
-            else {
+            } else {
                 $stream->rewind($mark);
                 break;
             }
@@ -521,30 +504,35 @@ class ColumnDefinition
     public function getUninitialisedValue()
     {
         $typeInfo = $this->_getTypeInfo();
-        switch($typeInfo->kind) {
-        case 'enum';
-            return $this->elements[0];
+        switch ($typeInfo->kind) {
+            case 'enum':
+                return $this->elements[0];
 
-        case 'int':
-            if ($this->zerofill) {
-                $length = $this->length;
-                return sprintf("%0{$length}d", 0);
-            }
-            return '0';
+            case 'int':
+                if ($this->zerofill) {
+                    $length = $this->length;
+                    return sprintf("%0{$length}d", 0);
+                }
+                return '0';
 
-        case 'decimal':
-            $decimals = is_null($this->decimals) ? 0 : $this->decimals;
-            if ($this->zerofill) {
-                $length = $this->length;
-                return sprintf("%0{$length}.{$decimals}f", 0);
-            }
-            return sprintf("%.{$decimals}f", 0);
+            case 'decimal':
+                $decimals = is_null($this->decimals) ? 0 : $this->decimals;
+                if ($this->zerofill) {
+                    $length = $this->length;
+                    return sprintf("%0{$length}.{$decimals}f", 0);
+                }
+                return sprintf("%.{$decimals}f", 0);
 
-        default:
-            return $typeInfo->uninitialisedValue;
+            default:
+                return $typeInfo->uninitialisedValue;
         }
     }
 
+    /**
+     * @param Token $token
+     * @return string|null
+     * @throws \Exception
+     */
     private function _defaultValue(Token $token)
     {
         if ($token->eq('identifier', 'NULL')) {
@@ -567,99 +555,100 @@ class ColumnDefinition
 
         $typeInfo = $this->_getTypeInfo();
 
-        switch($typeInfo->kind) {
-        case 'bit':
-            return $token->asNumber();
-
-        case 'int':
-            if ($this->zerofill) {
-                $length = $this->length;
-                return sprintf("%0{$length}d", $token->asNumber());
-            }
-            else {
+        switch ($typeInfo->kind) {
+            case 'bit':
                 return $token->asNumber();
-            }
 
-        case 'decimal':
-            $decimals = is_null($this->decimals) ? 0 : $this->decimals;
-            if ($this->zerofill) {
-                $length = $this->length;
-                return sprintf("%0{$length}.{$decimals}f", $token->asNumber());
-            }
-            else {
-                return sprintf("%.{$decimals}f", $token->asNumber());
-            }
-
-        case 'date':
-            return $token->asDate();
-
-        case 'time':
-            return $token->asTime();
-
-        case 'datetime':
-            return $token->asDateTime();
-
-        case 'year':
-            $year = $token->asNumber();
-            if ($token->type !== 'string' && $year == 0) {
-                return '0000';
-            }
-            if ($year < 70) {
-                return (string)round($year + 2000);
-            }
-            else if ($year <= 99) {
-                return (string)round($year + 1900);
-            }
-            else if (1901 <= $year && $year <= 2155) {
-                return (string)round($year);
-            }
-            else {
-                throw new \Exception();
-            }
-
-        case 'text':
-            return $token->asString();
-
-        case 'binary':
-            return str_pad($token->asString(), $this->length, "\0");
-
-        case 'enum':
-            if ($token->type !== 'string') {
-                throw new \Exception();
-            }
-            foreach($this->elements as $element) {
-                if (strtolower($token->text) === strtolower($element)) {
-                    return $element;
+            case 'int':
+                if ($this->zerofill) {
+                    $length = $this->length;
+                    return sprintf("%0{$length}d", $token->asNumber());
+                } else {
+                    return $token->asNumber();
                 }
-            }
-            throw new \Exception();
+                // explicit break to appease phpcs
+                break;
 
-        case 'set':
-            if ($token->type !== 'string') {
-                throw new \Exception();
-            }
-            if ($token->text === '') {
-                return '';
-            }
-            $defaults = explode(',', strtolower($token->text));
-            foreach($defaults as $default) {
-                $match = null;
-                foreach($this->elements as $i => $element) {
-                    if (strtolower($default) === strtolower($element)) {
-                        $match = $i;
-                        break;
-                    }
+            case 'decimal':
+                $decimals = is_null($this->decimals) ? 0 : $this->decimals;
+                if ($this->zerofill) {
+                    $length = $this->length;
+                    return sprintf("%0{$length}.{$decimals}f", $token->asNumber());
+                } else {
+                    return sprintf("%.{$decimals}f", $token->asNumber());
                 }
-                if (is_null($match)) {
+                // explicit break to appease phpcs
+                break;
+
+            case 'date':
+                return $token->asDate();
+
+            case 'time':
+                return $token->asTime();
+
+            case 'datetime':
+                return $token->asDateTime();
+
+            case 'year':
+                $year = $token->asNumber();
+                if ($token->type !== 'string' && $year == 0) {
+                    return '0000';
+                }
+                if ($year < 70) {
+                    return (string)round($year + 2000);
+                } elseif ($year <= 99) {
+                    return (string)round($year + 1900);
+                } elseif (1901 <= $year && $year <= 2155) {
+                    return (string)round($year);
+                } else {
                     throw new \Exception();
                 }
-                $matches[$match] = $this->elements[$match];
-            }
-            ksort($matches, SORT_NUMERIC);
-            return implode(',', $matches);
+                // explicit break to appease phpcs
+                break;
 
-        default:
-            throw new \Exception();
+            case 'text':
+                return $token->asString();
+
+            case 'binary':
+                return str_pad($token->asString(), $this->length, "\0");
+
+            case 'enum':
+                if ($token->type !== 'string') {
+                    throw new \Exception();
+                }
+                foreach ($this->elements as $element) {
+                    if (strtolower($token->text) === strtolower($element)) {
+                        return $element;
+                    }
+                }
+                throw new \Exception();
+
+            case 'set':
+                if ($token->type !== 'string') {
+                    throw new \Exception();
+                }
+                if ($token->text === '') {
+                    return '';
+                }
+                $defaults = explode(',', strtolower($token->text));
+                foreach ($defaults as $default) {
+                    $match = null;
+                    foreach ($this->elements as $i => $element) {
+                        if (strtolower($default) === strtolower($element)) {
+                            $match = $i;
+                            break;
+                        }
+                    }
+                    if (is_null($match)) {
+                        throw new \Exception();
+                    }
+                    $matches[$match] = $this->elements[$match];
+                }
+                ksort($matches, SORT_NUMERIC);
+                return implode(',', $matches);
+
+            default:
+                throw new \Exception();
         }
     }
 
@@ -668,42 +657,41 @@ class ColumnDefinition
      * explicitly specified in the column definition. May modify the column's
      * type if the charset is binary.
      *
+     * @param CollationInfo $tableCollation
      * @return void
      */
     public function applyTableCollation(CollationInfo $tableCollation)
     {
-        if (
-            !$this->collation->isSpecified() &&
+        if (!$this->collation->isSpecified() &&
             $tableCollation->isSpecified()
         ) {
             $this->collation->setCollation($tableCollation->getCollation());
         }
 
-        if (
-            $this->collation->isSpecified() &&
+        if ($this->collation->isSpecified() &&
             $this->collation->isBinaryCharset()
         ) {
-            switch($this->type) {
-            case 'char':
-                $this->type = 'binary';
-                break;
-            case 'varchar':
-                $this->type = 'varbinary';
-                break;
-            case 'tinytext':
-                $this->type = 'tinyblob';
-                break;
-            case 'text':
-                $this->type = 'blob';
-                break;
-            case 'mediumtext':
-                $this->type = 'mediumblob';
-                break;
-            case 'longtext':
-                $this->type = 'longblob';
-                break;
-            default:
-                break;
+            switch ($this->type) {
+                case 'char':
+                    $this->type = 'binary';
+                    break;
+                case 'varchar':
+                    $this->type = 'varbinary';
+                    break;
+                case 'tinytext':
+                    $this->type = 'tinyblob';
+                    break;
+                case 'text':
+                    $this->type = 'blob';
+                    break;
+                case 'mediumtext':
+                    $this->type = 'mediumblob';
+                    break;
+                case 'longtext':
+                    $this->type = 'longblob';
+                    break;
+                default:
+                    break;
             }
         }
     }
@@ -712,6 +700,7 @@ class ColumnDefinition
      * Returns the column definition as an SQL fragment, relative to the
      * specified table collation.
      *
+     * @param CollationInfo $tableCollation
      * @return string
      */
     public function toString(CollationInfo $tableCollation)
@@ -731,7 +720,6 @@ class ColumnDefinition
             $text .= "(";
             $text .= implode(',', array_map('Graze\Morphism\Parse\Token::escapeString', $this->elements));
             $text .= ")";
-
         }
 
         if ($this->unsigned) {
@@ -745,8 +733,7 @@ class ColumnDefinition
         if ($typeInfo->allowCharset) {
             $collation = $this->collation;
             if ($collation->isSpecified()) {
-                if (
-                    !$tableCollation->isSpecified() || 
+                if (!$tableCollation->isSpecified() ||
                     $tableCollation->getCollation() !== $collation->getCollation()
                 ) {
                     $text .= " CHARACTER SET " . $collation->getCharset();
@@ -761,8 +748,7 @@ class ColumnDefinition
             if ($this->type === 'timestamp') {
                 $text .= " NULL";
             }
-        }
-        else {
+        } else {
             $text .= " NOT NULL";
         }
 
@@ -774,17 +760,13 @@ class ColumnDefinition
             if ($this->nullable && $typeInfo->allowDefault) {
                 $text .= " DEFAULT NULL";
             }
-        }
-        else if (
-            in_array($this->type, ['timestamp', 'datetime']) &&
+        } elseif (in_array($this->type, ['timestamp', 'datetime']) &&
             $this->default === 'CURRENT_TIMESTAMP'
         ) {
             $text .= " DEFAULT CURRENT_TIMESTAMP";
-        }
-        else if ($this->type === 'bit') {
+        } elseif ($this->type === 'bit') {
             $text .= " DEFAULT b'" . decbin($this->default) . "'";
-        }
-        else {
+        } else {
             $text .= " DEFAULT " . Token::escapeString($this->default);
         }
 

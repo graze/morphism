@@ -2,7 +2,9 @@
 
 namespace Graze\Morphism\Parse;
 
-class TokenTest extends \Graze\Morphism\Test\Parse\TestCase
+use Graze\Morphism\Test\Parse\TestCase;
+
+class TokenTest extends TestCase
 {
     public function testIsEof()
     {
@@ -42,7 +44,8 @@ class TokenTest extends \Graze\Morphism\Test\Parse\TestCase
             $sq
         );
         $this->assertTrue(
-            $escaped->eq('string', 
+            $escaped->eq(
+                'string',
                 "bcd{$bs}" .
                 "cde" . chr(0) .
                 "def" . chr(8) .
@@ -74,7 +77,8 @@ class TokenTest extends \Graze\Morphism\Test\Parse\TestCase
             $sq
         );
         $this->assertTrue(
-            $unescaped->eq('string', 
+            $unescaped->eq(
+                'string',
                 "ijk" . "a" .
                 "jkl" . "f" .
                 "klm" . "${sq}" .
@@ -90,9 +94,8 @@ class TokenTest extends \Graze\Morphism\Test\Parse\TestCase
     public function testMakeStringQuotes()
     {
         $sq = "'";
-        $dq = '"';
 
-        foreach([
+        foreach ([
             ""              => "",
             "{$sq}${sq}"    => "{$sq}",
             "abc{$sq}${sq}" => "abc{$sq}",
@@ -122,7 +125,8 @@ class TokenTest extends \Graze\Morphism\Test\Parse\TestCase
         );
 
         $this->assertTrue(
-            $token->eq('identifier', 
+            $token->eq(
+                'identifier',
                 'abc`def' .
                 "{$bs}0" .
                 "{$bs}b" .
@@ -152,7 +156,7 @@ class TokenTest extends \Graze\Morphism\Test\Parse\TestCase
             "{$sq}" .
             "abc''" .
             "def{$bs}0" .
-            "ghi{$bs}n" . 
+            "ghi{$bs}n" .
             "jkl{$bs}r" .
             "mno{$bs}{$bs}" .
             "pqr" .
@@ -168,13 +172,21 @@ class TokenTest extends \Graze\Morphism\Test\Parse\TestCase
         );
     }
 
-    /** @dataProvider providerEscapeIdentifier */
+    /**
+     * @dataProvider providerEscapeIdentifier
+     * @param bool   $quoteNames
+     * @param string $arg
+     * @param string $expected
+     */
     public function testEscapeIdentifier($quoteNames, $arg, $expected)
     {
         Token::setQuoteNames($quoteNames);
         $this->assertSame($expected, Token::escapeIdentifier($arg));
     }
 
+    /**
+     * @return array
+     */
     public function providerEscapeIdentifier()
     {
         return [
@@ -190,13 +202,22 @@ class TokenTest extends \Graze\Morphism\Test\Parse\TestCase
         ];
     }
 
-    /** @dataProvider providerAsXyz */
+    /**
+     * @dataProvider providerAsXyz
+     * @param string $method
+     * @param string $type
+     * @param string $arg
+     * @param mixed  $expected
+     */
     public function testAsXyz($method, $type, $arg, $expected)
     {
         $token = new Token($type, $arg);
         $this->assertSame($expected, $token->$method());
     }
 
+    /**
+     * @return array
+     */
     public function providerAsXyz()
     {
         return [
@@ -209,7 +230,7 @@ class TokenTest extends \Graze\Morphism\Test\Parse\TestCase
             ['asString',   'number', '-1.23',               '-1.23'  ],
             ['asString',   'number', '+1.23',               '1.23'   ],
             ['asString',   'number', '.23',                 '0.23'   ],
-        
+
         // TODO - work is needed on Token::asString to make these tests parse:
         //  ['asString',   'number', '1.234e1',             '12.34'  ],
         //  ['asString',   'number', '1.234000e15',         '1.234e15' ],
@@ -251,12 +272,18 @@ class TokenTest extends \Graze\Morphism\Test\Parse\TestCase
     /**
      * @dataProvider providerAsXyzError
      * @expectedException \Exception
+     * @param string $method
+     * @param string $type
+     * @param string $arg
      */
     public function testAsXyzError($method, $type, $arg)
     {
         (new Token($type, $arg))->$method();
     }
 
+    /**
+     * @return array
+     */
     public function providerAsXyzError()
     {
         return [
@@ -278,4 +305,3 @@ class TokenTest extends \Graze\Morphism\Test\Parse\TestCase
         ];
     }
 }
-

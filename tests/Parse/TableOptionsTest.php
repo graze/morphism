@@ -2,9 +2,15 @@
 
 namespace Graze\Morphism\Parse;
 
-class TableOptionsTest extends \Graze\Morphism\Test\Parse\TestCase
+use Graze\Morphism\Test\Parse\TestCase;
+
+class TableOptionsTest extends TestCase
 {
-    /** @dataProvider providerSetDefaultEngine */
+    /**
+     * @dataProvider providerSetDefaultEngine
+     * @param string $engine
+     * @param string $expected
+     */
     public function testSetDefaultEngine($engine, $expected)
     {
         $stream = $this->makeStream('');
@@ -15,6 +21,9 @@ class TableOptionsTest extends \Graze\Morphism\Test\Parse\TestCase
         $this->assertSame($expected, $options->toString());
     }
 
+    /**
+     * @return array
+     */
     public function providerSetDefaultEngine()
     {
         return [
@@ -23,7 +32,11 @@ class TableOptionsTest extends \Graze\Morphism\Test\Parse\TestCase
         ];
     }
 
-    /** @dataProvider parseProvider */
+    /**
+     * @dataProvider parseProvider
+     * @param string $text
+     * @param string $expected
+     */
     public function testParse($text, $expected)
     {
         $stream = $this->makeStream($text);
@@ -35,6 +48,9 @@ class TableOptionsTest extends \Graze\Morphism\Test\Parse\TestCase
         $this->assertSame($expected, $options->toString());
     }
 
+    /**
+     * @return array
+     */
     public function parseProvider()
     {
         return [
@@ -91,7 +107,6 @@ class TableOptionsTest extends \Graze\Morphism\Test\Parse\TestCase
             ["PASSWORD='blah'",             "ENGINE=InnoDB"],
         ];
     }
-
 
     // TODO - test diff()
 }

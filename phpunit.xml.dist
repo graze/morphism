@@ -7,7 +7,7 @@
 
         <!-- Unit test suite -->
         <testsuite name="tests">
-            <directory suffix="Test.php">./test</directory>
+            <directory suffix="Test.php">./tests</directory>
         </testsuite>
 
     </testsuites>

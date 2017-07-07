@@ -11,7 +11,7 @@ class CreateTable
 
     /** @var ColumnDefinition[] */
     public $columns = [];
-    
+
     /** @var IndexDefinition[] definitions of non-foreign keys */
     public $indexes = [];
 
@@ -21,10 +21,13 @@ class CreateTable
     /** @var TableOptions */
     public $options = null;
 
+    /** @var array */
     private $_covers = [];
 
     /**
      * Constructor.
+     *
+     * @param CollationInfo $databaseCollation
      */
     public function __construct(CollationInfo $databaseCollation)
     {
@@ -51,76 +54,62 @@ class CreateTable
      *
      * An exception will be thrown if a valid CREATE TABLE statement cannot be recognised.
      *
-     * @throws \RuntimeException
-     * @return void
+     * @param TokenStream $stream
      */
     public function parse(TokenStream $stream)
     {
         if ($stream->consume('CREATE TABLE')) {
             $stream->consume('IF NOT EXISTS');
-        }
-        else {
+        } else {
             throw new \RuntimeException("expected CREATE TABLE");
         }
 
         $this->name = $stream->expectName();
         $stream->expectOpenParen();
 
-        while(true) {
+        while (true) {
             $hasConstraintKeyword = $stream->consume('CONSTRAINT');
             if ($stream->consume('PRIMARY KEY')) {
                 $this->_parseIndex($stream, 'PRIMARY KEY');
-            }
-            else if (
-                $stream->consume('KEY') ||
+            } elseif ($stream->consume('KEY') ||
                 $stream->consume('INDEX')
             ) {
                 if ($hasConstraintKeyword) {
                     throw new \RuntimeException("bad CONSTRAINT");
                 }
                 $this->_parseIndex($stream, 'KEY');
-            }
-            else if ($stream->consume('FULLTEXT')) {
+            } elseif ($stream->consume('FULLTEXT')) {
                 if ($hasConstraintKeyword) {
                     throw new \RuntimeException("bad CONSTRAINT");
                 }
                 $stream->consume('KEY') || $stream->consume('INDEX');
                 $this->_parseIndex($stream, 'FULLTEXT KEY');
-            }
-            else if ($stream->consume('UNIQUE')) {
+            } elseif ($stream->consume('UNIQUE')) {
                 $stream->consume('KEY') || $stream->consume('INDEX');
                 $this->_parseIndex($stream, 'UNIQUE KEY');
-            }
-            else if ($stream->consume('FOREIGN KEY')) {
+            } elseif ($stream->consume('FOREIGN KEY')) {
                 $this->_parseIndex($stream, 'FOREIGN KEY');
-            }
-            else if ($hasConstraintKeyword) {
+            } elseif ($hasConstraintKeyword) {
                 $constraint = $stream->expectName();
                 if ($stream->consume('PRIMARY KEY')) {
                     $this->_parseIndex($stream, 'PRIMARY KEY', $constraint);
-                }
-                else if ($stream->consume('UNIQUE')) {
+                } elseif ($stream->consume('UNIQUE')) {
                     $stream->consume('KEY') || $stream->consume('INDEX');
                     $this->_parseIndex($stream, 'UNIQUE KEY', $constraint);
-                }
-                else if ($stream->consume('FOREIGN KEY')) {
+                } elseif ($stream->consume('FOREIGN KEY')) {
                     $this->_parseIndex($stream, 'FOREIGN KEY', $constraint);
-                }
-                else {
+                } else {
                     throw new \RuntimeException("bad CONSTRAINT");
                 }
-            }
-            else {
+            } else {
                 $this->_parseColumn($stream);
             }
             $token = $stream->nextToken();
             if ($token->eq('symbol', ',')) {
                 continue;
-            }
-            else if ($token->eq('symbol', ')')) {
+            } elseif ($token->eq('symbol', ')')) {
                 break;
-            }
-            else {
+            } else {
                 throw new \RuntimeException("expected ',' or ')'");
             }
         }
@@ -150,16 +139,16 @@ class CreateTable
     public function getDDL()
     {
         $lines = [];
-        foreach($this->columns as $column) {
+        foreach ($this->columns as $column) {
             $lines[] = "  " . $column->toString($this->getCollation());
         }
-        foreach($this->indexes as $index) {
+        foreach ($this->indexes as $index) {
             $lines[] = "  " . $index->toString();
         }
-        foreach($this->foreigns as $foreign) {
+        foreach ($this->foreigns as $foreign) {
             $lines[] = "  " . $foreign->toString();
         }
-        
+
         $text = "CREATE TABLE " . Token::escapeIdentifier($this->name) . " (\n" .
             implode(",\n", $lines) .
             "\n" .
@@ -172,7 +161,10 @@ class CreateTable
 
         return [$text];
     }
-    
+
+    /**
+     * @param TokenStream $stream
+     */
     private function _parseColumn(TokenStream $stream)
     {
         $column = new ColumnDefinition();
@@ -187,6 +179,11 @@ class CreateTable
         );
     }
 
+    /**
+     * @param TokenStream $stream
+     * @param string $type
+     * @param string|null $constraint
+     */
     private function _parseIndex(TokenStream $stream, $type, $constraint = null)
     {
         $index = new IndexDefinition();
@@ -194,6 +191,9 @@ class CreateTable
         $this->indexes[] = $index;
     }
 
+    /**
+     * @param TokenStream $stream
+     */
     private function _parseTableOptions(TokenStream $stream)
     {
         $this->options->parse($stream);
@@ -204,11 +204,11 @@ class CreateTable
         // To specify automatic properties, use the DEFAULT CURRENT_TIMESTAMP
         // and ON UPDATE CURRENT_TIMESTAMP clauses. The order of the clauses
         // does not matter. If both are present in a column definition, either
-        // can occur first. 
+        // can occur first.
 
         // collect all timestamps
         $ts = [];
-        foreach($this->columns as $column) {
+        foreach ($this->columns as $column) {
             if ($column->type === 'timestamp') {
                 $ts[] = $column;
             }
@@ -243,7 +243,7 @@ class CreateTable
         //     }
         // }
 
-        foreach($ts as $column) {
+        foreach ($ts as $column) {
             if (!$column->nullable && is_null($column->default)) {
                 $column->default = '0000-00-00 00:00:00';
             }
@@ -253,8 +253,8 @@ class CreateTable
     private function _processIndexes()
     {
         // check indexes are sane wrt available columns
-        foreach($this->indexes as $index) {
-            foreach($index->columns as $indexColumn) {
+        foreach ($this->indexes as $index) {
+            foreach ($index->columns as $indexColumn) {
                 $indexColumnName = $indexColumn['name'];
                 if (!array_key_exists(strtolower($indexColumnName), $this->columns)) {
                     throw new \RuntimeException("key column '$indexColumnName' doesn't exist in table");
@@ -263,9 +263,9 @@ class CreateTable
         }
 
         // figure out all sequences of columns covered by non-FK indexes
-        foreach($this->indexes as $index) {
+        foreach ($this->indexes as $index) {
             if ($index->type !== 'FOREIGN KEY') {
-                foreach($index->getCovers() as $cover) {
+                foreach ($index->getCovers() as $cover) {
                     $lookup = implode('\0', $cover);
                     $this->_covers[$lookup] = true;
                 }
@@ -276,7 +276,7 @@ class CreateTable
         $foreigns = [];
         $ibfkCounter = 0;
 
-        foreach($this->indexes as $index) {
+        foreach ($this->indexes as $index) {
             if ($index->type === 'FOREIGN KEY') {
                 // TODO - doesn't correctly deal with indexes like foo(10)
                 $lookup = implode('\0', $index->getColumns());
@@ -286,8 +286,7 @@ class CreateTable
                     $newIndex->columns = $index->columns;
                     if (!is_null($index->constraint)) {
                         $newIndex->name = $index->constraint;
-                    }
-                    else if (!is_null($index->name)) {
+                    } elseif (!is_null($index->name)) {
                         $newIndex->name = $index->name;
                     }
                     $indexes[] = $newIndex;
@@ -295,16 +294,14 @@ class CreateTable
                 $foreign = new IndexDefinition();
                 if (is_null($index->constraint)) {
                     $foreign->constraint = $this->name . '_ibfk_' . ++$ibfkCounter;
-                }
-                else {
+                } else {
                     $foreign->constraint = $index->constraint;
                 }
                 $foreign->type = 'FOREIGN KEY';
                 $foreign->columns = $index->columns;
                 $foreign->reference = $index->reference;
                 $foreigns[] = $foreign;
-            }
-            else {
+            } else {
                 $indexes[] = $index;
             }
         }
@@ -320,21 +317,19 @@ class CreateTable
             'FOREIGN KEY',
         ];
         $indexesByType = array_fill_keys($keyTypes, []);
-        foreach($indexes as $index) {
+        foreach ($indexes as $index) {
             $name = $index->name;
             if ($index->type === 'PRIMARY KEY') {
                 $name = 'PRIMARY';
-            }
-            else if (is_null($name)) {
+            } elseif (is_null($name)) {
                 $base = $index->columns[0]['name'];
                 $name = $base;
                 $i = 1;
-                while(isset($usedName[$name])) {
+                while (isset($usedName[$name])) {
                     $name = $base . '_' . ++$i;
                 }
                 $index->name = $name;
-            }
-            else if (array_key_exists(strtolower($name), $usedName)) {
+            } elseif (array_key_exists(strtolower($name), $usedName)) {
                 throw new \RuntimeException("duplicate key name '$name'");
             }
             $index->name = $name;
@@ -347,8 +342,8 @@ class CreateTable
             throw new \RuntimeException("multiple PRIMARY KEYs defined");
         }
 
-        foreach($indexesByType['PRIMARY KEY'] as $pk) {
-            foreach($pk->columns as $indexColumn) {
+        foreach ($indexesByType['PRIMARY KEY'] as $pk) {
+            foreach ($pk->columns as $indexColumn) {
                 $column = $this->columns[strtolower($indexColumn['name'])];
                 if ($column->nullable) {
                     $column->nullable = false;
@@ -360,10 +355,10 @@ class CreateTable
         }
 
         $this->indexes = [];
-        foreach(array_reduce($indexesByType, 'array_merge', []) as $index) {
+        foreach (array_reduce($indexesByType, 'array_merge', []) as $index) {
             $this->indexes[$index->name] = $index;
         }
-        foreach($foreigns as $foreign) {
+        foreach ($foreigns as $foreign) {
             $this->foreigns[] = $foreign;
         }
     }
@@ -371,7 +366,7 @@ class CreateTable
     private function _processAutoIncrement()
     {
         $count = 0;
-        foreach($this->columns as $column) {
+        foreach ($this->columns as $column) {
             if ($column->autoIncrement) {
                 if (++$count > 1) {
                     throw new \RuntimeException("there can be only one AUTO_INCREMENT column");
@@ -385,7 +380,7 @@ class CreateTable
 
     private function _processColumnCollations()
     {
-        foreach($this->columns as $column) {
+        foreach ($this->columns as $column) {
             $column->applyTableCollation($this->getCollation());
         }
     }
@@ -399,9 +394,11 @@ class CreateTable
      * :-------------|----
      * 'alterEngine' | (bool) include ALTER TABLE ... ENGINE= [default: true]
      *
+     * @param CreateTable $that
+     * @param array $flags
      * @return string
      */
-    public function diff(self $that, array $flags = [])
+    public function diff(CreateTable $that, array $flags = [])
     {
         $flags += [
             'alterEngine' => true,
@@ -422,15 +419,18 @@ class CreateTable
         return ["ALTER TABLE " . Token::escapeIdentifier($this->name) . "\n" . implode(",\n", $alters)];
     }
 
+    /**
+     * @param CreateTable $that
+     * @return array
+     */
     private function _diffColumns(CreateTable $that)
     {
         $alters = [];
         $permutation = [];
-        foreach(array_keys($this->columns) as $columnName) {
+        foreach (array_keys($this->columns) as $columnName) {
             if (array_key_exists($columnName, $that->columns)) {
                 $permutation[] = $columnName;
-            }
-            else {
+            } else {
                 $alters[] = "DROP COLUMN " . Token::escapeIdentifier($columnName);
             }
         }
@@ -438,7 +438,7 @@ class CreateTable
         $prevColumn = null;
         $thatPosition = " FIRST";
         $j = 0;
-        foreach($that->columns as $columnName => $column) {
+        foreach ($that->columns as $columnName => $column) {
             if (array_key_exists($columnName, $this->columns)) {
                 $thisDefinition = $this->columns[$columnName]->toString($this->getCollation());
                 $thatDefinition = $that->columns[$columnName]->toString($that->getCollation());
@@ -451,8 +451,7 @@ class CreateTable
                 // need to change it
                 $thisPosition = ($i === 0) ? " FIRST" : " AFTER " . Token::escapeIdentifier($permutation[$i - 1]);
 
-                if (
-                    $thisDefinition !== $thatDefinition ||
+                if ($thisDefinition !== $thatDefinition ||
                     $thisPosition   !== $thatPosition
                 ) {
                     $alter = "MODIFY COLUMN " . $thatDefinition;
@@ -473,8 +472,7 @@ class CreateTable
 
                     $alters[] = $alter;
                 }
-            }
-            else {
+            } else {
                 $alter = "ADD COLUMN " . $column->toString($this->getCollation());
                 if ($j < count($permutation)) {
                     $alter .= $thatPosition;
@@ -493,33 +491,35 @@ class CreateTable
         return $alters;
     }
 
+    /**
+     * @param CreateTable $that
+     * @return array
+     */
     private function _diffIndexes(CreateTable $that)
     {
         $alters = [];
 
-        foreach($this->indexes as $indexName => $index) {
-            if (
-                !array_key_exists($indexName, $that->indexes) ||
+        foreach ($this->indexes as $indexName => $index) {
+            if (!array_key_exists($indexName, $that->indexes) ||
                 $index->toString() !== $that->indexes[$indexName]->toString()
             ) {
-                switch($index->type) {
-                case 'PRIMARY KEY':
-                    $alter = "DROP PRIMARY KEY";
-                    break;
+                switch ($index->type) {
+                    case 'PRIMARY KEY':
+                        $alter = "DROP PRIMARY KEY";
+                        break;
 
                 // TODO - foreign keys???
 
-                default:
-                    $alter = "DROP KEY " . Token::escapeIdentifier($indexName);
-                    break;
+                    default:
+                        $alter = "DROP KEY " . Token::escapeIdentifier($indexName);
+                        break;
                 }
                 $alters[] = $alter;
             }
         }
 
-        foreach($that->indexes as $indexName => $index) {
-            if (
-                !array_key_exists($indexName, $this->indexes) ||
+        foreach ($that->indexes as $indexName => $index) {
+            if (!array_key_exists($indexName, $this->indexes) ||
                 $index->toString() !== $this->indexes[$indexName]->toString()
             ) {
                 $alters[] = "ADD " . $index->toString();
@@ -529,7 +529,12 @@ class CreateTable
         return $alters;
     }
 
-    private function _diffOptions(CreateTable $that, $flags = [])
+    /**
+     * @param CreateTable $that
+     * @param array $flags
+     * @return array
+     */
+    private function _diffOptions(CreateTable $that, array $flags = [])
     {
         $flags += [
             'alterEngine' => true,

@@ -2,7 +2,9 @@
 
 namespace Graze\Morphism\Parse;
 
-class CreateTableTest extends \Graze\Morphism\Test\Parse\TestCase
+use Graze\Morphism\Test\Parse\TestCase;
+
+class CreateTableTest extends TestCase
 {
     public function testConstructor()
     {
@@ -19,7 +21,11 @@ class CreateTableTest extends \Graze\Morphism\Test\Parse\TestCase
         $this->assertTrue(true);
     }
 
-    /** @dataProvider providerParse */
+    /**
+     * @dataProvider providerParse
+     * @param string $text
+     * @param string $expected
+     */
     public function testParse($text, $expected)
     {
         $stream = $this->makeStream($text);
@@ -30,8 +36,7 @@ class CreateTableTest extends \Graze\Morphism\Test\Parse\TestCase
         $threw = null;
         try {
             $table->parse($stream);
-        }
-        catch(\Exception $e) {
+        } catch (\Exception $e) {
             $threw = $e;
         }
         if (preg_match('/^exception/i', $expected)) {
@@ -41,13 +46,11 @@ class CreateTableTest extends \Graze\Morphism\Test\Parse\TestCase
             list(, $expectedExceptionType, $expectedMessageRegex) = $pregMatch;
             if (is_null($threw)) {
                 $this->fail("expected an $expectedExceptionType exception, but none was thrown");
-            }
-            else {
+            } else {
                 $this->assertInstanceOf($expectedExceptionType, $threw, "wrong exception type thrown");
                 $this->assertRegExp("/$expectedMessageRegex/", $e->getMessage(), "wrong exception message");
             }
-        }
-        elseif (is_null($threw)) {
+        } elseif (is_null($threw)) {
             $ddl = $table->getDDL();
             $actual = $ddl[0] . ';';
             $this->assertCount(1, $ddl);
@@ -55,17 +58,19 @@ class CreateTableTest extends \Graze\Morphism\Test\Parse\TestCase
                 trim(preg_replace('/\s+/', ' ', $expected)),
                 trim(preg_replace('/\s+/', ' ', $actual))
             );
-        }
-        else {
+        } else {
             $this->fail("Unexpected exception " . get_class($threw) . ": " . $threw->getMessage());
         }
     }
 
+    /**
+     * @return array
+     */
     public function providerParse()
     {
         $tests = [];
 
-        foreach([
+        foreach ([
             'simpleCreateTable.sql',
             'default.sql',
             'primaryKey.sql',
@@ -78,10 +83,10 @@ class CreateTableTest extends \Graze\Morphism\Test\Parse\TestCase
         ] as $file) {
             $path = __DIR__ . '/sql/' . $file;
             $sql = @file_get_contents(__DIR__ . '/sql/' . $file);
-            if ($sql === FALSE) {
+            if ($sql === false) {
                 $this->fail("could not open $path");
             }
-            foreach(preg_split('/^-- test .*$/m', $sql) as $pair) {
+            foreach (preg_split('/^-- test .*$/m', $sql) as $pair) {
                 if (trim($pair) != '') {
                     list($text, $expected) = preg_split('/(?<=;)/', $pair);
                     $tests[] = [

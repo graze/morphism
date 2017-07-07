@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<ruleset name="graze/standards">
+
+    <description>The graze PHP coding standard as defined in graze/standards.</description>
+
+    <!-- Include all sniffs in the Graze standard. -->
+    <rule ref="vendor/graze/standards/PHP/CodeSniffer/Graze/ruleset.xml" />
+
+    <rule ref="Squiz.Commenting.FunctionComment">
+        <exclude name="Squiz.Commenting.FunctionComment.InvalidReturnVoid" />
+    </rule>
+
+    <rule ref="Squiz.Commenting.FunctionComment">
+        <!-- excluded because it can't be used for both php 5 and 7 -->
+        <exclude name="Squiz.Commenting.FunctionComment.ScalarTypeHintMissing" />
+    </rule>
+
+    <rule ref="Squiz.NamingConventions.ValidVariableName.NotCamelCaps">
+        <!-- excluded because it's handling raw database query results -->
+        <exclude-pattern>*/src/Extractor.php</exclude-pattern>
+    </rule>
+</ruleset>

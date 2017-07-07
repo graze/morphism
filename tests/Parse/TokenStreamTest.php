@@ -2,7 +2,9 @@
 
 namespace Graze\Morphism\Parse;
 
-class TokenStreamTest extends \Graze\Morphism\Test\Parse\TestCase
+use Graze\Morphism\Test\Parse\TestCase;
+
+class TokenStreamTest extends TestCase
 {
     public function testNewFromFile()
     {
@@ -16,7 +18,12 @@ class TokenStreamTest extends \Graze\Morphism\Test\Parse\TestCase
         TokenStream::newFromFile(dirname(__FILE__) . "/file_not_found");
     }
 
-    /** @dataProvider nextTokenProvider */
+    /**
+     * @dataProvider nextTokenProvider
+     * @param string $text
+     * @param string $expectedType
+     * @param mixed $expectedValue
+     */
     public function testNextToken($text, $expectedType, $expectedValue)
     {
         $stream = $this->makeStream($text);
@@ -24,6 +31,11 @@ class TokenStreamTest extends \Graze\Morphism\Test\Parse\TestCase
         $this->assertTokenEq($expectedType, $expectedValue, $token);
     }
 
+    /**
+     * @param string $expectedType
+     * @param mixed $expectedValue
+     * @param string $token
+     */
     public function assertTokenEq($expectedType, $expectedValue, $token)
     {
         $this->assertTrue(
@@ -32,6 +44,9 @@ class TokenStreamTest extends \Graze\Morphism\Test\Parse\TestCase
         );
     }
 
+    /**
+     * @return array
+     */
     public function nextTokenProvider()
     {
         $sq = "'";
@@ -148,7 +163,14 @@ class TokenStreamTest extends \Graze\Morphism\Test\Parse\TestCase
         $this->assertTokenEq($token22->type, $token22->text, $token12);
     }
 
-    /** @dataProvider consumeProvider */
+    /**
+     * @dataProvider consumeProvider
+     * @param string $text
+     * @param mixed $spec
+     * @param bool $success
+     * @param string $type
+     * @param string $value
+     */
     public function testConsume($text, $spec, $success, $type, $value)
     {
         $stream = $this->makeStream($text);
@@ -156,11 +178,14 @@ class TokenStreamTest extends \Graze\Morphism\Test\Parse\TestCase
             (bool)$success,
             (bool)$stream->consume($spec),
             "consume did not return " . ($success ? 'true' : 'false')
-        ); 
+        );
         $token = $stream->nextToken();
         $this->assertTokenEq($type, $value, $token);
     }
 
+    /**
+     * @return array
+     */
     public function consumeProvider()
     {
         return [
@@ -175,7 +200,14 @@ class TokenStreamTest extends \Graze\Morphism\Test\Parse\TestCase
         ];
     }
 
-    /** @dataProvider peekProvider */
+    /**
+     * @dataProvider peekProvider
+     * @param string $text
+     * @param mixed $spec
+     * @param bool $success
+     * @param string $type
+     * @param string $value
+     */
     public function testPeek($text, $spec, $success, $type, $value)
     {
         $stream = $this->makeStream($text);
@@ -187,7 +219,10 @@ class TokenStreamTest extends \Graze\Morphism\Test\Parse\TestCase
         $token = $stream->nextToken();
         $this->assertTokenEq($type, $value, $token);
     }
-        
+
+    /**
+     * @return array
+     */
     public function peekProvider()
     {
         return [
@@ -218,7 +253,7 @@ class TokenStreamTest extends \Graze\Morphism\Test\Parse\TestCase
     // TODO -
     // following methods are untested:
     //     expectName
-    //     expectOpenParen 
+    //     expectOpenParen
     //     expectCloseParen
     //     expectNumber
     //     expectString

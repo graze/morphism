@@ -9,19 +9,23 @@ class CreateDatabase
     /** @var string */
     public $name = '';
 
-    /** 
+    /**
      * @var CreateTable[]
-     * 
+     *
      * indexed by (string) table name; when enumerated, reflects the order
      * in which the table definitions were parsed.
      */
     public $tables = [];
 
+    /** @var CollationInfo|null */
     private $_collation = null;
+    /** @var CollationInfo|null */
     private $_defaultCollation = null;
 
     /**
      * Constructor.
+     *
+     * @param CollationInfo $defaultCollation
      */
     public function __construct(CollationInfo $defaultCollation)
     {
@@ -33,22 +37,21 @@ class CreateDatabase
      * Parses a database declaration from $stream.
      *
      * Declarations must be of the form 'CREATE DATABASE ...' or
-     * 'CREATE DATABASE IF NOT EXISTS ...'. Anything else will cause 
+     * 'CREATE DATABASE IF NOT EXISTS ...'. Anything else will cause
      * an exception to be thrown.
      *
-     * @throws \RuntimeException
+     * @param TokenStream $stream
      */
     public function parse(TokenStream $stream)
     {
         if ($stream->consume('CREATE DATABASE')) {
             $stream->consume('IF NOT EXISTS');
-        }
-        else {
+        } else {
             throw new \RuntimeException("expected CREATE DATABASE");
         }
 
         $this->name = $stream->expectName();
-        while(true) {
+        while (true) {
             $stream->consume('DEFAULT');
             if ($stream->consume('CHARSET') ||
                 $stream->consume('CHARACTER SET')
@@ -57,22 +60,18 @@ class CreateDatabase
                 $charset = $stream->expectName();
                 if (strtoupper($charset) === 'DEFAULT') {
                     $this->_collation = new CollationInfo();
-                }
-                else {
+                } else {
                     $this->_collation->setCharset($charset);
                 }
-            }
-            else if ($stream->consume('COLLATE')) {
+            } elseif ($stream->consume('COLLATE')) {
                 $stream->consume([['symbol', '=']]);
                 $collation = $stream->expectName();
                 if (strtoupper($collation) === 'DEFAULT') {
                     $this->_collation = new CollationInfo();
-                }
-                else {
+                } else {
                     $this->_collation->setCollation($collation);
                 }
-            }
-            else {
+            } else {
                 break;
             }
         }
@@ -93,6 +92,8 @@ class CreateDatabase
     /**
      * Asserts that the table described by $table belongs to this
      * database.
+     *
+     * @param CreateTable $table
      */
     public function addTable(CreateTable $table)
     {
@@ -134,9 +135,11 @@ class CreateDatabase
      * 'alterEngine' | (bool) include ALTER TABLE ... ENGINE= [default: true]
      * 'matchTables' | ['include' => $regex, 'exclude' => $regex] regex of tables to include/exclude
      *
-     * @return string[]
+     * @param CreateDatabase $that
+     * @param array $flags
+     * @return \string[]
      */
-    public function diff(self $that, array $flags = [])
+    public function diff(CreateDatabase $that, array $flags = [])
     {
         $flags += [
             'createTable' => true,
@@ -161,9 +164,8 @@ class CreateDatabase
         $excludeTablesRegex = $flags['matchTables']['exclude'];
 
         if ($flags['dropTable'] && count($droppedTableNames) > 0) {
-            foreach($droppedTableNames as $tableName) {
-                if (
-                    ($includeTablesRegex == '' || preg_match($includeTablesRegex, $tableName)) &&
+            foreach ($droppedTableNames as $tableName) {
+                if (($includeTablesRegex == '' || preg_match($includeTablesRegex, $tableName)) &&
                     ($excludeTablesRegex == '' || !preg_match($excludeTablesRegex, $tableName))
                 ) {
                     $diff[] = "DROP TABLE IF EXISTS " . Token::escapeIdentifier($tableName);
@@ -172,9 +174,8 @@ class CreateDatabase
         }
 
         if ($flags['createTable'] && count($createdTableNames) > 0) {
-            foreach($createdTableNames as $tableName) {
-                if (
-                    ($includeTablesRegex == '' || preg_match($includeTablesRegex, $tableName)) &&
+            foreach ($createdTableNames as $tableName) {
+                if (($includeTablesRegex == '' || preg_match($includeTablesRegex, $tableName)) &&
                     ($excludeTablesRegex == '' || !preg_match($excludeTablesRegex, $tableName))
                 ) {
                     $diff = array_merge($diff, $that->tables[$tableName]->getDDL());
@@ -182,9 +183,8 @@ class CreateDatabase
             }
         }
 
-        foreach($commonTableNames as $tableName) {
-            if (
-                ($includeTablesRegex == '' || preg_match($includeTablesRegex, $tableName)) &&
+        foreach ($commonTableNames as $tableName) {
+            if (($includeTablesRegex == '' || preg_match($includeTablesRegex, $tableName)) &&
                 ($excludeTablesRegex == '' || !preg_match($excludeTablesRegex, $tableName))
             ) {
                 $thisTable = $this->tables[$tableName];

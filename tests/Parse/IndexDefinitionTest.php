@@ -2,9 +2,17 @@
 
 namespace Graze\Morphism\Parse;
 
-class IndexDefinitionTest extends \Graze\Morphism\Test\Parse\TestCase
+use Graze\Morphism\Test\Parse\TestCase;
+
+class IndexDefinitionTest extends TestCase
 {
-    /** @dataProvider parseProvider */
+    /**
+     * @dataProvider parseProvider
+     * @param string $type
+     * @param string $text
+     * @param string|null $constraint
+     * @param string $expected
+     */
     public function testParse($type, $text, $constraint, $expected)
     {
         $stream = $this->makeStream($text);
@@ -18,6 +26,9 @@ class IndexDefinitionTest extends \Graze\Morphism\Test\Parse\TestCase
         $this->assertSame($expected, $index->toString());
     }
 
+    /**
+     * @return array
+     */
     public function parseProvider()
     {
         return [
@@ -79,8 +90,12 @@ class IndexDefinitionTest extends \Graze\Morphism\Test\Parse\TestCase
         ];
     }
 
-    /** @dataProvider providerCovers */
-    public function testCovers($text, $expected)
+    /**
+     * @dataProvider providerCovers
+     * @param string $text
+     * @param array $expected
+     */
+    public function testCovers($text, array $expected)
     {
         $stream = $this->makeStream($text);
 
@@ -94,6 +109,9 @@ class IndexDefinitionTest extends \Graze\Morphism\Test\Parse\TestCase
         $this->assertSame($covers, $expected);
     }
 
+    /**
+     * @return array
+     */
     public function providerCovers()
     {
         return [
@@ -104,8 +122,12 @@ class IndexDefinitionTest extends \Graze\Morphism\Test\Parse\TestCase
         ];
     }
 
-    /** @dataProvider providerColumns() */
-    public function testColumns($text, $expected)
+    /**
+     * @dataProvider providerColumns()
+     * @param string $text
+     * @param array $expected
+     */
+    public function testColumns($text, array $expected)
     {
         $stream = $this->makeStream($text);
 
@@ -115,7 +137,10 @@ class IndexDefinitionTest extends \Graze\Morphism\Test\Parse\TestCase
 
         $this->assertSame($columns, $expected);
     }
-        
+
+    /**
+     * @return array
+     */
     public function providerColumns()
     {
         return [

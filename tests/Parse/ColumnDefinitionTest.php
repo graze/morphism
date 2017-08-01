@@ -30,6 +30,7 @@ class ColumnDefinitionTest extends \Graze\Morphism\Test\Parse\TestCase
             ["x int signed",                "`x` int(11) DEFAULT NULL"],
             ["x int unsigned",              "`x` int(10) unsigned DEFAULT NULL"],
             ["x int(5)",                    "`x` int(5) DEFAULT NULL"],
+            ["x int(5) default null",       "`x` int(5) DEFAULT NULL"],
             ["x int not null default 1",    "`x` int(11) NOT NULL DEFAULT '1'"],
             ["x int zerofill",              "`x` int(10) unsigned zerofill DEFAULT NULL"],
             ["x int zerofill unsigned",     "`x` int(10) unsigned zerofill DEFAULT NULL"],
@@ -72,6 +73,9 @@ class ColumnDefinitionTest extends \Graze\Morphism\Test\Parse\TestCase
             ["x decimal unsigned",          "`x` decimal(10,0) unsigned DEFAULT NULL"],
             ["x decimal(8)",                "`x` decimal(8,0) DEFAULT NULL"],
             ["x decimal(8,3)",              "`x` decimal(8,3) DEFAULT NULL"],
+            ["x decimal default 1",         "`x` decimal(10,0) DEFAULT '1'"],
+            ["x decimal(5,3) default 1",    "`x` decimal(5,3) DEFAULT '1.000'"],
+            ["x decimal(7,3) zerofill default 1",   "`x` decimal(7,3) unsigned zerofill DEFAULT '001.000'"],
 
             ["x date",                      "`x` date DEFAULT NULL"],
             ["x date default 0",            "`x` date DEFAULT '0000-00-00'"],
@@ -112,16 +116,19 @@ class ColumnDefinitionTest extends \Graze\Morphism\Test\Parse\TestCase
             ["x year default 69",  "`x` year(4) DEFAULT '2069'"],
             ["x year default 70",  "`x` year(4) DEFAULT '1970'"],
             ["x year default 99",  "`x` year(4) DEFAULT '1999'"],
+            ["x year default 1901","`x` year(4) DEFAULT '1901'"],
+            ["x year default 2155","`x` year(4) DEFAULT '2155'"],
 
             ["x char",           "`x` char(1) DEFAULT NULL"],
             ["x char(4)",        "`x` char(4) DEFAULT NULL"],
 
             ["x varchar(255)",   "`x` varchar(255) DEFAULT NULL"],
 
-            ["x binary",         "`x` binary(1) DEFAULT NULL"],
-            ["x binary(255)",    "`x` binary(255) DEFAULT NULL"],
+            ["x binary",                "`x` binary(1) DEFAULT NULL"],
+            ["x binary(255)",           "`x` binary(255) DEFAULT NULL"],
+            ["x binary default 'a'",    "`x` binary(1) DEFAULT 'a'"],
 
-            ["x varbinary(255)", "`x` varbinary(255) DEFAULT NULL"],
+            ["x varbinary(255)",        "`x` varbinary(255) DEFAULT NULL"],
 
             ["x tinyblob",            "`x` tinyblob"],
             ["x tinyblob NULL",       "`x` tinyblob"],
@@ -146,6 +153,9 @@ class ColumnDefinitionTest extends \Graze\Morphism\Test\Parse\TestCase
             ["x text",                "`x` text"],
             ["x text NULL",           "`x` text"],
             ["x text NOT NULL",       "`x` text NOT NULL"],
+            ["x text binary",         "`x` text"],
+            ["x text charset utf8",   "`x` text CHARACTER SET utf8"],
+            ["x text collate utf8_unicode_ci", "`x` text CHARACTER SET utf8 COLLATE utf8_unicode_ci"],
 
             ["x mediumtext",          "`x` mediumtext"],
             ["x mediumtext NULL",     "`x` mediumtext"],
@@ -155,6 +165,8 @@ class ColumnDefinitionTest extends \Graze\Morphism\Test\Parse\TestCase
             ["x longtext NULL",       "`x` longtext"],
             ["x longtext NOT NULL",   "`x` longtext NOT NULL"],
 
+            ["x varchar(3) default 'abc'",  "`x` varchar(3) DEFAULT 'abc'"],
+
             ["x enum('a', 'b', 'c')",             "`x` enum('a','b','c') DEFAULT NULL"],
             ["x enum('a', 'b', 'c') DEFAULT 'b'", "`x` enum('a','b','c') DEFAULT 'b'"],
             ["x enum('a', 'b', 'c') NOT NULL",    "`x` enum('a','b','c') NOT NULL"],
@@ -162,6 +174,7 @@ class ColumnDefinitionTest extends \Graze\Morphism\Test\Parse\TestCase
             ["x set('a', 'b', 'c')",               "`x` set('a','b','c') DEFAULT NULL"],
             ["x set('a', 'b', 'c') DEFAULT 'a,c'", "`x` set('a','b','c') DEFAULT 'a,c'"],
             ["x set('a', 'b', 'c') NOT NULL",      "`x` set('a','b','c') NOT NULL"],
+            ["x set('a', 'b', 'c') default ''",      "`x` set('a','b','c') DEFAULT ''"],
 
             ["x serial",                 "`x` bigint(20) unsigned NOT NULL AUTO_INCREMENT"],
 
@@ -173,8 +186,9 @@ class ColumnDefinitionTest extends \Graze\Morphism\Test\Parse\TestCase
             ["x double precision unsigned", "`x` double unsigned DEFAULT NULL"],
             ["x double precision(12,4)",    "`x` double(12,4) DEFAULT NULL"],
 
-            ["x long varbinary", "`x` mediumblob"],
-            ["x long varchar",   "`x` mediumtext"],
+            ["x long varbinary",      "`x` mediumblob"],
+            ["x long varchar",        "`x` mediumtext"],
+            ["x long",                "`x` mediumtext"],
 
             ["x bool",                "`x` tinyint(1) DEFAULT NULL"],
             ["x boolean",             "`x` tinyint(1) DEFAULT NULL"],
@@ -227,6 +241,100 @@ class ColumnDefinitionTest extends \Graze\Morphism\Test\Parse\TestCase
             ["x real",                "`x` double DEFAULT NULL"],
             ["x real(8,3)",           "`x` double(8,3) DEFAULT NULL"],
 
+            // Ignore unrecognised column options
+            ["x int foo",             "`x` int(11) DEFAULT NULL"],
+        ];
+    }
+
+    /**
+     * @param string $text
+     * @dataProvider parseInvalidDatatypesProvider
+     * @expectedException \RuntimeException
+     */
+    public function testParseInvalidDatatypes($text)
+    {
+        $stream = $this->makeStream($text);
+        $column = new ColumnDefinition();
+        $column->parse($stream);
+    }
+
+    /**
+     * @return array
+     */
+    public function parseInvalidDatatypesProvider()
+    {
+        return [
+            // Invalid type
+            ["x foo"],
+            // Another invalid type
+            ["x null"],
+            // No identifier
+            ["int"],
+            // No comma separator
+            ["x set('a'|'b')"],
+            // Unexpected parentheses
+            ["x text ()"],
+            // Unexpected comma
+            ["x year (1,)"],
+            // No comma separator
+            ["x double(1 2)"],
+            // No parentheses
+            ["x varchar"],
+            // Unexpected ZEROFILL keyword
+            ["x date zerofill"],
+            // Unexpected UNSIGNED keyword
+            ["x date unsigned"],
+            // Unexpected SIGNED keyword
+            ["x date signed"],
+            // Unexpected BINARY keyword
+            ["x date binary"],
+            // Unexpected CHARSET keyword
+            ["x date charset"],
+            // Unexpected COLLATE keyword
+            ["x date collate"],
+            // Unexpected AUTO_INCREMENT keyword
+            ["x date auto_increment"],
+            // Unexpected SERIAL DEFAULT VALUE keywords
+            ["x date serial default value"],
+            // Invalid year length
+            ["x year(1)"],
+            ["x year(5)"],
+            // Missing parentheses after keyword NOW
+            ["x timestamp default now"],
+            ["x timestamp on update now"],
+            // "on update" with the current timestamp only available for datetime and timestamp
+            ["x date on update current_timestamp"],
+        ];
+    }
+
+    /**
+     * @param string $text
+     * @dataProvider parseInvalidDefaultValuesProvider
+     * @expectedException \Exception
+     */
+    public function testParseInvalidDefaultValues($text)
+    {
+        $stream = $this->makeStream($text);
+        $column = new ColumnDefinition();
+        $column->parse($stream);
+    }
+
+    /**
+     * @return array
+     */
+    public function parseInvalidDefaultValuesProvider()
+    {
+        return [
+            ["x timestamp default null"],
+            ["x date default current_timestamp"],
+            ["x int default "],
+            ["x year default 1900"],
+            ["x year default 2156"],
+            ["x enum('a', 'b', 'c') default 1"],
+            ["x enum('a', 'b', 'c') default 'd'"],
+            ["x set('a', 'b', 'c') default 1"],
+            ["x set('a', 'b', 'c') default 'd'"],
+            ["x text default 'abc'"],
         ];
     }
 
@@ -267,5 +375,86 @@ class ColumnDefinitionTest extends \Graze\Morphism\Test\Parse\TestCase
         ];
     }
 
-    // TODO - collations
+    /**
+     * @param string $text
+     * @param string|null $expected
+     * @dataProvider getUninitialisedValuesProvider
+     */
+    public function testGetUninitialisedValues($text, $expected)
+    {
+        $stream = $this->makeStream($text);
+        $column = new ColumnDefinition();
+        $column->parse($stream);
+
+        $this->assertSame($expected, $column->getUninitialisedValue());
+    }
+
+    /**
+     * @return array
+     */
+    public function getUninitialisedValuesProvider()
+    {
+        return [
+            // [ Column definition, uninitialised value ]
+            ["x enum('a', 'b', 'c')",   "a"],
+            ["x int",                   "0"],
+            ["x int(5) zerofill",       "00000"],
+            ["x decimal",               "0"],
+            ["x decimal(5,3)",          "0.000"],
+            ["x decimal(5,1) zerofill", "000.0"],
+            ["x char",                  ""],
+            ["x blob",                  null],
+        ];
+    }
+
+    public function testApplyTableCollationSetsCollation()
+    {
+        // Make sure the given collation is applied if none exists
+        $column = new ColumnDefinition();
+        $utf8Collation = new CollationInfo("utf8");
+        $column->applyTableCollation($utf8Collation);
+
+        $this->assertEquals($utf8Collation, $column->collation);
+
+        // Make sure the given collation is NOT applied in one exists
+        $latin1Collation = new CollationInfo("latin1");
+        $column->applyTableCollation($latin1Collation);
+        $this->assertNotEquals($latin1Collation, $column->collation);
+    }
+
+    /**
+     * @param string $text
+     * @param string $expected
+     * @dataProvider applyTableCollationEffectOnColumnTypeProvider
+     */
+    public function testApplyTableCollationEffectOnColumnType($text, $expected)
+    {
+        $stream = $this->makeStream($text);
+        $column = new ColumnDefinition();
+        $column->parse($stream);
+
+        $collation = new CollationInfo("binary");
+        $column->applyTableCollation($collation);
+
+        $this->assertSame($expected, $column->type);
+    }
+
+    /**
+     * @return array
+     */
+    public function applyTableCollationEffectOnColumnTypeProvider()
+    {
+        return [
+            // [ Column definition, expected column type ]
+            // These are all types that will change
+            ["x char",          "binary"],
+            ["x varchar(1)",    "varbinary"],
+            ["x tinytext",      "tinyblob"],
+            ["x text",          "blob"],
+            ["x mediumtext",    "mediumblob"],
+            ["x longtext",      "longblob"],
+            // An example of one that doesn't change
+            ["x int",           "int"],
+        ];
+    }
 }

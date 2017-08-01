@@ -291,7 +291,10 @@ class ColumnDefinition
                         }
                         $format[] = $stream->expectNumber();
                     } elseif (!$spec[1]) {
-                        throw new \RuntimeException("expected ',' but got ");
+                        $mark = $stream->getMark();
+                        $unexpectedToken = $stream->nextToken();
+                        $stream->rewind($mark);
+                        throw new \RuntimeException("expected ',' but got: '$unexpectedToken->text'");
                     }
                     $stream->expectCloseParen();
                 } elseif (!$spec[0]) {
@@ -425,7 +428,7 @@ class ColumnDefinition
                     if (!$stream->consume([['symbol', '('], ['symbol', ')']]) &&
                         $token2->eq('identifier', 'NOW')
                     ) {
-                        throw new \RuntimeException("expected ()");
+                        throw new \RuntimeException("expected () after keyword NOW");
                     }
                     $token2 = new Token('identifier', 'CURRENT_TIMESTAMP');
                 }
@@ -447,7 +450,7 @@ class ColumnDefinition
                     if (!$stream->consume([['symbol', '('], ['symbol', ')']]) &&
                         $token2->eq('identifier', 'NOW')
                     ) {
-                        throw new \RuntimeException("expected ()");
+                        throw new \RuntimeException("expected () after keyword NOW");
                     }
                     if (!in_array($this->type, ['timestamp', 'datetime'])) {
                         throw new \RuntimeException("ON UPDATE CURRENT_TIMESTAMP only valid for TIMESTAMP and DATETIME columns");
@@ -529,6 +532,8 @@ class ColumnDefinition
     }
 
     /**
+     * Get the default value for the given token.
+     *
      * @param Token $token
      * @return string|null
      * @throws \Exception
@@ -537,20 +542,20 @@ class ColumnDefinition
     {
         if ($token->eq('identifier', 'NULL')) {
             if (!$this->nullable) {
-                throw new \Exception();
+                throw new \Exception("Column type cannot have NULL default: $this->type");
             }
             return null;
         }
 
         if ($token->eq('identifier', 'CURRENT_TIMESTAMP')) {
             if (!in_array($this->type, ['timestamp', 'datetime'])) {
-                throw new \Exception();
+                throw new \Exception("Only 'timestamp' and 'datetime' types can have default value of CURRENT_TIMESTAMP");
             }
             return 'CURRENT_TIMESTAMP';
         }
 
         if (!in_array($token->type, ['string', 'hex', 'bin', 'number'])) {
-            throw new \Exception();
+            throw new \Exception("Invalid token type for default value: $token->type");
         }
 
         $typeInfo = $this->_getTypeInfo();
@@ -566,8 +571,10 @@ class ColumnDefinition
                 } else {
                     return $token->asNumber();
                 }
-                // explicit break to appease phpcs
-                break;
+                // Comment to appease this phpcs rule:
+                // PSR2.ControlStructures.SwitchDeclaration.TerminatingComment
+                // There must be a comment when fall-through is intentional
+                // in a non-empty case body
 
             case 'decimal':
                 $decimals = is_null($this->decimals) ? 0 : $this->decimals;
@@ -577,8 +584,10 @@ class ColumnDefinition
                 } else {
                     return sprintf("%.{$decimals}f", $token->asNumber());
                 }
-                // explicit break to appease phpcs
-                break;
+                // Comment to appease this phpcs rule:
+                // PSR2.ControlStructures.SwitchDeclaration.TerminatingComment
+                // There must be a comment when fall-through is intentional
+                // in a non-empty case body
 
             case 'date':
                 return $token->asDate();
@@ -601,10 +610,12 @@ class ColumnDefinition
                 } elseif (1901 <= $year && $year <= 2155) {
                     return (string)round($year);
                 } else {
-                    throw new \Exception();
+                    throw new \Exception("Invalid default year (1901-2155): $year");
                 }
-                // explicit break to appease phpcs
-                break;
+                // Comment to appease this phpcs rule:
+                // PSR2.ControlStructures.SwitchDeclaration.TerminatingComment
+                // There must be a comment when fall-through is intentional
+                // in a non-empty case body
 
             case 'text':
                 return $token->asString();
@@ -614,18 +625,18 @@ class ColumnDefinition
 
             case 'enum':
                 if ($token->type !== 'string') {
-                    throw new \Exception();
+                    throw new \Exception("Invalid data type for default enum value: $token->type");
                 }
                 foreach ($this->elements as $element) {
                     if (strtolower($token->text) === strtolower($element)) {
                         return $element;
                     }
                 }
-                throw new \Exception();
+                throw new \Exception("Default enum value not found in enum: $token->text");
 
             case 'set':
                 if ($token->type !== 'string') {
-                    throw new \Exception();
+                    throw new \Exception("Invalid type for default set value: $token->type");
                 }
                 if ($token->text === '') {
                     return '';
@@ -640,7 +651,7 @@ class ColumnDefinition
                         }
                     }
                     if (is_null($match)) {
-                        throw new \Exception();
+                        throw new \Exception("Default set value not found in set: $token->text");
                     }
                     $matches[$match] = $this->elements[$match];
                 }
@@ -648,7 +659,7 @@ class ColumnDefinition
                 return implode(',', $matches);
 
             default:
-                throw new \Exception();
+                throw new \Exception("This kind of data type cannot have a default value: $typeInfo->kind");
         }
     }
 

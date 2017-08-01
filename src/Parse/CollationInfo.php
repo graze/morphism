@@ -80,7 +80,7 @@ class CollationInfo
     public function getCharset()
     {
         if (is_null($this->_charset)) {
-            throw new \LogicException("getCharset called when collation is unspecified");
+            throw new \LogicException("getCharset called when charset is unspecified");
         }
         return $this->_charset;
     }
@@ -198,6 +198,8 @@ class CollationInfo
     }
 
     /**
+     * Get all the available collations for the given character set.
+     *
      * @param string $charset
      * @return string|null
      */
@@ -209,6 +211,8 @@ class CollationInfo
     }
 
     /**
+     * Get the default collation for the given character set.
+     *
      * @param string $charset
      * @return string|null
      */
@@ -222,6 +226,8 @@ class CollationInfo
     }
 
     /**
+     * Get the binary collation for the given character set.
+     *
      * @param string $charset
      * @return string|null
      */

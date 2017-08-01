@@ -47,7 +47,30 @@ class CollationInfoTest extends \Graze\Morphism\Test\Parse\TestCase
             ['binary', null,                'binary', 'binary'],
             ['binary', 'binary',            'binary', 'binary'],
             [null,     'binary',            'binary', 'binary'],
+        ];
+    }
 
+    /**
+     * @param string $charset
+     * @param string $collation
+     * @dataProvider providerConstructorWithBadArgs
+     * @expectedException \RuntimeException
+     */
+    public function testConstructorWithBadArgs($charset, $collation)
+    {
+        $collation = new CollationInfo($charset, $collation);
+    }
+
+    /**
+     * @return array
+     */
+    public function providerConstructorWithBadArgs()
+    {
+        return [
+            // Invalid character set
+            ['foo', 'utf8_general_ci'],
+            // Invalid collation
+            ['utf8', 'foo'],
         ];
     }
 
@@ -78,6 +101,12 @@ class CollationInfoTest extends \Graze\Morphism\Test\Parse\TestCase
         $this->assertFalse((new CollationInfo('utf8', 'utf8_bin'))->isBinaryCharset());
     }
 
+    /** @expectedException \LogicException */
+    public function testInvalidIsBinaryCharset()
+    {
+        (new CollationInfo())->isBinaryCharset();
+    }
+
     public function testIsDefaultCollation()
     {
         $this->assertTrue((new CollationInfo('utf8'))->isDefaultCollation());
@@ -87,6 +116,12 @@ class CollationInfoTest extends \Graze\Morphism\Test\Parse\TestCase
 
         $this->assertFalse((new CollationInfo('utf8', 'utf8_unicode_ci'))->isDefaultCollation());
         $this->assertFalse((new CollationInfo('latin1', 'latin1_general_ci'))->isDefaultCollation());
+    }
+
+    /** @expectedException \LogicException */
+    public function testInvalidSiDefaulfCollation()
+    {
+        (new CollationInfo())->isDefaultCollation();
     }
 
     public function testSetCharset()
@@ -106,6 +141,12 @@ class CollationInfoTest extends \Graze\Morphism\Test\Parse\TestCase
         (new CollationInfo('latin1'))->setCharset('utf8');
     }
 
+    /** @expectedException \LogicException */
+    public function testEmptyCharsetFail()
+    {
+        (new CollationInfo())->getCharset();
+    }
+
     public function testSetCollation()
     {
         $collation = new CollationInfo();
@@ -123,5 +164,20 @@ class CollationInfoTest extends \Graze\Morphism\Test\Parse\TestCase
     public function testSetCollationFail()
     {
         (new CollationInfo('latin1'))->setCollation('utf8_general_ci');
+    }
+
+    public function testGetCollation()
+    {
+        $collation = new CollationInfo(null, 'utf8_unicode_ci');
+        $this->assertSame('utf8_unicode_ci', $collation->getCollation());
+
+        $collation->setBinaryCollation();
+        $this->assertSame('utf8_bin', $collation->getCollation());
+    }
+
+    /** @expectedException \LogicException */
+    public function testEmptyCollationFail()
+    {
+        (new CollationInfo())->getCollation();
     }
 }

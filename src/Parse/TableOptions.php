@@ -80,7 +80,7 @@ class TableOptions
                 if (!($token->type === 'identifier' &&
                       in_array(strtoupper($token->text), ['CHARSET', 'CHARACTER', 'COLLATE']))
                 ) {
-                    throw new \RuntimeException("expected CHARSET, CHARACTER SET or COLLATE");
+                    throw new \RuntimeException("Expected CHARSET, CHARACTER SET or COLLATE");
                 }
             }
 
@@ -145,16 +145,16 @@ class TableOptions
                 $this->_parseEnum($stream, $option, ['DEFAULT', 'DYNAMIC', 'FIXED', 'COMPRESSED', 'REDUNDANT', 'COMPACT']);
                 break;
 
-            case 'STATS_SAMPLE_PAGES':
+            case 'PARTITION':
             case 'STATS_AUTO_RECALC':
             case 'STATS_PERSISTENT':
+            case 'STATS_SAMPLE_PAGES':
             case 'TABLESPACE':
             case 'UNION':
-            case 'PARTITION':
                 throw new \RuntimeException("$option is not currently supported by this tool");
 
             default:
-                throw new \RuntimeException("unknown table option");
+                throw new \RuntimeException("Unknown table option: $option");
         }
     }
 
@@ -217,10 +217,10 @@ class TableOptions
         $stream->consume([['symbol', '=']]);
         $token = $stream->nextToken();
         if ($token->isEof()) {
-            throw new \RuntimeException("unexpected end-of-file");
+            throw new \RuntimeException("Unexpected end-of-file");
         }
         if (!in_array($token->type, ['identifier', 'string'])) {
-            throw new \RuntimeException("bad table option value");
+            throw new \RuntimeException("Bad table option value: '$token->text'");
         }
         $this->setOption($option, strtolower($token->text));
     }
@@ -245,11 +245,11 @@ class TableOptions
         $stream->consume([['symbol', '=']]);
         $token = $stream->nextToken();
         if (!in_array($token->type, ['identifier', 'number'])) {
-            throw new \RuntimeException("bad table option value");
+            throw new \RuntimeException("Bad table option value");
         }
         $value = strtoupper($token->text);
         if (!in_array($value, $enums)) {
-            throw new \RuntimeException("invalid option value, expected " . implode(' | ', $enums));
+            throw new \RuntimeException("Invalid option value, expected " . implode(' | ', $enums));
         }
         $this->setOption($option, $value);
     }

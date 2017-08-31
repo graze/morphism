@@ -1,6 +1,9 @@
 <?php
 namespace Graze\Morphism\Parse;
 
+use LogicException;
+use RuntimeException;
+
 /**
  * Represents the definition of an index.
  */
@@ -75,9 +78,6 @@ class IndexDefinition
                     $this->_parseOptionalIndexName($stream);
                     $this->_parseOptionalIndexType($stream);
                 }
-                if (!is_null($constraint)) {
-                    $this->name = $constraint;
-                }
                 $this->_parseIndexColumns($stream);
                 $this->_parseIndexOptions($stream);
                 break;
@@ -90,7 +90,7 @@ class IndexDefinition
                 break;
 
             default:
-                throw new \LogicException("Internal error - unknown index type '$type'");
+                throw new LogicException("Internal error - unknown index type '$type'");
         }
     }
 
@@ -128,7 +128,7 @@ class IndexDefinition
         } elseif ($stream->consume('HASH')) {
             $using = 'HASH';
         } else {
-            throw new \RuntimeException("Expected BTREE or HASH");
+            throw new RuntimeException("Expected BTREE or HASH");
         }
         $this->options['USING'] = $using;
     }
@@ -212,7 +212,7 @@ class IndexDefinition
             $table = $tableOrSchema;
         }
 
-        $this->reference['schema'] = null;
+        $this->reference['schema'] = $schema;
         $this->reference['table'] = $table;
         $this->reference['columns'] = $this->_expectIndexColumns($stream);
         $this->reference['ON DELETE'] = 'RESTRICT';
@@ -220,7 +220,7 @@ class IndexDefinition
 
         while (true) {
             if ($stream->consume('MATCH')) {
-                throw new \RuntimeException("MATCH clause is not supported in this tool, or in MySQL itself!");
+                throw new RuntimeException("MATCH clause is not supported in this tool, or in MySQL itself!");
             } elseif ($stream->consume('ON DELETE')) {
                 $this->_parseReferenceOption($stream, 'ON DELETE');
             } elseif ($stream->consume('ON UPDATE')) {
@@ -243,7 +243,7 @@ class IndexDefinition
                 return;
             }
         }
-        throw new \RuntimeException("Expected RESTRICT, CASCADE, SET NULL or NO ACTION");
+        throw new RuntimeException("Expected RESTRICT, CASCADE, SET NULL or NO ACTION");
     }
 
     /**

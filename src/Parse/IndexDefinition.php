@@ -46,7 +46,7 @@ class IndexDefinition
     public $reference = [];
 
     /**
-     * Parses an index defintion from $stream
+     * Parses an index definition from $stream
      *
      * The type of key (PRIMARY KEY, UNIQUE KEY, etc) should already have
      * been parsed from the stream. If the optional preceding CONSTRAINT clause
@@ -90,7 +90,7 @@ class IndexDefinition
                 break;
 
             default:
-                throw new \LogicException("internal error - unknown index type '$type'");
+                throw new \LogicException("Internal error - unknown index type '$type'");
         }
     }
 
@@ -128,7 +128,7 @@ class IndexDefinition
         } elseif ($stream->consume('HASH')) {
             $using = 'HASH';
         } else {
-            throw new \RuntimeException("expected BTREE or HASH");
+            throw new \RuntimeException("Expected BTREE or HASH");
         }
         $this->options['USING'] = $using;
     }
@@ -243,7 +243,7 @@ class IndexDefinition
                 return;
             }
         }
-        throw new \RuntimeException("expected RESTRICT, CASCADE, SET NULL or NO ACTION");
+        throw new \RuntimeException("Expected RESTRICT, CASCADE, SET NULL or NO ACTION");
     }
 
     /**

@@ -65,28 +65,28 @@ class IndexDefinition
 
         switch ($type) {
             case 'PRIMARY KEY':
-                $this->_parseOptionalIndexType($stream);
-                $this->_parseIndexColumns($stream);
-                $this->_parseIndexOptions($stream);
+                $this->parseOptionalIndexType($stream);
+                $this->parseIndexColumns($stream);
+                $this->parseIndexOptions($stream);
                 break;
 
             case 'UNIQUE KEY':
             case 'KEY':
             case 'FULLTEXT KEY':
-                $this->_parseOptionalIndexType($stream);
+                $this->parseOptionalIndexType($stream);
                 if (!isset($this->options['USING'])) {
-                    $this->_parseOptionalIndexName($stream);
-                    $this->_parseOptionalIndexType($stream);
+                    $this->parseOptionalIndexName($stream);
+                    $this->parseOptionalIndexType($stream);
                 }
-                $this->_parseIndexColumns($stream);
-                $this->_parseIndexOptions($stream);
+                $this->parseIndexColumns($stream);
+                $this->parseIndexOptions($stream);
                 break;
 
             case 'FOREIGN KEY':
                 $this->constraint = $constraint;
-                $this->_parseOptionalIndexName($stream);
-                $this->_parseIndexColumns($stream);
-                $this->_parseReferenceDefinition($stream);
+                $this->parseOptionalIndexName($stream);
+                $this->parseIndexColumns($stream);
+                $this->parseReferenceDefinition($stream);
                 break;
 
             default:
@@ -97,7 +97,7 @@ class IndexDefinition
     /**
      * @param TokenStream $stream
      */
-    private function _parseOptionalIndexName(TokenStream $stream)
+    private function parseOptionalIndexName(TokenStream $stream)
     {
         $mark = $stream->getMark();
         $token = $stream->nextToken();
@@ -111,17 +111,17 @@ class IndexDefinition
     /**
      * @param TokenStream $stream
      */
-    private function _parseOptionalIndexType(TokenStream $stream)
+    private function parseOptionalIndexType(TokenStream $stream)
     {
         if ($stream->consume('USING')) {
-            $this->_parseIndexType($stream);
+            $this->parseIndexType($stream);
         }
     }
 
     /**
      * @param TokenStream $stream
      */
-    private function _parseIndexType(TokenStream $stream)
+    private function parseIndexType(TokenStream $stream)
     {
         if ($stream->consume('BTREE')) {
             $using = 'BTREE';
@@ -136,16 +136,16 @@ class IndexDefinition
     /**
      * @param TokenStream $stream
      */
-    private function _parseIndexColumns(TokenStream $stream)
+    private function parseIndexColumns(TokenStream $stream)
     {
-        $this->columns = $this->_expectIndexColumns($stream);
+        $this->columns = $this->expectIndexColumns($stream);
     }
 
     /**
      * @param TokenStream $stream
      * @return array
      */
-    private function _expectIndexColumns(TokenStream $stream)
+    private function expectIndexColumns(TokenStream $stream)
     {
         $columns = [];
         $stream->expect('symbol', '(');
@@ -178,7 +178,7 @@ class IndexDefinition
     /**
      * @param TokenStream $stream
      */
-    private function _parseIndexOptions(TokenStream $stream)
+    private function parseIndexOptions(TokenStream $stream)
     {
         while (true) {
             if ($stream->consume('KEY_BLOCK_SIZE')) {
@@ -189,7 +189,7 @@ class IndexDefinition
             } elseif ($stream->consume('COMMENT')) {
                 $this->options['COMMENT'] = $stream->expectString();
             } elseif ($stream->consume('USING')) {
-                $this->_parseIndexType($stream);
+                $this->parseIndexType($stream);
             } else {
                 break;
             }
@@ -199,7 +199,7 @@ class IndexDefinition
     /**
      * @param TokenStream $stream
      */
-    private function _parseReferenceDefinition(TokenStream $stream)
+    private function parseReferenceDefinition(TokenStream $stream)
     {
         $stream->expect('identifier', 'REFERENCES');
 
@@ -214,7 +214,7 @@ class IndexDefinition
 
         $this->reference['schema'] = $schema;
         $this->reference['table'] = $table;
-        $this->reference['columns'] = $this->_expectIndexColumns($stream);
+        $this->reference['columns'] = $this->expectIndexColumns($stream);
         $this->reference['ON DELETE'] = 'RESTRICT';
         $this->reference['ON UPDATE'] = 'RESTRICT';
 
@@ -222,9 +222,9 @@ class IndexDefinition
             if ($stream->consume('MATCH')) {
                 throw new RuntimeException("MATCH clause is not supported in this tool, or in MySQL itself!");
             } elseif ($stream->consume('ON DELETE')) {
-                $this->_parseReferenceOption($stream, 'ON DELETE');
+                $this->parseReferenceOption($stream, 'ON DELETE');
             } elseif ($stream->consume('ON UPDATE')) {
-                $this->_parseReferenceOption($stream, 'ON UPDATE');
+                $this->parseReferenceOption($stream, 'ON UPDATE');
             } else {
                 break;
             }
@@ -235,15 +235,16 @@ class IndexDefinition
      * @param TokenStream $stream
      * @param string $clause
      */
-    private function _parseReferenceOption(TokenStream $stream, $clause)
+    private function parseReferenceOption(TokenStream $stream, $clause)
     {
-        foreach (['RESTRICT', 'CASCADE', 'SET NULL', 'NO ACTION'] as $option) {
+        $availableOptions = ['RESTRICT', 'CASCADE', 'SET NULL', 'NO ACTION'];
+        foreach ($availableOptions as $option) {
             if ($stream->consume($option)) {
                 $this->reference[$clause] = $option;
                 return;
             }
         }
-        throw new RuntimeException("Expected RESTRICT, CASCADE, SET NULL or NO ACTION");
+        throw new RuntimeException("Expected one of: " . implode(", ", $availableOptions));
     }
 
     /**

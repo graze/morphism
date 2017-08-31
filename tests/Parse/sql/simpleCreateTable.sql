@@ -17,9 +17,9 @@ CREATE TABLE `t` (
 
 -- test -----------
 CREATE TABLE x (a int, b int, a int);
-exception RuntimeException "duplicate column name 'a'"
+exception RuntimeException "Duplicate column name 'a'"
 
 -- test -----------
 CREATE TABLE x (a int, b int, A int);
-exception RuntimeException "duplicate column name 'A'"
+exception RuntimeException "Duplicate column name 'A'"
 

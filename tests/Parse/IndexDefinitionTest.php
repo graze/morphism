@@ -107,9 +107,9 @@ class IndexDefinitionTest extends TestCase
      * @dataProvider badParseProvider
      * @param string $type
      * @param string $text
-     * @param Exception $exception
+     * @param string $exception
      */
-    public function testBadParse($type, $text, Exception $exception)
+    public function testBadParse($type, $text, $exception)
     {
         $stream = $this->makeStream($text);
 

@@ -3,6 +3,8 @@
 namespace Graze\Morphism\Parse;
 
 use Graze\Morphism\Test\Parse\TestCase;
+use LogicException;
+use RuntimeException;
 
 class IndexDefinitionTest extends TestCase
 {
@@ -32,13 +34,16 @@ class IndexDefinitionTest extends TestCase
     public function parseProvider()
     {
         return [
+            // [ type, text, constraint, expected ]
             ["PRIMARY KEY", "(a)",       null, "PRIMARY KEY (`a`)"],
 
             ["UNIQUE KEY", "(a)",        null, "UNIQUE KEY `k1` (`a`)"],
             ["UNIQUE KEY", "k (a)",      null, "UNIQUE KEY `k` (`a`)"],
+            ["UNIQUE KEY", "(a)",        'foo', "UNIQUE KEY `foo` (`a`)"],
 
             ["FULLTEXT KEY", "(a)",      null, "FULLTEXT KEY `k1` (`a`)"],
             ["FULLTEXT KEY", "k (a)",    null, "FULLTEXT KEY `k` (`a`)"],
+            ["FULLTEXT KEY", "(a) WITH PARSER foo_parser", null, "FULLTEXT KEY `k1` (`a`) WITH PARSER foo_parser"],
 
             ["KEY", "(a)",               null, "KEY `k1` (`a`)"],
             ["KEY", "(a ASC)",           null, "KEY `k1` (`a`)"],
@@ -63,8 +68,11 @@ class IndexDefinitionTest extends TestCase
             ["FOREIGN KEY",  "(a) REFERENCES t(ta)", "c1",
                 "CONSTRAINT `c1` FOREIGN KEY (`a`) REFERENCES `t` (`ta`)"],
 
-            ["FOREIGN KEY",  "(a) REFERENCES t(ta)", "c1",
-                "CONSTRAINT `c1` FOREIGN KEY (`a`) REFERENCES `t` (`ta`)"],
+            ["FOREIGN KEY",  "(a) REFERENCES foo.t(ta)", "c1",
+                "CONSTRAINT `c1` FOREIGN KEY (`a`) REFERENCES `foo`.`t` (`ta`)"],
+
+            ["FOREIGN KEY",  "(a) REFERENCES t(ta(10))", "c1",
+                "CONSTRAINT `c1` FOREIGN KEY (`a`) REFERENCES `t` (`ta`(10))"],
 
             ["FOREIGN KEY",  "(a) REFERENCES t(ta) ON DELETE RESTRICT", "c1",
                 "CONSTRAINT `c1` FOREIGN KEY (`a`) REFERENCES `t` (`ta`)"],
@@ -75,6 +83,9 @@ class IndexDefinitionTest extends TestCase
             ["FOREIGN KEY",  "(a) REFERENCES t(ta) ON DELETE NO ACTION", "c1",
                 "CONSTRAINT `c1` FOREIGN KEY (`a`) REFERENCES `t` (`ta`) ON DELETE NO ACTION"],
 
+            ["FOREIGN KEY",  "(a) REFERENCES t(ta) ON DELETE SET NULL", "c1",
+                "CONSTRAINT `c1` FOREIGN KEY (`a`) REFERENCES `t` (`ta`) ON DELETE SET NULL"],
+
             ["FOREIGN KEY",  "(a) REFERENCES t(ta) ON UPDATE RESTRICT", "c1",
                 "CONSTRAINT `c1` FOREIGN KEY (`a`) REFERENCES `t` (`ta`)"],
 
@@ -84,9 +95,46 @@ class IndexDefinitionTest extends TestCase
             ["FOREIGN KEY",  "(a) REFERENCES t(ta) ON UPDATE NO ACTION", "c1",
                 "CONSTRAINT `c1` FOREIGN KEY (`a`) REFERENCES `t` (`ta`) ON UPDATE NO ACTION"],
 
+            ["FOREIGN KEY",  "(a) REFERENCES t(ta) ON UPDATE SET NULL", "c1",
+                "CONSTRAINT `c1` FOREIGN KEY (`a`) REFERENCES `t` (`ta`) ON UPDATE SET NULL"],
+
             ["FOREIGN KEY",  "(a) REFERENCES t(ta) ON UPDATE NO ACTION ON DELETE NO ACTION", "c1",
                 "CONSTRAINT `c1` FOREIGN KEY (`a`) REFERENCES `t` (`ta`) ON DELETE NO ACTION ON UPDATE NO ACTION"],
 
+        ];
+    }
+
+    /**
+     * @dataProvider badParseProvider
+     * @param string $type
+     * @param string $text
+     * @param string $exception
+     */
+    public function testBadParse($type, $text, $exception)
+    {
+        $stream = $this->makeStream($text);
+
+        $this->setExpectedException($exception);
+
+        $index = new IndexDefinition();
+        $index->parse($stream, $type);
+    }
+
+    /**
+     * @return array
+     */
+    public function badParseProvider()
+    {
+        return [
+            // [ type, text ]
+            // Invalid key type
+            ["INVALID_INDEX_TYPE", "foo", LogicException::class],
+            // Invalid tree type
+            ["KEY", "USING FOOTREE (a)", RuntimeException::class],
+            // Unsupported 'MATCH' keyword
+            ["FOREIGN KEY",  "(a) REFERENCES t(ta) MATCH FULL", RuntimeException::class],
+            // Unsupported reference action
+            ["FOREIGN KEY",  "(a) REFERENCES t(ta) ON UPDATE FOO", RuntimeException::class],
         ];
     }
 

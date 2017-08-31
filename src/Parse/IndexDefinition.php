@@ -78,6 +78,9 @@ class IndexDefinition
                     $this->parseOptionalIndexName($stream);
                     $this->parseOptionalIndexType($stream);
                 }
+                if (!is_null($constraint)) {
+                    $this->name = $constraint;
+                }
                 $this->parseIndexColumns($stream);
                 $this->parseIndexOptions($stream);
                 break;

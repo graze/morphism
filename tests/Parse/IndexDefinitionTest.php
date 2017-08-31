@@ -39,6 +39,7 @@ class IndexDefinitionTest extends TestCase
 
             ["UNIQUE KEY", "(a)",        null, "UNIQUE KEY `k1` (`a`)"],
             ["UNIQUE KEY", "k (a)",      null, "UNIQUE KEY `k` (`a`)"],
+            ["UNIQUE KEY", "(a)",        'foo', "UNIQUE KEY `foo` (`a`)"],
 
             ["FULLTEXT KEY", "(a)",      null, "FULLTEXT KEY `k1` (`a`)"],
             ["FULLTEXT KEY", "k (a)",    null, "FULLTEXT KEY `k` (`a`)"],

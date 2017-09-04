@@ -2,6 +2,7 @@
 
 namespace Graze\Morphism\Parse;
 
+use Exception;
 use Graze\Morphism\Test\Parse\TestCase;
 
 class CreateTableTest extends TestCase
@@ -25,6 +26,7 @@ class CreateTableTest extends TestCase
      * @dataProvider providerParse
      * @param string $text
      * @param string $expected
+     * @throws Exception
      */
     public function testParse($text, $expected)
     {
@@ -36,7 +38,7 @@ class CreateTableTest extends TestCase
         $threw = null;
         try {
             $table->parse($stream);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $threw = $e;
         }
         if (preg_match('/^exception/i', $expected)) {

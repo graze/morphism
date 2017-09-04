@@ -15,11 +15,42 @@ CREATE TABLE `t` (
     `x` text
 ) ENGINE=InnoDB;
 
--- test -----------
+-- test ----------------------------------------
 CREATE TABLE x (a int, b int, a int);
 exception RuntimeException "Duplicate column name 'a'"
 
--- test -----------
+-- test ----------------------------------------
 CREATE TABLE x (a int, b int, A int);
 exception RuntimeException "Duplicate column name 'A'"
 
+-- test ----------------------------------------
+foo bar create table x (a int);
+exception RuntimeException "Expected CREATE TABLE"
+
+-- test ----------------------------------------
+create table x (a int;
+exception RuntimeException "Expected ',' or '\)'"
+
+-- test ----------------------------------------
+create table x (a);
+exception RuntimeException "expected a datatype"
+
+-- test ----------------------------------------
+create table x (int int);
+CREATE TABLE `x` (
+    `int` int(11) DEFAULT NULL
+) ENGINE=InnoDB;
+
+-- test ----------------------------------------
+create table x (a a);
+exception RuntimeException "unknown datatype 'a'"
+
+-- test ----------------------------------------
+create table x ();
+exception RuntimeException "expected identifier"
+
+-- test ----------------------------------------
+create table `table` (a int);
+CREATE TABLE `table` (
+    `a` int(11) DEFAULT NULL
+) ENGINE=InnoDB;

@@ -425,10 +425,10 @@ class Extractor
      * Returns an array of table options which will form part of the DDL
      * necessary to create the specified table.
      *
-     * @param array $table TABLES-object[]
+     * @param object $table TABLES-object[]
      * @return string[]
      */
-    private function getTableOptionDefs(array $table)
+    private function getTableOptionDefs($table)
     {
         $defTableOptions = [];
         $defTableOptions[] = "ENGINE=$table->ENGINE";

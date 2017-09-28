@@ -136,7 +136,8 @@ class CreateTableTest extends TestCase
 
         foreach ([
                     'columns.sql',
-                    'indexes.sql'
+                    'indexes.sql',
+                    'simpleDiff.sql'
                  ] as $file) {
             $path = __DIR__ . '/sql/diff/' . $file;
             $sql = @file_get_contents($path);

@@ -415,7 +415,7 @@ class CreateTable
         );
 
         if (count($alters) === 0) {
-            return '';
+            return [''];
         }
 
         return ["ALTER TABLE " . Token::escapeIdentifier($this->name) . "\n" . implode(",\n", $alters)];
@@ -442,6 +442,7 @@ class CreateTable
         $j = 0;
         foreach ($that->columns as $columnName => $column) {
             if (array_key_exists($columnName, $this->columns)) {
+                // An existing column is being changed
                 $thisDefinition = $this->columns[$columnName]->toString($this->getCollation());
                 $thatDefinition = $that->columns[$columnName]->toString($that->getCollation());
 
@@ -475,6 +476,7 @@ class CreateTable
                     $alters[] = $alter;
                 }
             } else {
+                // A new column is being added
                 $alter = "ADD COLUMN " . $column->toString($this->getCollation());
                 if ($j < count($permutation)) {
                     $alter .= $thatPosition;

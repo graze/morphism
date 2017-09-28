@@ -1,4 +1,4 @@
--- test - Add a column
+-- test - Add a column at the end
 create table t (
     a int
 );
@@ -8,6 +8,30 @@ create table t (
 );
 ALTER TABLE `t`
 ADD COLUMN `b` int(11) DEFAULT NULL
+
+-- test - Add a column at the beginning
+create table t (
+    a int
+);
+create table t (
+    b int,
+    a int
+);
+ALTER TABLE `t`
+ADD COLUMN `b` int(11) DEFAULT NULL FIRST
+
+-- test - Add a column at somewhere in the middle
+create table t (
+    a int,
+    b int
+);
+create table t (
+    a int,
+    c int,
+    b int
+);
+ALTER TABLE `t`
+ADD COLUMN `c` int(11) DEFAULT NULL AFTER `a`
 
 -- test - Remove a column
 create table t (

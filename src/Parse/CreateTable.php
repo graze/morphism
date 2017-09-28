@@ -403,7 +403,7 @@ class CreateTable
     public function diff(CreateTable $that, array $flags = [])
     {
         $flags += [
-            'alterEngine' => true,
+            'alterEngine' => true
         ];
 
         $alters = array_merge(
@@ -541,7 +541,7 @@ class CreateTable
     private function _diffOptions(CreateTable $that, array $flags = [])
     {
         $flags += [
-            'alterEngine' => true,
+            'alterEngine' => true
         ];
         $diff = $this->options->diff($that->options, [
             'alterEngine' => $flags['alterEngine']

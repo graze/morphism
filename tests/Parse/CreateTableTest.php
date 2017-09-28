@@ -158,4 +158,43 @@ class CreateTableTest extends TestCase
 
         return $tests;
     }
+
+    /**
+     * Test that the "alterEngine" flag works.
+     * @dataProvider alterEngineProvider
+     * @param array $flags
+     * @param string $expected
+     */
+    public function testAlterEngineDiff($flags, $expected)
+    {
+        $sql = 'create table t (a int)';
+        $collation = new CollationInfo();
+
+        $firstStream = $this->makeStream($sql);
+        $firstTable = new CreateTable($collation);
+        $firstTable->setDefaultEngine('InnoDb');
+        $firstTable->parse($firstStream);
+
+        $secondStream = $this->makeStream($sql);
+        $secondTable = new CreateTable($collation);
+        $secondTable->setDefaultEngine('MyISAM');
+        $secondTable->parse($secondStream);
+
+        $diff = $firstTable->diff($secondTable, $flags);
+
+        $this->assertEquals([$expected], $diff);
+    }
+
+    /**
+     * @return array
+     */
+    public function alterEngineProvider()
+    {
+        return [
+            // [ alter engine flag, expected diff ]
+            [ [ 'alterEngine' => true ],    "ALTER TABLE `t`\nENGINE=MyISAM" ],
+            [ [ 'alterEngine' => false ],   ""                               ],
+            [ [],                           "ALTER TABLE `t`\nENGINE=MyISAM" ],
+        ];
+    }
 }

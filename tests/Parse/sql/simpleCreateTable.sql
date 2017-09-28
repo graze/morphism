@@ -54,3 +54,16 @@ create table `table` (a int);
 CREATE TABLE `table` (
     `a` int(11) DEFAULT NULL
 ) ENGINE=InnoDB;
+
+-- test - Multiple auto increment columns
+create table x (
+    a int auto_increment primary key,
+    b int auto_increment
+);
+exception RuntimeException "There can be only one AUTO_INCREMENT column"
+
+-- test - Non-key auto increment column
+create table x (
+    a int auto_increment
+);
+exception RuntimeException "AUTO_INCREMENT column must be defined as a key"

@@ -165,7 +165,7 @@ class CreateTableTest extends TestCase
      * @param array $flags
      * @param string $expected
      */
-    public function testAlterEngineDiff($flags, $expected)
+    public function testAlterEngineDiff(array $flags, $expected)
     {
         $sql = 'create table t (a int)';
         $collation = new CollationInfo();

@@ -398,7 +398,7 @@ class CreateTable
      *
      * @param CreateTable $that
      * @param array $flags
-     * @return string
+     * @return string[]
      */
     public function diff(CreateTable $that, array $flags = [])
     {

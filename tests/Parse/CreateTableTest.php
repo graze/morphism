@@ -101,4 +101,60 @@ class CreateTableTest extends TestCase
 
         return $tests;
     }
+
+    /**
+     * @param string $firstTableText
+     * @param string $secondTableText
+     * @param string $expected
+     * @dataProvider diffProvider
+     */
+    public function testDiff($firstTableText, $secondTableText, $expected)
+    {
+        $collation = new CollationInfo();
+
+        $firstStream = $this->makeStream($firstTableText);
+        $firstTable = new CreateTable($collation);
+        $firstTable->setDefaultEngine('InnoDB');
+        $firstTable->parse($firstStream);
+
+        $secondStream = $this->makeStream($secondTableText);
+        $secondTable = new CreateTable($collation);
+        $secondTable->setDefaultEngine('InnoDB');
+        $secondTable->parse($secondStream);
+
+        $diff = $firstTable->diff($secondTable);
+
+        $this->assertEquals([$expected], $diff);
+    }
+
+    /**
+     * @return array
+     */
+    public function diffProvider()
+    {
+        $tests = [];
+
+        foreach ([
+                    'columns.sql',
+                    'indexes.sql'
+                 ] as $file) {
+            $path = __DIR__ . '/sql/diff/' . $file;
+            $sql = @file_get_contents($path);
+            if ($sql === false) {
+                $this->fail("could not open $path");
+            }
+            foreach (preg_split('/^-- test .*$/m', $sql) as $pair) {
+                if (trim($pair) != '') {
+                    list($firstText, $secondText, $expected) = preg_split('/(?<=;)/', $pair);
+                    $tests[] = [
+                        trim($firstText),
+                        trim($secondText),
+                        trim($expected)
+                    ];
+                }
+            }
+        }
+
+        return $tests;
+    }
 }

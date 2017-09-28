@@ -1,4 +1,3 @@
-
 -- test ----------------------------------------
 create table t (
     ux int,
@@ -7,6 +6,17 @@ create table t (
 CREATE TABLE `t` (
     `ux` int(11) DEFAULT NULL,
     KEY `ux` (`ux`),
+    CONSTRAINT `t_ibfk_1` FOREIGN KEY (`ux`) REFERENCES `u` (`x`)
+) ENGINE=InnoDB;
+
+-- test - named index
+create table t (
+    ux int,
+    foreign key fk_t_u_x (ux) references u (x)
+);
+CREATE TABLE `t` (
+    `ux` int(11) DEFAULT NULL,
+    KEY `fk_t_u_x` (`ux`),
     CONSTRAINT `t_ibfk_1` FOREIGN KEY (`ux`) REFERENCES `u` (`x`)
 ) ENGINE=InnoDB;
 

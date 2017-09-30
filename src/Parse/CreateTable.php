@@ -415,7 +415,7 @@ class CreateTable
         );
 
         if (count($alters) === 0) {
-            return [''];
+            return [];
         }
 
         return ["ALTER TABLE " . Token::escapeIdentifier($this->name) . "\n" . implode(",\n", $alters)];

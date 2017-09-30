@@ -124,7 +124,7 @@ class CreateTableTest extends TestCase
 
         $diff = $firstTable->diff($secondTable);
 
-        $this->assertEquals([$expected], $diff);
+        $this->assertEquals($expected == "" ? [] : [$expected], $diff);
     }
 
     /**
@@ -182,7 +182,7 @@ class CreateTableTest extends TestCase
 
         $diff = $firstTable->diff($secondTable, $flags);
 
-        $this->assertEquals([$expected], $diff);
+        $this->assertEquals($expected, $diff);
     }
 
     /**
@@ -192,9 +192,9 @@ class CreateTableTest extends TestCase
     {
         return [
             // [ alter engine flag, expected diff ]
-            [ [ 'alterEngine' => true ],    "ALTER TABLE `t`\nENGINE=MyISAM" ],
-            [ [ 'alterEngine' => false ],   ""                               ],
-            [ [],                           "ALTER TABLE `t`\nENGINE=MyISAM" ],
+            [ [ 'alterEngine' => true ],  ["ALTER TABLE `t`\nENGINE=MyISAM"] ],
+            [ [ 'alterEngine' => false ], []                                 ],
+            [ [],                         ["ALTER TABLE `t`\nENGINE=MyISAM"] ],
         ];
     }
 }

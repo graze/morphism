@@ -1,6 +1,8 @@
 <?php
 namespace Graze\Morphism\Parse;
 
+use RuntimeException;
+
 /**
  * Represents a table definition.
  */
@@ -61,7 +63,7 @@ class CreateTable
         if ($stream->consume('CREATE TABLE')) {
             $stream->consume('IF NOT EXISTS');
         } else {
-            throw new \RuntimeException("expected CREATE TABLE");
+            throw new RuntimeException("Expected CREATE TABLE");
         }
 
         $this->name = $stream->expectName();
@@ -75,12 +77,12 @@ class CreateTable
                 $stream->consume('INDEX')
             ) {
                 if ($hasConstraintKeyword) {
-                    throw new \RuntimeException("bad CONSTRAINT");
+                    throw new RuntimeException("Bad CONSTRAINT");
                 }
                 $this->_parseIndex($stream, 'KEY');
             } elseif ($stream->consume('FULLTEXT')) {
                 if ($hasConstraintKeyword) {
-                    throw new \RuntimeException("bad CONSTRAINT");
+                    throw new RuntimeException("Bad CONSTRAINT");
                 }
                 $stream->consume('KEY') || $stream->consume('INDEX');
                 $this->_parseIndex($stream, 'FULLTEXT KEY');
@@ -99,7 +101,7 @@ class CreateTable
                 } elseif ($stream->consume('FOREIGN KEY')) {
                     $this->_parseIndex($stream, 'FOREIGN KEY', $constraint);
                 } else {
-                    throw new \RuntimeException("bad CONSTRAINT");
+                    throw new RuntimeException("Bad CONSTRAINT");
                 }
             } else {
                 $this->_parseColumn($stream);
@@ -110,7 +112,7 @@ class CreateTable
             } elseif ($token->eq('symbol', ')')) {
                 break;
             } else {
-                throw new \RuntimeException("expected ',' or ')'");
+                throw new RuntimeException("Expected ',' or ')'");
             }
         }
 
@@ -170,7 +172,7 @@ class CreateTable
         $column = new ColumnDefinition();
         $column->parse($stream);
         if (array_key_exists(strtolower($column->name), $this->columns)) {
-            throw new \RuntimeException("duplicate column name '" . $column->name . "'");
+            throw new RuntimeException("Duplicate column name '" . $column->name . "'");
         }
         $this->columns[strtolower($column->name)] = $column;
         $this->indexes = array_merge(
@@ -238,7 +240,7 @@ class CreateTable
         //         $column->onUpdateCurrentTimestamp
         //     ) {
         //         if (++$specials > 1) {
-        //             throw new \RuntimeException("there can be only one TIMESTAMP column with CURRENT_TIMESTAMP in DEFAULT or ON UPDATE clause");
+        //             throw new RuntimeException("There can be only one TIMESTAMP column with CURRENT_TIMESTAMP in DEFAULT or ON UPDATE clause");
         //         }
         //     }
         // }
@@ -257,7 +259,7 @@ class CreateTable
             foreach ($index->columns as $indexColumn) {
                 $indexColumnName = $indexColumn['name'];
                 if (!array_key_exists(strtolower($indexColumnName), $this->columns)) {
-                    throw new \RuntimeException("key column '$indexColumnName' doesn't exist in table");
+                    throw new RuntimeException("Key column '$indexColumnName' doesn't exist in table");
                 }
             }
         }
@@ -330,7 +332,7 @@ class CreateTable
                 }
                 $index->name = $name;
             } elseif (array_key_exists(strtolower($name), $usedName)) {
-                throw new \RuntimeException("duplicate key name '$name'");
+                throw new RuntimeException("Duplicate key name '$name'");
             }
             $index->name = $name;
             $usedName[strtolower($name)] = true;
@@ -339,7 +341,7 @@ class CreateTable
         }
 
         if (count($indexesByType['PRIMARY KEY']) > 1) {
-            throw new \RuntimeException("multiple PRIMARY KEYs defined");
+            throw new RuntimeException("Multiple PRIMARY KEYs defined");
         }
 
         foreach ($indexesByType['PRIMARY KEY'] as $pk) {
@@ -369,10 +371,10 @@ class CreateTable
         foreach ($this->columns as $column) {
             if ($column->autoIncrement) {
                 if (++$count > 1) {
-                    throw new \RuntimeException("there can be only one AUTO_INCREMENT column");
+                    throw new RuntimeException("There can be only one AUTO_INCREMENT column");
                 }
-                if (!$this->_covers[$column->name]) {
-                    throw new \RuntimeException("AUTO_INCREMENT column must be defined as a key");
+                if (! array_key_exists($column->name, $this->_covers)) {
+                    throw new RuntimeException("AUTO_INCREMENT column must be defined as a key");
                 }
             }
         }
@@ -396,12 +398,12 @@ class CreateTable
      *
      * @param CreateTable $that
      * @param array $flags
-     * @return string
+     * @return string[]
      */
     public function diff(CreateTable $that, array $flags = [])
     {
         $flags += [
-            'alterEngine' => true,
+            'alterEngine' => true
         ];
 
         $alters = array_merge(
@@ -413,7 +415,7 @@ class CreateTable
         );
 
         if (count($alters) === 0) {
-            return '';
+            return [];
         }
 
         return ["ALTER TABLE " . Token::escapeIdentifier($this->name) . "\n" . implode(",\n", $alters)];
@@ -440,6 +442,7 @@ class CreateTable
         $j = 0;
         foreach ($that->columns as $columnName => $column) {
             if (array_key_exists($columnName, $this->columns)) {
+                // An existing column is being changed
                 $thisDefinition = $this->columns[$columnName]->toString($this->getCollation());
                 $thatDefinition = $that->columns[$columnName]->toString($that->getCollation());
 
@@ -473,6 +476,7 @@ class CreateTable
                     $alters[] = $alter;
                 }
             } else {
+                // A new column is being added
                 $alter = "ADD COLUMN " . $column->toString($this->getCollation());
                 if ($j < count($permutation)) {
                     $alter .= $thatPosition;
@@ -537,7 +541,7 @@ class CreateTable
     private function _diffOptions(CreateTable $that, array $flags = [])
     {
         $flags += [
-            'alterEngine' => true,
+            'alterEngine' => true
         ];
         $diff = $this->options->diff($that->options, [
             'alterEngine' => $flags['alterEngine']

@@ -2,6 +2,7 @@
 
 namespace Graze\Morphism\Parse;
 
+use Exception;
 use Graze\Morphism\Test\Parse\TestCase;
 
 class CreateTableTest extends TestCase
@@ -25,6 +26,7 @@ class CreateTableTest extends TestCase
      * @dataProvider providerParse
      * @param string $text
      * @param string $expected
+     * @throws Exception
      */
     public function testParse($text, $expected)
     {
@@ -36,7 +38,7 @@ class CreateTableTest extends TestCase
         $threw = null;
         try {
             $table->parse($stream);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $threw = $e;
         }
         if (preg_match('/^exception/i', $expected)) {
@@ -98,5 +100,101 @@ class CreateTableTest extends TestCase
         }
 
         return $tests;
+    }
+
+    /**
+     * @param string $firstTableText
+     * @param string $secondTableText
+     * @param string $expected
+     * @dataProvider diffProvider
+     */
+    public function testDiff($firstTableText, $secondTableText, $expected)
+    {
+        $collation = new CollationInfo();
+
+        $firstStream = $this->makeStream($firstTableText);
+        $firstTable = new CreateTable($collation);
+        $firstTable->setDefaultEngine('InnoDB');
+        $firstTable->parse($firstStream);
+
+        $secondStream = $this->makeStream($secondTableText);
+        $secondTable = new CreateTable($collation);
+        $secondTable->setDefaultEngine('InnoDB');
+        $secondTable->parse($secondStream);
+
+        $diff = $firstTable->diff($secondTable);
+
+        $this->assertEquals($expected == "" ? [] : [$expected], $diff);
+    }
+
+    /**
+     * @return array
+     */
+    public function diffProvider()
+    {
+        $tests = [];
+
+        foreach ([
+                    'columns.sql',
+                    'indexes.sql',
+                    'simpleDiff.sql'
+                 ] as $file) {
+            $path = __DIR__ . '/sql/diff/' . $file;
+            $sql = @file_get_contents($path);
+            if ($sql === false) {
+                $this->fail("could not open $path");
+            }
+            foreach (preg_split('/^-- test .*$/m', $sql) as $pair) {
+                if (trim($pair) != '') {
+                    list($firstText, $secondText, $expected) = preg_split('/(?<=;)/', $pair);
+                    $tests[] = [
+                        trim($firstText),
+                        trim($secondText),
+                        trim($expected)
+                    ];
+                }
+            }
+        }
+
+        return $tests;
+    }
+
+    /**
+     * Test that the "alterEngine" flag works.
+     * @dataProvider alterEngineProvider
+     * @param array $flags
+     * @param string $expected
+     */
+    public function testAlterEngineDiff(array $flags, $expected)
+    {
+        $sql = 'create table t (a int)';
+        $collation = new CollationInfo();
+
+        $firstStream = $this->makeStream($sql);
+        $firstTable = new CreateTable($collation);
+        $firstTable->setDefaultEngine('InnoDb');
+        $firstTable->parse($firstStream);
+
+        $secondStream = $this->makeStream($sql);
+        $secondTable = new CreateTable($collation);
+        $secondTable->setDefaultEngine('MyISAM');
+        $secondTable->parse($secondStream);
+
+        $diff = $firstTable->diff($secondTable, $flags);
+
+        $this->assertEquals($expected, $diff);
+    }
+
+    /**
+     * @return array
+     */
+    public function alterEngineProvider()
+    {
+        return [
+            // [ alter engine flag, expected diff ]
+            [ [ 'alterEngine' => true ],  ["ALTER TABLE `t`\nENGINE=MyISAM"] ],
+            [ [ 'alterEngine' => false ], []                                 ],
+            [ [],                         ["ALTER TABLE `t`\nENGINE=MyISAM"] ],
+        ];
     }
 }

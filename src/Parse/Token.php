@@ -4,9 +4,19 @@ namespace Graze\Morphism\Parse;
 /**
  * Represents a lexical token parsed from an SQL input stream.
  */
-
 class Token
 {
+    const SYMBOL = 'symbol';
+    const IDENTIFIER = 'identifier';
+    const NUMBER = 'number';
+    const BIN = 'bin';
+    const HEX = 'hex';
+    const WHITESPACE = 'whitespace';
+    const COMMENT = 'comment';
+    const CONDITIONAL_START = 'conditional-start';
+    const CONDITIONAL_END = 'conditional-end';
+    const EOF = 'EOF';
+
     /**
      * @var string  'symbol' | 'identifier' | 'number' | 'bin' | 'hex' |
      *              'whitespace' | 'comment' | 'conditional-start' |

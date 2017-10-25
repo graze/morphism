@@ -304,4 +304,36 @@ class TokenTest extends TestCase
             ['asDateTime', 'string', '19700812000000'],
         ];
     }
+
+    /**
+     * @param Token $token
+     * @param string $expected
+     * @dataProvider provideToDebugString
+     */
+    public function testToDebugString(Token $token, $expected)
+    {
+        $this->assertEquals($expected, $token->toDebugString());
+    }
+
+    /**
+     * @return array
+     */
+    public function provideToDebugString()
+    {
+        $text = 'foo';
+
+        return [
+            // Token, Expected output
+            [new Token(Token::BIN, $text), 'bin[foo]'],
+            [new Token(Token::COMMENT, $text), 'comment[foo]'],
+            [new Token(Token::CONDITIONAL_END, $text), 'conditional-end[foo]'],
+            [new Token(Token::CONDITIONAL_START, $text), 'conditional-start[foo]'],
+            [new Token(Token::EOF, $text), 'EOF[foo]'],
+            [new Token(Token::HEX, $text), 'hex[foo]'],
+            [new Token(Token::IDENTIFIER, $text), 'identifier[foo]'],
+            [new Token(Token::NUMBER, $text), 'number[foo]'],
+            [new Token(Token::SYMBOL, $text), 'symbol[foo]'],
+            [new Token(Token::WHITESPACE, $text), 'whitespace[foo]'],
+        ];
+    }
 }

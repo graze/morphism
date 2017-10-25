@@ -104,7 +104,7 @@ class IndexDefinition
     {
         $mark = $stream->getMark();
         $token = $stream->nextToken();
-        if ($token->type === 'identifier') {
+        if ($token->type === Token::IDENTIFIER) {
             $this->name = $token->text;
         } else {
             $stream->rewind($mark);
@@ -151,16 +151,16 @@ class IndexDefinition
     private function expectIndexColumns(TokenStream $stream)
     {
         $columns = [];
-        $stream->expect('symbol', '(');
+        $stream->expect(Token::SYMBOL, '(');
         while (true) {
             $column = [
                 'name'   => $stream->expectName(),
                 'length' => null,
                 'sort'   => 'ASC',
             ];
-            if ($stream->consume([['symbol', '(']])) {
+            if ($stream->consume([[Token::SYMBOL, '(']])) {
                 $column['length'] = $stream->expectNumber();
-                $stream->expect('symbol', ')');
+                $stream->expect(Token::SYMBOL, ')');
             }
             if ($stream->consume('ASC')) {
                 $column['sort'] = 'ASC';
@@ -168,12 +168,12 @@ class IndexDefinition
                 $column['sort'] = 'DESC';
             }
             $columns[] = $column;
-            if (!$stream->consume([['symbol', ',']])) {
+            if (!$stream->consume([[Token::SYMBOL, ',']])) {
                 break;
             }
         }
 
-        $stream->expect('symbol', ')');
+        $stream->expect(Token::SYMBOL, ')');
 
         return $columns;
     }
@@ -185,7 +185,7 @@ class IndexDefinition
     {
         while (true) {
             if ($stream->consume('KEY_BLOCK_SIZE')) {
-                $stream->consume([['symbol', '=']]);
+                $stream->consume([[Token::SYMBOL, '=']]);
                 $this->options['KEY_BLOCK_SIZE'] = $stream->expectNumber();
             } elseif ($stream->consume('WITH PARSER')) {
                 $this->options['WITH PARSER'] = $stream->expectName();
@@ -204,10 +204,10 @@ class IndexDefinition
      */
     private function parseReferenceDefinition(TokenStream $stream)
     {
-        $stream->expect('identifier', 'REFERENCES');
+        $stream->expect(Token::IDENTIFIER, 'REFERENCES');
 
         $tableOrSchema = $stream->expectName();
-        if ($stream->consume([['symbol', '.']])) {
+        if ($stream->consume([[Token::SYMBOL, '.']])) {
             $schema = $tableOrSchema;
             $table = $stream->expectName();
         } else {

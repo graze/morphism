@@ -70,14 +70,14 @@ class TableOptions
         while (true) {
             $mark = $stream->getMark();
             $token = $stream->nextToken();
-            if ($token->type !== 'identifier') {
+            if ($token->type !== Token::IDENTIFIER) {
                 $stream->rewind($mark);
                 break;
             }
 
-            if ($token->eq('identifier', 'DEFAULT')) {
+            if ($token->eq(Token::IDENTIFIER, 'DEFAULT')) {
                 $token = $stream->nextToken();
-                if (!($token->type === 'identifier' &&
+                if (!($token->type === Token::IDENTIFIER &&
                       in_array(strtoupper($token->text), ['CHARSET', 'CHARACTER', 'COLLATE']))
                 ) {
                     throw new \RuntimeException("Expected CHARSET, CHARACTER SET or COLLATE");
@@ -106,7 +106,7 @@ class TableOptions
                 break;
 
             case 'CHARACTER':
-                $stream->expect('identifier', 'SET');
+                $stream->expect(Token::IDENTIFIER, 'SET');
                 $this->_parseIdentifier($stream, 'CHARSET');
                 break;
 
@@ -129,7 +129,7 @@ class TableOptions
 
             case 'DATA':
             case 'INDEX':
-                $stream->expect('identifier', 'DIRECTORY');
+                $stream->expect(Token::IDENTIFIER, 'DIRECTORY');
                 // fall through //
             case 'COMMENT':
             case 'CONNECTION':
@@ -214,12 +214,12 @@ class TableOptions
      */
     private function _parseIdentifier(TokenStream $stream, $option)
     {
-        $stream->consume([['symbol', '=']]);
+        $stream->consume([[Token::SYMBOL, '=']]);
         $token = $stream->nextToken();
         if ($token->isEof()) {
             throw new \RuntimeException("Unexpected end-of-file");
         }
-        if (!in_array($token->type, ['identifier', 'string'])) {
+        if (!in_array($token->type, [Token::IDENTIFIER, Token::STRING])) {
             throw new \RuntimeException("Bad table option value: '$token->text'");
         }
         $this->setOption($option, strtolower($token->text));
@@ -231,7 +231,7 @@ class TableOptions
      */
     private function _parseNumber(TokenStream $stream, $option)
     {
-        $stream->consume([['symbol', '=']]);
+        $stream->consume([[Token::SYMBOL, '=']]);
         $this->setOption($option, $stream->expectNumber());
     }
 
@@ -242,9 +242,9 @@ class TableOptions
      */
     private function _parseEnum(TokenStream $stream, $option, array $enums)
     {
-        $stream->consume([['symbol', '=']]);
+        $stream->consume([[Token::SYMBOL, '=']]);
         $token = $stream->nextToken();
-        if (!in_array($token->type, ['identifier', 'number'])) {
+        if (!in_array($token->type, [Token::IDENTIFIER, Token::NUMBER])) {
             throw new \RuntimeException("Bad table option value");
         }
         $value = strtoupper($token->text);
@@ -260,7 +260,7 @@ class TableOptions
      */
     private function _parseString(TokenStream $stream, $option)
     {
-        $stream->consume([['symbol', '=']]);
+        $stream->consume([[Token::SYMBOL, '=']]);
         $this->setOption($option, $stream->expectString());
     }
 

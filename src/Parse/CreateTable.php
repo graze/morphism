@@ -107,9 +107,9 @@ class CreateTable
                 $this->_parseColumn($stream);
             }
             $token = $stream->nextToken();
-            if ($token->eq('symbol', ',')) {
+            if ($token->eq(Token::SYMBOL, ',')) {
                 continue;
-            } elseif ($token->eq('symbol', ')')) {
+            } elseif ($token->eq(Token::SYMBOL, ')')) {
                 break;
             } else {
                 throw new RuntimeException("Expected ',' or ')'");

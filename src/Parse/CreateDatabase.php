@@ -56,7 +56,7 @@ class CreateDatabase
             if ($stream->consume('CHARSET') ||
                 $stream->consume('CHARACTER SET')
             ) {
-                $stream->consume([['symbol', '=']]);
+                $stream->consume([[Token::SYMBOL, '=']]);
                 $charset = $stream->expectName();
                 if (strtoupper($charset) === 'DEFAULT') {
                     $this->_collation = new CollationInfo();
@@ -64,7 +64,7 @@ class CreateDatabase
                     $this->_collation->setCharset($charset);
                 }
             } elseif ($stream->consume('COLLATE')) {
-                $stream->consume([['symbol', '=']]);
+                $stream->consume([[Token::SYMBOL, '=']]);
                 $collation = $stream->expectName();
                 if (strtoupper($collation) === 'DEFAULT') {
                     $this->_collation = new CollationInfo();

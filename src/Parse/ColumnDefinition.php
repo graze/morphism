@@ -189,7 +189,7 @@ class ColumnDefinition
     private function _parseColumnDatatype(TokenStream $stream)
     {
         $token = $stream->nextToken();
-        if ($token->type !== 'identifier') {
+        if ($token->type !== Token::IDENTIFIER) {
             throw new \RuntimeException("expected a datatype");
         }
 
@@ -261,10 +261,10 @@ class ColumnDefinition
                 while (true) {
                     $this->elements[] = rtrim($stream->expectStringExtended(), " ");
                     $token = $stream->nextToken();
-                    if ($token->eq('symbol', ',')) {
+                    if ($token->eq(Token::SYMBOL, ',')) {
                         continue;
                     }
-                    if ($token->eq('symbol', ')')) {
+                    if ($token->eq(Token::SYMBOL, ')')) {
                         break;
                     }
                     throw new \RuntimeException("expected ',' or ')'");
@@ -280,12 +280,12 @@ class ColumnDefinition
 
             default:
                 $spec = $typeInfo->formatSpec;
-                if ($stream->consume([['symbol', '(']])) {
+                if ($stream->consume([[Token::SYMBOL, '(']])) {
                     if (!($spec[1] || $spec[2])) {
                         throw new \RuntimeException("unexpected '('");
                     }
                     $format[] = $stream->expectNumber();
-                    if ($stream->consume([['symbol', ',']])) {
+                    if ($stream->consume([[Token::SYMBOL, ',']])) {
                         if (!$spec[2]) {
                             throw new \RuntimeException("unexpected ','");
                         }
@@ -306,22 +306,22 @@ class ColumnDefinition
         while (true) {
             $mark = $stream->getMark();
             $token1 = $stream->nextToken();
-            if ($token1->type !== 'identifier') {
+            if ($token1->type !== Token::IDENTIFIER) {
                 $stream->rewind($mark);
                 break;
             }
 
-            if ($token1->eq('identifier', 'ZEROFILL')) {
+            if ($token1->eq(Token::IDENTIFIER, 'ZEROFILL')) {
                 if (!$typeInfo->allowZerofill) {
                     throw new \RuntimeException("unexpected ZEROFILL");
                 }
                 $this->zerofill = true;
-            } elseif ($token1->eq('identifier', 'UNSIGNED')) {
+            } elseif ($token1->eq(Token::IDENTIFIER, 'UNSIGNED')) {
                 if (!$typeInfo->allowSign) {
                     throw new \RuntimeException("unexpected UNSIGNED");
                 }
                 $this->unsigned = true;
-            } elseif ($token1->eq('identifier', 'SIGNED')) {
+            } elseif ($token1->eq(Token::IDENTIFIER, 'SIGNED')) {
                 if (!$typeInfo->allowSign) {
                     throw new \RuntimeException("unexpected SIGNED");
                 }
@@ -361,18 +361,18 @@ class ColumnDefinition
         while (true) {
             $mark = $stream->getMark();
             $token1 = $stream->nextToken();
-            if ($token1->type !== 'identifier') {
+            if ($token1->type !== Token::IDENTIFIER) {
                 $stream->rewind($mark);
                 break;
             }
 
-            if ($token1->eq('identifier', 'BINARY')) {
+            if ($token1->eq(Token::IDENTIFIER, 'BINARY')) {
                 if (!$typeInfo->allowBinary) {
                     throw new \RuntimeException("unexpected BINARY");
                 }
                 $this->collation->setBinaryCollation();
-            } elseif ($token1->eq('identifier', 'CHARSET') ||
-                $token1->eq('identifier', 'CHARACTER') && $stream->consume('SET')
+            } elseif ($token1->eq(Token::IDENTIFIER, 'CHARSET') ||
+                $token1->eq(Token::IDENTIFIER, 'CHARACTER') && $stream->consume('SET')
             ) {
                 if (!$typeInfo->allowCharset) {
                     throw new \RuntimeException("unexpected CHARSET");
@@ -402,35 +402,35 @@ class ColumnDefinition
         while (true) {
             $mark = $stream->getMark();
             $token1 = $stream->nextToken();
-            if ($token1->type !== 'identifier') {
+            if ($token1->type !== Token::IDENTIFIER) {
                 $stream->rewind($mark);
                 break;
             }
 
-            if ($token1->eq('identifier', 'NOT') &&
+            if ($token1->eq(Token::IDENTIFIER, 'NOT') &&
                 $stream->consume('NULL')
             ) {
                 $this->nullable = false;
-            } elseif ($token1->eq('identifier', 'NULL')
+            } elseif ($token1->eq(Token::IDENTIFIER, 'NULL')
             ) {
                 if (!$this->autoIncrement) {
                     $this->nullable = true;
                 }
-            } elseif ($token1->eq('identifier', 'DEFAULT')
+            } elseif ($token1->eq(Token::IDENTIFIER, 'DEFAULT')
             ) {
                 $token2 = $stream->nextToken();
 
-                if ($token2->eq('identifier', 'NOW') ||
-                    $token2->eq('identifier', 'CURRENT_TIMESTAMP') ||
-                    $token2->eq('identifier', 'LOCALTIME') ||
-                    $token2->eq('identifier', 'LOCALTIMESTAMP')
+                if ($token2->eq(Token::IDENTIFIER, 'NOW') ||
+                    $token2->eq(Token::IDENTIFIER, 'CURRENT_TIMESTAMP') ||
+                    $token2->eq(Token::IDENTIFIER, 'LOCALTIME') ||
+                    $token2->eq(Token::IDENTIFIER, 'LOCALTIMESTAMP')
                 ) {
-                    if (!$stream->consume([['symbol', '('], ['symbol', ')']]) &&
-                        $token2->eq('identifier', 'NOW')
+                    if (!$stream->consume([[Token::SYMBOL, '('], [Token::SYMBOL, ')']]) &&
+                        $token2->eq(Token::IDENTIFIER, 'NOW')
                     ) {
                         throw new \RuntimeException("expected () after keyword NOW");
                     }
-                    $token2 = new Token('identifier', 'CURRENT_TIMESTAMP');
+                    $token2 = new Token(Token::IDENTIFIER, 'CURRENT_TIMESTAMP');
                 }
 
                 try {
@@ -438,17 +438,17 @@ class ColumnDefinition
                 } catch (Exception $e) {
                     throw new \RuntimeException("invalid DEFAULT for '" . $this->name . "'");
                 }
-            } elseif ($token1->eq('identifier', 'ON') &&
+            } elseif ($token1->eq(Token::IDENTIFIER, 'ON') &&
                 $stream->consume('UPDATE')
             ) {
                 $token2 = $stream->nextToken();
-                if ($token2->eq('identifier', 'NOW') ||
-                    $token2->eq('identifier', 'CURRENT_TIMESTAMP') ||
-                    $token2->eq('identifier', 'LOCALTIME') ||
-                    $token2->eq('identifier', 'LOCALTIMESTAMP')
+                if ($token2->eq(Token::IDENTIFIER, 'NOW') ||
+                    $token2->eq(Token::IDENTIFIER, 'CURRENT_TIMESTAMP') ||
+                    $token2->eq(Token::IDENTIFIER, 'LOCALTIME') ||
+                    $token2->eq(Token::IDENTIFIER, 'LOCALTIMESTAMP')
                 ) {
-                    if (!$stream->consume([['symbol', '('], ['symbol', ')']]) &&
-                        $token2->eq('identifier', 'NOW')
+                    if (!$stream->consume([[Token::SYMBOL, '('], [Token::SYMBOL, ')']]) &&
+                        $token2->eq(Token::IDENTIFIER, 'NOW')
                     ) {
                         throw new \RuntimeException("expected () after keyword NOW");
                     }
@@ -459,26 +459,26 @@ class ColumnDefinition
                 } else {
                     throw new \RuntimeException("expected CURRENT_TIMESTAMP, NOW, LOCALTIME or LOCALTIMESTAMP");
                 }
-            } elseif ($token1->eq('identifier', 'AUTO_INCREMENT')
+            } elseif ($token1->eq(Token::IDENTIFIER, 'AUTO_INCREMENT')
             ) {
                 if (!$this->_getTypeInfo()->allowAutoIncrement) {
                     throw new \RuntimeException("AUTO_INCREMENT not allowed for this datatype");
                 }
                 $this->autoIncrement = true;
                 $this->nullable = false;
-            } elseif ($token1->eq('identifier', 'UNIQUE')
+            } elseif ($token1->eq(Token::IDENTIFIER, 'UNIQUE')
             ) {
                 $stream->consume('KEY');
                 $this->_uniqueKey = true;
-            } elseif ($token1->eq('identifier', 'PRIMARY') && $stream->consume('KEY') ||
-                $token1->eq('identifier', 'KEY')
+            } elseif ($token1->eq(Token::IDENTIFIER, 'PRIMARY') && $stream->consume('KEY') ||
+                $token1->eq(Token::IDENTIFIER, 'KEY')
             ) {
                 $this->_primaryKey = true;
                 $this->nullable = false;
-            } elseif ($token1->eq('identifier', 'COMMENT')
+            } elseif ($token1->eq(Token::IDENTIFIER, 'COMMENT')
             ) {
                 $this->comment = $stream->expectString();
-            } elseif ($token1->eq('identifier', 'SERIAL') &&
+            } elseif ($token1->eq(Token::IDENTIFIER, 'SERIAL') &&
                 $stream->consume('DEFAULT VALUE')
             ) {
                 if (!$this->_getTypeInfo()->allowAutoIncrement) {
@@ -540,21 +540,21 @@ class ColumnDefinition
      */
     private function _defaultValue(Token $token)
     {
-        if ($token->eq('identifier', 'NULL')) {
+        if ($token->eq(Token::IDENTIFIER, 'NULL')) {
             if (!$this->nullable) {
                 throw new \Exception("Column type cannot have NULL default: $this->type");
             }
             return null;
         }
 
-        if ($token->eq('identifier', 'CURRENT_TIMESTAMP')) {
+        if ($token->eq(Token::IDENTIFIER, 'CURRENT_TIMESTAMP')) {
             if (!in_array($this->type, ['timestamp', 'datetime'])) {
                 throw new \Exception("Only 'timestamp' and 'datetime' types can have default value of CURRENT_TIMESTAMP");
             }
             return 'CURRENT_TIMESTAMP';
         }
 
-        if (!in_array($token->type, ['string', 'hex', 'bin', 'number'])) {
+        if (!in_array($token->type, [Token::STRING, Token::HEX, Token::BIN, Token::NUMBER])) {
             throw new \Exception("Invalid token type for default value: $token->type");
         }
 
@@ -600,7 +600,7 @@ class ColumnDefinition
 
             case 'year':
                 $year = $token->asNumber();
-                if ($token->type !== 'string' && $year == 0) {
+                if ($token->type !== Token::STRING && $year == 0) {
                     return '0000';
                 }
                 if ($year < 70) {
@@ -624,7 +624,7 @@ class ColumnDefinition
                 return str_pad($token->asString(), $this->length, "\0");
 
             case 'enum':
-                if ($token->type !== 'string') {
+                if ($token->type !== Token::STRING) {
                     throw new \Exception("Invalid data type for default enum value: $token->type");
                 }
                 foreach ($this->elements as $element) {
@@ -635,7 +635,7 @@ class ColumnDefinition
                 throw new \Exception("Default enum value not found in enum: $token->text");
 
             case 'set':
-                if ($token->type !== 'string') {
+                if ($token->type !== Token::STRING) {
                     throw new \Exception("Invalid type for default set value: $token->type");
                 }
                 if ($token->text === '') {

@@ -18,10 +18,10 @@ class TokenStream
 
     /** @var array */
     private static $skipTokenTypes = [
-        'conditional-start' => true,
-        'conditional-end'   => true,
-        'comment'           => true,
-        'whitespace'        => true,
+        Token::CONDITIONAL_START => true,
+        Token::CONDITIONAL_END   => true,
+        Token::COMMENT           => true,
+        Token::WHITESPACE        => true,
     ];
 
     private function __construct()
@@ -76,7 +76,7 @@ class TokenStream
         }
 
         if ($this->offset >= $this->len) {
-            $token = new Token('EOF');
+            $token = new Token(Token::EOF);
             $this->offset = $this->len;
         } else {
             list($token, $offset) = $this->_nextTokenRaw($this->text, $this->offset);
@@ -112,7 +112,7 @@ class TokenStream
             case "\t":
                 $n = strspn($text, " \n\r\t", $offset);
                 return [
-                    new Token('whitespace', substr($text, $offset, $n)),
+                    new Token(Token::WHITESPACE, substr($text, $offset, $n)),
                     $offset + $n
                 ];
 
@@ -288,7 +288,7 @@ class TokenStream
         // TODO - should probably be a new token type 'variable' for @ and @@
         preg_match('/\A(?:<=|>=|<>|!=|:=|@@|&&|\|\||[=~!@%^&();:,<>|])()/xms', substr($text, $offset, 2), $pregMatch, PREG_OFFSET_CAPTURE);
         return [
-            new Token('symbol', $pregMatch[0][0]),
+            new Token(Token::SYMBOL, $pregMatch[0][0]),
             $offset + $pregMatch[1][1]
         ];
     }
@@ -306,7 +306,7 @@ class TokenStream
         ) {
             $this->inConditional = true;
             return [
-                new Token('conditional-start', $pregMatch[1]),
+                new Token(Token::CONDITIONAL_START, $pregMatch[1]),
                 $offset + strlen($pregMatch[0])
             ];
         }
@@ -326,7 +326,7 @@ class TokenStream
             }
             $this->inConditional = false;
             return [
-                new Token('conditional-end'),
+                new Token(Token::CONDITIONAL_END),
                 $offset + 2
             ];
         }
@@ -344,7 +344,7 @@ class TokenStream
             $pos = strpos($text, '*/', $offset);
             if ($pos !== false) {
                 return [
-                    new Token('comment', substr($text, $offset, $pos - $offset + 2)),
+                    new Token(Token::COMMENT, substr($text, $offset, $pos - $offset + 2)),
                     $pos + 2
                 ];
             }
@@ -364,12 +364,12 @@ class TokenStream
             $pos = strpos($text, "\n", $offset);
             if ($pos !== false) {
                 return [
-                    new Token('comment', substr($text, $offset, $pos - $offset)),
+                    new Token(Token::COMMENT, substr($text, $offset, $pos - $offset)),
                     $pos + 1
                 ];
             }
             return [
-                new Token('comment', $text),
+                new Token(Token::COMMENT, $text),
                 strlen($text)
             ];
         }
@@ -422,7 +422,7 @@ class TokenStream
             preg_match('/[-+]?(?:[0-9]+(?:[.][0-9]*)?|[.][0-9]+)(?:[eE][-+]?[0-9]+)?/ms', $text, $pregMatch, 0, $offset)
         ) {
             return [
-                new Token('number', $pregMatch[0]),
+                new Token(Token::NUMBER, $pregMatch[0]),
                 $offset + strlen($pregMatch[0])
             ];
         }
@@ -443,7 +443,7 @@ class TokenStream
                 throw new \RuntimeException("invalid hex literal");
             }
             return [
-                new Token('hex', $pregMatch[1]),
+                new Token(Token::HEX, $pregMatch[1]),
                 $offset + strlen($pregMatch[0])
             ];
         }
@@ -461,7 +461,7 @@ class TokenStream
             preg_match('/b\'([01]*)\'/ms', $text, $pregMatch, 0, $offset)
         ) {
             return [
-                new Token('bin', $pregMatch[1]),
+                new Token(Token::BIN, $pregMatch[1]),
                 $offset + strlen($pregMatch[0])
             ];
         }
@@ -477,7 +477,7 @@ class TokenStream
     {
         preg_match('/[a-zA-Z0-9$_]+()/ms', $text, $pregMatch, PREG_OFFSET_CAPTURE, $offset);
         return [
-            new Token('identifier', $pregMatch[0][0]),
+            new Token(Token::IDENTIFIER, $pregMatch[0][0]),
             $pregMatch[1][1]
         ];
     }
@@ -491,7 +491,7 @@ class TokenStream
     {
         if (preg_match('/\A(?:[-+*.\/])/xms', substr($text, $offset, 2), $pregMatch)) {
             return [
-                new Token('symbol', $pregMatch[0]),
+                new Token(Token::SYMBOL, $pregMatch[0]),
                 $offset + strlen($pregMatch[0])
             ];
         }
@@ -546,7 +546,7 @@ class TokenStream
                 $token = $this->nextToken();
                 // inline $token->eq(...)
                 if (strcasecmp($token->text, $text) !== 0 ||
-                    $token->type !== 'identifier'
+                    $token->type !== Token::IDENTIFIER
                 ) {
                     // inline rewind()
                     $this->offset        = $markOffset;
@@ -610,7 +610,7 @@ class TokenStream
     public function expectName()
     {
         $token = $this->nextToken();
-        if ($token->type !== 'identifier') {
+        if ($token->type !== Token::IDENTIFIER) {
             throw new \RuntimeException("expected identifier");
         }
         return $token->text;
@@ -618,12 +618,12 @@ class TokenStream
 
     public function expectOpenParen()
     {
-        $this->expect('symbol', '(');
+        $this->expect(Token::SYMBOL, '(');
     }
 
     public function expectCloseParen()
     {
-        $this->expect('symbol', ')');
+        $this->expect(Token::SYMBOL, ')');
     }
 
     /**
@@ -632,7 +632,7 @@ class TokenStream
     public function expectNumber()
     {
         $token = $this->nextToken();
-        if ($token->type !== 'number') {
+        if ($token->type !== Token::NUMBER) {
             throw new \RuntimeException("expected number");
         }
         return 0 + $token->text;
@@ -644,7 +644,7 @@ class TokenStream
     public function expectString()
     {
         $token = $this->nextToken();
-        if ($token->type !== 'string') {
+        if ($token->type !== Token::STRING) {
             throw new \RuntimeException("expected string");
         }
         return $token->text;
@@ -657,11 +657,11 @@ class TokenStream
     {
         $token = $this->nextToken();
         switch ($token->type) {
-            case 'string':
+            case Token::STRING:
                 return $token->text;
-            case 'hex':
+            case Token::HEX:
                 return $token->hexToString();
-            case 'bin':
+            case Token::BIN:
                 return $token->binToString();
             default:
                 throw new \RuntimeException("expected string");

@@ -25,19 +25,6 @@ class TokenStreamTest extends TestCase
     }
 
     /**
-     * @dataProvider nextTokenProvider
-     * @param string $text
-     * @param string $expectedType
-     * @param mixed $expectedValue
-     */
-    public function testNextToken($text, $expectedType, $expectedValue)
-    {
-        $stream = $this->makeStream($text);
-        $token = $stream->nextToken();
-        $this->assertTokenEq($expectedType, $expectedValue, $token);
-    }
-
-    /**
      * @param string $expectedType
      * @param mixed $expectedValue
      * @param string $token
@@ -48,6 +35,19 @@ class TokenStreamTest extends TestCase
             $token->eq($expectedType, $expectedValue),
             "expected {$expectedType}[{$expectedValue}], but got " . $token->toDebugString()
         );
+    }
+
+    /**
+     * @dataProvider nextTokenProvider
+     * @param string $text
+     * @param string $expectedType
+     * @param mixed $expectedNextTokenValue
+     */
+    public function testNextToken($text, $expectedType, $expectedNextTokenValue)
+    {
+        $stream = $this->makeStream($text);
+        $token = $stream->nextToken();
+        $this->assertTokenEq($expectedType, $expectedNextTokenValue, $token);
     }
 
     /**
@@ -151,6 +151,59 @@ class TokenStreamTest extends TestCase
             [ "*_",  Token::SYMBOL, "*"  ],
             [ "/_",  Token::SYMBOL, "/"  ],
             [ "%_",  Token::SYMBOL, "%"  ],
+        ];
+    }
+
+    /**
+     * @param string $text
+     * @dataProvider provideBadLogicNextToken
+     * @expectedException LogicException
+     */
+    public function testBadLogicNextToken($text)
+    {
+        $stream = $this->makeStream($text);
+        $token = $stream->nextToken();
+    }
+
+    /**
+     * @return array
+     */
+    public function provideBadLogicNextToken()
+    {
+        return [
+            // All of these are explicitly not valid and will result in a "Lexer is confused by ..." message.
+            ['?'],
+            ['['],
+            [']'],
+            ['\\'],
+            ['{'],
+            ['}'],
+            // This item covers the fall through value for any characters not explicitly listed
+            [chr(0)],
+        ];
+    }
+
+    /**
+     * @param string $text
+     * @dataProvider provideBadRuntimeNextToken
+     * @expectedException RuntimeException
+     */
+    public function testBadRuntimeNextToken($text)
+    {
+        $stream = $this->makeStream($text);
+        $token = $stream->nextToken();
+    }
+
+    /**
+     * @return array
+     */
+    public function provideBadRuntimeNextToken()
+    {
+        return [
+            // Unterminated quoted identifier
+            ['`foo'],
+            // Unexpected end of comment
+            ['*/'],
         ];
     }
 

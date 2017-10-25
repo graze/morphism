@@ -307,6 +307,8 @@ class TokenTest extends TestCase
             ['asDateTime', 'string', '19700812000000'],
 
             ['asString',   'symbol', 'abc'       ],
+
+            ['asNumber',   'symbol', 'abc'       ],
         ];
     }
 

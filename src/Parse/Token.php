@@ -10,6 +10,7 @@ class Token
 {
     const SYMBOL = 'symbol';
     const IDENTIFIER = 'identifier';
+    const STRING = 'string';
     const NUMBER = 'number';
     const BIN = 'bin';
     const HEX = 'hex';
@@ -20,8 +21,8 @@ class Token
     const EOF = 'EOF';
 
     /**
-     * @var string  'symbol' | 'identifier' | 'number' | 'bin' | 'hex' |
-     *              'whitespace' | 'comment' | 'conditional-start' |
+     * @var string  'symbol' | 'identifier' | 'string' | 'number' | 'bin' |
+     *              'hex' | 'whitespace' | 'comment' | 'conditional-start' |
      *              'conditional-end' | 'EOF'
      */
     public $type;
@@ -90,7 +91,7 @@ class Token
      */
     public function isEof()
     {
-        return $this->type === 'EOF';
+        return $this->type === self::EOF;
     }
 
     /**
@@ -150,7 +151,7 @@ class Token
             }
             $text .= $ch;
         }
-        return new self('string', $text);
+        return new self(self::STRING, $text);
     }
 
     /**
@@ -225,10 +226,10 @@ class Token
     public function asString()
     {
         switch ($this->type) {
-            case 'string':
+            case self::STRING:
                 return $this->text;
 
-            case 'number':
+            case self::NUMBER:
                 preg_match('/^([+-]?)0*(.*)$/', $this->text, $pregMatch);
                 list(, $sign, $value) = $pregMatch;
                 if ($value == '') {
@@ -241,10 +242,10 @@ class Token
                 }
                 return $value;
 
-            case 'hex':
+            case self::HEX:
                 return pack('H*', $this->text);
 
-            case 'bin':
+            case self::BIN:
                 $bytes = '';
                 for ($text = $this->text; $text !== ''; $text = substr($text, 0, -8)) {
                     $bytes = chr(bindec(substr($text, -8))) . $bytes;
@@ -264,17 +265,17 @@ class Token
     public function asNumber()
     {
         switch ($this->type) {
-            case 'number':
+            case self::NUMBER:
                 return 0 + $this->text;
 
-            case 'string':
+            case self::STRING:
                 // TODO - should check $this->text is actually a valid number
                 return 0 + $this->text;
 
-            case 'hex':
+            case self::HEX:
                 return hexdec($this->text);
 
-            case 'bin':
+            case self::BIN:
                 return bindec($this->text);
 
             default:

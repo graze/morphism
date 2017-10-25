@@ -222,6 +222,8 @@ class TokenTest extends TestCase
     {
         return [
             ['asString',   'string', 'abc',                 'abc'    ],
+            ['asString',   'string', '',                    ''       ],
+
             ['asString',   'number', '123',                 '123'    ],
             ['asString',   'number', '0123',                '123'    ],
             ['asString',   'number', '-0123',               '-123'   ],
@@ -230,6 +232,7 @@ class TokenTest extends TestCase
             ['asString',   'number', '-1.23',               '-1.23'  ],
             ['asString',   'number', '+1.23',               '1.23'   ],
             ['asString',   'number', '.23',                 '0.23'   ],
+            ['asString',   'number', '',                    '0'      ],
 
         // TODO - work is needed on Token::asString to make these tests parse:
         //  ['asString',   'number', '1.234e1',             '12.34'  ],
@@ -302,6 +305,42 @@ class TokenTest extends TestCase
             ['asDateTime', 'string', '1970/08/12'    ],
             ['asDateTime', 'string', '197008120000'  ],
             ['asDateTime', 'string', '19700812000000'],
+
+            ['asString',   'symbol', 'abc'       ],
+
+            ['asNumber',   'symbol', 'abc'       ],
+        ];
+    }
+
+    /**
+     * @param Token $token
+     * @param string $expected
+     * @dataProvider provideToDebugString
+     */
+    public function testToDebugString(Token $token, $expected)
+    {
+        $this->assertEquals($expected, $token->toDebugString());
+    }
+
+    /**
+     * @return array
+     */
+    public function provideToDebugString()
+    {
+        $text = 'foo';
+
+        return [
+            // Token, Expected output
+            [new Token(Token::BIN, $text), 'bin[foo]'],
+            [new Token(Token::COMMENT, $text), 'comment[foo]'],
+            [new Token(Token::CONDITIONAL_END, $text), 'conditional-end[foo]'],
+            [new Token(Token::CONDITIONAL_START, $text), 'conditional-start[foo]'],
+            [new Token(Token::EOF, $text), 'EOF[foo]'],
+            [new Token(Token::HEX, $text), 'hex[foo]'],
+            [new Token(Token::IDENTIFIER, $text), 'identifier[foo]'],
+            [new Token(Token::NUMBER, $text), 'number[foo]'],
+            [new Token(Token::SYMBOL, $text), 'symbol[foo]'],
+            [new Token(Token::WHITESPACE, $text), 'whitespace[foo]'],
         ];
     }
 }

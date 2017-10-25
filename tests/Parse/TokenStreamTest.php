@@ -6,6 +6,12 @@ use Graze\Morphism\Test\Parse\TestCase;
 
 class TokenStreamTest extends TestCase
 {
+    public function testNewFromText()
+    {
+        $stream = TokenStream::newFromText('', '');
+        $this->assertThat($stream, $this->isInstanceOf(__NAMESPACE__ . '\TokenStream'));
+    }
+
     public function testNewFromFile()
     {
         $stream = TokenStream::newFromFile("/dev/null");
@@ -109,15 +115,15 @@ class TokenStreamTest extends TestCase
             [ "{$bq}hello{$bs}nworld{$bq}",     Token::IDENTIFIER, "hello{$bs}nworld"],     // \n => \n
 
             // hex literals
-            [ "x''",                    "hex", "" ],
-            [ "x'00'",                  "hex", "00" ],
-            [ "x'0123456789abcdef'",    "hex", "0123456789abcdef" ],
-            [ "x'0123456789ABCDEF'",    "hex", "0123456789ABCDEF" ],
+            [ "x''",                    Token::HEX, "" ],
+            [ "x'00'",                  Token::HEX, "00" ],
+            [ "x'0123456789abcdef'",    Token::HEX, "0123456789abcdef" ],
+            [ "x'0123456789ABCDEF'",    Token::HEX, "0123456789ABCDEF" ],
 
             // binary literals
-            [ "b''",            "bin", "" ],
-            [ "b'0'",           "bin", "0" ],
-            [ "b'00011011'",    "bin", "00011011" ],
+            [ "b''",            Token::BIN, "" ],
+            [ "b'0'",           Token::BIN, "0" ],
+            [ "b'00011011'",    Token::BIN, "00011011" ],
 
             // unquoted identifiers
        //   [ '1_',       Token::IDENTIFIER, '1_' ],     // TODO - make this pass
@@ -131,20 +137,20 @@ class TokenStreamTest extends TestCase
             [ '$_123abc', Token::IDENTIFIER, '$_123abc' ],
 
             // symbols
-            [ "<=_", "symbol", "<=" ],
-            [ ">=_", "symbol", ">=" ],
-            [ "<>_", "symbol", "<>" ],
-            [ "!=_", "symbol", "!=" ],
-            [ ":=_", "symbol", ":=" ],
-            [ "&&_", "symbol", "&&" ],
-            [ "||_", "symbol", "||" ],
-            [ "@@_", "symbol", "@@" ],
-            [ "@_",  "symbol", "@" ],
-            [ "+_",  "symbol", "+"  ],
-            [ "-_",  "symbol", "-"  ],
-            [ "*_",  "symbol", "*"  ],
-            [ "/_",  "symbol", "/"  ],
-            [ "%_",  "symbol", "%"  ],
+            [ "<=_", Token::SYMBOL, "<=" ],
+            [ ">=_", Token::SYMBOL, ">=" ],
+            [ "<>_", Token::SYMBOL, "<>" ],
+            [ "!=_", Token::SYMBOL, "!=" ],
+            [ ":=_", Token::SYMBOL, ":=" ],
+            [ "&&_", Token::SYMBOL, "&&" ],
+            [ "||_", Token::SYMBOL, "||" ],
+            [ "@@_", Token::SYMBOL, "@@" ],
+            [ "@_",  Token::SYMBOL, "@" ],
+            [ "+_",  Token::SYMBOL, "+"  ],
+            [ "-_",  Token::SYMBOL, "-"  ],
+            [ "*_",  Token::SYMBOL, "*"  ],
+            [ "/_",  Token::SYMBOL, "/"  ],
+            [ "%_",  Token::SYMBOL, "%"  ],
         ];
     }
 

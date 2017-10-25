@@ -136,7 +136,7 @@ class MysqlDump
             if ($stream->peek('CREATE DATABASE')) {
                 $this->database = new CreateDatabase($this->_defaultCollation);
                 $this->database->parse($stream);
-                $stream->expect('symbol', ';');
+                $stream->expect(Token::SYMBOL, ';');
 
                 $this->databases[$this->database->name] = $this->database;
             } elseif ($stream->peek('CREATE TABLE')) {
@@ -149,7 +149,7 @@ class MysqlDump
                 $table = new CreateTable($this->database->getCollation());
                 $table->setDefaultEngine($this->_defaultEngine);
                 $table->parse($stream);
-                $stream->expect('symbol', ';');
+                $stream->expect(Token::SYMBOL, ';');
 
                 $includeTablesRegex = $flags['matchTables']['include'];
                 $excludeTablesRegex = $flags['matchTables']['exclude'];
@@ -175,7 +175,7 @@ class MysqlDump
             if ($token->isEof()) {
                 return false;
             }
-            if ($token->eq('symbol', ';')) {
+            if ($token->eq(Token::SYMBOL, ';')) {
                 return true;
             }
         }

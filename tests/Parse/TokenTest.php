@@ -8,23 +8,23 @@ class TokenTest extends TestCase
 {
     public function testIsEof()
     {
-        $eof = new Token('EOF');
+        $eof = new Token(Token::EOF);
         $this->assertTrue($eof->isEof());
 
-        $notEof = new Token('number', '123');
+        $notEof = new Token(Token::NUMBER, '123');
         $this->assertFalse($notEof->isEof());
     }
 
     public function testEq()
     {
-        $token = new Token('string', 'test');
+        $token = new Token(Token::STRING, 'test');
 
-        $this->assertTrue($token->eq('string', 'test'));
-        $this->assertTrue($token->eq('string', 'Test'));
-        $this->assertTrue($token->eq('string', 'TEST'));
+        $this->assertTrue($token->eq(Token::STRING, 'test'));
+        $this->assertTrue($token->eq(Token::STRING, 'Test'));
+        $this->assertTrue($token->eq(Token::STRING, 'TEST'));
 
-        $this->assertFalse($token->eq('string', 'testtest'));
-        $this->assertFalse($token->eq('number', 'test'));
+        $this->assertFalse($token->eq(Token::STRING, 'testtest'));
+        $this->assertFalse($token->eq(Token::NUMBER, 'test'));
     }
 
     public function testMakeStringEscapes()
@@ -45,7 +45,7 @@ class TokenTest extends TestCase
         );
         $this->assertTrue(
             $escaped->eq(
-                'string',
+                Token::STRING,
                 "bcd{$bs}" .
                 "cde" . chr(0) .
                 "def" . chr(8) .
@@ -78,7 +78,7 @@ class TokenTest extends TestCase
         );
         $this->assertTrue(
             $unescaped->eq(
-                'string',
+                Token::STRING,
                 "ijk" . "a" .
                 "jkl" . "f" .
                 "klm" . "${sq}" .
@@ -102,11 +102,11 @@ class TokenTest extends TestCase
             "{$sq}${sq}abc" => "{$sq}abc",
         ] as $arg => $result) {
             $token = Token::fromString($arg, $sq);
-            $this->assertTrue($token->eq('string', $result));
+            $this->assertTrue($token->eq(Token::STRING, $result));
         }
 
         $token = Token::fromString("{$sq}${sq}", $sq);
-        $this->assertTrue($token->eq('string', "{$sq}"));
+        $this->assertTrue($token->eq(Token::STRING, "{$sq}"));
     }
 
     public function testMakeIdentifier()
@@ -126,7 +126,7 @@ class TokenTest extends TestCase
 
         $this->assertTrue(
             $token->eq(
-                'identifier',
+                Token::IDENTIFIER,
                 'abc`def' .
                 "{$bs}0" .
                 "{$bs}b" .
@@ -221,54 +221,54 @@ class TokenTest extends TestCase
     public function providerAsXyz()
     {
         return [
-            ['asString',   'string', 'abc',                 'abc'    ],
-            ['asString',   'string', '',                    ''       ],
+            ['asString',   Token::STRING, 'abc',                 'abc'    ],
+            ['asString',   Token::STRING, '',                    ''       ],
 
-            ['asString',   'number', '123',                 '123'    ],
-            ['asString',   'number', '0123',                '123'    ],
-            ['asString',   'number', '-0123',               '-123'   ],
-            ['asString',   'number', '1.2300',              '1.2300' ],
-            ['asString',   'number', '1.234567890123',      '1.234567890123' ],
-            ['asString',   'number', '-1.23',               '-1.23'  ],
-            ['asString',   'number', '+1.23',               '1.23'   ],
-            ['asString',   'number', '.23',                 '0.23'   ],
-            ['asString',   'number', '',                    '0'      ],
+            ['asString',   Token::NUMBER, '123',                 '123'    ],
+            ['asString',   Token::NUMBER, '0123',                '123'    ],
+            ['asString',   Token::NUMBER, '-0123',               '-123'   ],
+            ['asString',   Token::NUMBER, '1.2300',              '1.2300' ],
+            ['asString',   Token::NUMBER, '1.234567890123',      '1.234567890123' ],
+            ['asString',   Token::NUMBER, '-1.23',               '-1.23'  ],
+            ['asString',   Token::NUMBER, '+1.23',               '1.23'   ],
+            ['asString',   Token::NUMBER, '.23',                 '0.23'   ],
+            ['asString',   Token::NUMBER, '',                    '0'      ],
 
         // TODO - work is needed on Token::asString to make these tests parse:
-        //  ['asString',   'number', '1.234e1',             '12.34'  ],
-        //  ['asString',   'number', '1.234000e15',         '1.234e15' ],
-        //  ['asString',   'number', '0.999999e15',         '999999000000000' ],
-        //  ['asString',   'number', '-1.234000e15',        '-1.234e15' ],
-        //  ['asString',   'number', '-0.999999e15',        '-999999000000000'],
-        //  ['asString',   'number', '1.0001e-15',          '0.0000000000000010001' ],
-        //  ['asString',   'number', '0.999e-16',           '9.99e-16' ],
-        //  ['asString',   'number', '-1.0001e-15',         '-0.0000000000000010001' ],
-        //  ['asString',   'number', '-0.999e-16',          '-9.99e-16' ],
+        //  ['asString',   Token::NUMBER, '1.234e1',             '12.34'  ],
+        //  ['asString',   Token::NUMBER, '1.234000e15',         '1.234e15' ],
+        //  ['asString',   Token::NUMBER, '0.999999e15',         '999999000000000' ],
+        //  ['asString',   Token::NUMBER, '-1.234000e15',        '-1.234e15' ],
+        //  ['asString',   Token::NUMBER, '-0.999999e15',        '-999999000000000'],
+        //  ['asString',   Token::NUMBER, '1.0001e-15',          '0.0000000000000010001' ],
+        //  ['asString',   Token::NUMBER, '0.999e-16',           '9.99e-16' ],
+        //  ['asString',   Token::NUMBER, '-1.0001e-15',         '-0.0000000000000010001' ],
+        //  ['asString',   Token::NUMBER, '-0.999e-16',          '-9.99e-16' ],
 
-            ['asString',   'hex',    '68656c6c6f21',        'hello!' ],
-            ['asString',   'bin',    '0111111000100011',    '~#'     ],
+            ['asString',   Token::HEX,    '68656c6c6f21',        'hello!' ],
+            ['asString',   Token::BIN,    '0111111000100011',    '~#'     ],
 
-            ['asNumber',   'string', '123',                 123   ],
-            ['asNumber',   'number', '456',                 456   ],
-            ['asNumber',   'hex',    'fffe',                65534 ],
-            ['asNumber',   'bin',    '10100101',            165   ],
+            ['asNumber',   Token::STRING, '123',                 123   ],
+            ['asNumber',   Token::NUMBER, '456',                 456   ],
+            ['asNumber',   Token::HEX,    'fffe',                65534 ],
+            ['asNumber',   Token::BIN,    '10100101',            165   ],
 
-            ['asDate',     'string', '0',                   '0000-00-00'],
-            ['asDate',     'string', '0000-00-00',          '0000-00-00'],
-            ['asDate',     'string', '1970-08-12',          '1970-08-12'],
-            ['asDate',     'string', '2001-12-31',          '2001-12-31'],
+            ['asDate',     Token::STRING, '0',                   '0000-00-00'],
+            ['asDate',     Token::STRING, '0000-00-00',          '0000-00-00'],
+            ['asDate',     Token::STRING, '1970-08-12',          '1970-08-12'],
+            ['asDate',     Token::STRING, '2001-12-31',          '2001-12-31'],
 
-            ['asTime',     'string', '0',                   '00:00:00'  ],
-            ['asTime',     'string', '00:00:00',            '00:00:00'  ],
-            ['asTime',     'string', '17:45:59',            '17:45:59'  ],
+            ['asTime',     Token::STRING, '0',                   '00:00:00'  ],
+            ['asTime',     Token::STRING, '00:00:00',            '00:00:00'  ],
+            ['asTime',     Token::STRING, '17:45:59',            '17:45:59'  ],
 
-            ['asDateTime', 'string', '0',                   '0000-00-00 00:00:00'],
-            ['asDateTime', 'string', '0000-00-00',          '0000-00-00 00:00:00'],
-            ['asDateTime', 'string', '1970-08-12',          '1970-08-12 00:00:00'],
-            ['asDateTime', 'string', '2001-12-31',          '2001-12-31 00:00:00'],
-            ['asDateTime', 'string', '0000-00-00 00:00:00', '0000-00-00 00:00:00'],
-            ['asDateTime', 'string', '1970-08-12 13:34:45', '1970-08-12 13:34:45'],
-            ['asDateTime', 'string', '2001-12-31 23:59:59', '2001-12-31 23:59:59'],
+            ['asDateTime', Token::STRING, '0',                   '0000-00-00 00:00:00'],
+            ['asDateTime', Token::STRING, '0000-00-00',          '0000-00-00 00:00:00'],
+            ['asDateTime', Token::STRING, '1970-08-12',          '1970-08-12 00:00:00'],
+            ['asDateTime', Token::STRING, '2001-12-31',          '2001-12-31 00:00:00'],
+            ['asDateTime', Token::STRING, '0000-00-00 00:00:00', '0000-00-00 00:00:00'],
+            ['asDateTime', Token::STRING, '1970-08-12 13:34:45', '1970-08-12 13:34:45'],
+            ['asDateTime', Token::STRING, '2001-12-31 23:59:59', '2001-12-31 23:59:59'],
         ];
     }
 
@@ -290,25 +290,25 @@ class TokenTest extends TestCase
     public function providerAsXyzError()
     {
         return [
-            ['asDate',     'string', 'abc'       ],
-            ['asDate',     'string', '1970'      ],
-            ['asDate',     'string', '19700812'  ],
-            ['asDate',     'string', '1970/08/12'],
+            ['asDate',     Token::STRING, 'abc'       ],
+            ['asDate',     Token::STRING, '1970'      ],
+            ['asDate',     Token::STRING, '19700812'  ],
+            ['asDate',     Token::STRING, '1970/08/12'],
 
-            ['asTime',     'string', 'abc'       ],
-            ['asTime',     'string', '000000'    ],
-            ['asTime',     'string', '1745'      ],
-            ['asTime',     'string', '174559'    ],
+            ['asTime',     Token::STRING, 'abc'       ],
+            ['asTime',     Token::STRING, '000000'    ],
+            ['asTime',     Token::STRING, '1745'      ],
+            ['asTime',     Token::STRING, '174559'    ],
 
-            ['asDateTime', 'string', 'abc'           ],
-            ['asDateTime', 'string', '19700812'      ],
-            ['asDateTime', 'string', '1970/08/12'    ],
-            ['asDateTime', 'string', '197008120000'  ],
-            ['asDateTime', 'string', '19700812000000'],
+            ['asDateTime', Token::STRING, 'abc'           ],
+            ['asDateTime', Token::STRING, '19700812'      ],
+            ['asDateTime', Token::STRING, '1970/08/12'    ],
+            ['asDateTime', Token::STRING, '197008120000'  ],
+            ['asDateTime', Token::STRING, '19700812000000'],
 
-            ['asString',   'symbol', 'abc'       ],
+            ['asString',   Token::SYMBOL, 'abc'       ],
 
-            ['asNumber',   'symbol', 'abc'       ],
+            ['asNumber',   Token::SYMBOL, 'abc'       ],
         ];
     }
 

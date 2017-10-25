@@ -1,6 +1,8 @@
 <?php
 namespace Graze\Morphism\Parse;
 
+use RuntimeException;
+
 /**
  * Represents a lexical token parsed from an SQL input stream.
  */
@@ -213,11 +215,11 @@ class Token
      * Tokens of type 'string' or 'number' will simply return the parsed text,
      * whereas 'hex' or 'bin' tokens will be reinterpreted as strings. E.g.
      * a 'hex' token generated from the sequence x'41424344' in the token
-     * stream * will be returned as 'ABCD'.
+     * stream will be returned as 'ABCD'.
      *
      * An exception will be thrown for any other token type.
      *
-     * @throws \RuntimeException
+     * @throws RuntimeException
      * @return string
      */
     public function asString()
@@ -250,7 +252,7 @@ class Token
                 return $bytes;
 
             default:
-                throw new \RuntimeException("expected string");
+                throw new RuntimeException("Expected string");
         }
     }
 
@@ -276,7 +278,7 @@ class Token
                 return bindec($this->text);
 
             default:
-                throw new \RuntimeException("expected a number");
+                throw new RuntimeException("Expected a number");
         }
     }
 
@@ -296,7 +298,7 @@ class Token
         if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $text, $pregMatch)) {
             return $text;
         } else {
-            throw new \RuntimeException("expected a date");
+            throw new RuntimeException("Expected a date");
         }
     }
 
@@ -316,7 +318,7 @@ class Token
         if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $text)) {
             return $text;
         } else {
-            throw new \RuntimeException("expected a time");
+            throw new RuntimeException("Expected a time");
         }
     }
 
@@ -340,6 +342,6 @@ class Token
         if (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $text)) {
             return $text;
         }
-        throw new \RuntimeException("bad datetime");
+        throw new RuntimeException("Bad datetime");
     }
 }

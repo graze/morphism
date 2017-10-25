@@ -222,6 +222,8 @@ class TokenTest extends TestCase
     {
         return [
             ['asString',   'string', 'abc',                 'abc'    ],
+            ['asString',   'string', '',                    ''       ],
+
             ['asString',   'number', '123',                 '123'    ],
             ['asString',   'number', '0123',                '123'    ],
             ['asString',   'number', '-0123',               '-123'   ],
@@ -230,6 +232,7 @@ class TokenTest extends TestCase
             ['asString',   'number', '-1.23',               '-1.23'  ],
             ['asString',   'number', '+1.23',               '1.23'   ],
             ['asString',   'number', '.23',                 '0.23'   ],
+            ['asString',   'number', '',                    '0'      ],
 
         // TODO - work is needed on Token::asString to make these tests parse:
         //  ['asString',   'number', '1.234e1',             '12.34'  ],
@@ -302,6 +305,8 @@ class TokenTest extends TestCase
             ['asDateTime', 'string', '1970/08/12'    ],
             ['asDateTime', 'string', '197008120000'  ],
             ['asDateTime', 'string', '19700812000000'],
+
+            ['asString',   'symbol', 'abc'       ],
         ];
     }
 

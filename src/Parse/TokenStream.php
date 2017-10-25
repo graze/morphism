@@ -1,6 +1,9 @@
 <?php
 namespace Graze\Morphism\Parse;
 
+use LogicException;
+use RuntimeException;
+
 class TokenStream
 {
     /** @var string */
@@ -53,7 +56,7 @@ class TokenStream
     {
         $text = @file_get_contents($path);
         if ($text === false) {
-            throw new \RuntimeException("$path: could not open file");
+            throw new RuntimeException("$path: could not open file");
         }
         $stream = new self;
         $stream->path = $path;
@@ -257,7 +260,7 @@ class TokenStream
             case '}':
             default:
                 $ch = $text[$offset];
-                throw new \LogicException("lexer is confused by char '$ch' ord " . ord($ch));
+                throw new LogicException("Lexer is confused by char '$ch' ord " . ord($ch));
         }
     }
 
@@ -275,7 +278,7 @@ class TokenStream
                 $pregMatch[2][1]
             ];
         }
-        throw new \RuntimeException("unterminated identifier $quote...$quote");
+        throw new RuntimeException("Unterminated identifier $quote...$quote");
     }
 
     /**
@@ -322,7 +325,7 @@ class TokenStream
     {
         if (substr($text, $offset, 2) === '*/') {
             if (!$this->inConditional) {
-                throw new \RuntimeException("unexpected '*/'");
+                throw new RuntimeException("Unexpected '*/'");
             }
             $this->inConditional = false;
             return [
@@ -348,7 +351,7 @@ class TokenStream
                     $pos + 2
                 ];
             }
-            throw new \RuntimeException("unterminated '/*'");
+            throw new RuntimeException("Unterminated '/*'");
         }
         return null;
     }
@@ -408,7 +411,7 @@ class TokenStream
                 $offset + strlen($pregMatch[0])
             ];
         }
-        throw new \RuntimeException("unterminated string $quote...$quote");
+        throw new RuntimeException("Unterminated string $quote...$quote");
     }
 
     /**
@@ -440,7 +443,7 @@ class TokenStream
             preg_match('/x\'([0-9a-f]*)\'/ims', $text, $pregMatch, 0, $offset)
         ) {
             if (strlen($pregMatch[1]) % 2 != 0) {
-                throw new \RuntimeException("invalid hex literal");
+                throw new RuntimeException("Invalid hex literal");
             }
             return [
                 new Token(Token::HEX, $pregMatch[1]),
@@ -600,7 +603,7 @@ class TokenStream
     {
         $token = $this->nextToken();
         if (!$token->eq($type, $text)) {
-            throw new \RuntimeException("expected '$text'");
+            throw new RuntimeException("Expected '$text'");
         }
     }
 
@@ -611,7 +614,7 @@ class TokenStream
     {
         $token = $this->nextToken();
         if ($token->type !== Token::IDENTIFIER) {
-            throw new \RuntimeException("expected identifier");
+            throw new RuntimeException("Expected identifier");
         }
         return $token->text;
     }
@@ -633,7 +636,7 @@ class TokenStream
     {
         $token = $this->nextToken();
         if ($token->type !== Token::NUMBER) {
-            throw new \RuntimeException("expected number");
+            throw new RuntimeException("Expected number");
         }
         return 0 + $token->text;
     }
@@ -645,7 +648,7 @@ class TokenStream
     {
         $token = $this->nextToken();
         if ($token->type !== Token::STRING) {
-            throw new \RuntimeException("expected string");
+            throw new RuntimeException("Expected string");
         }
         return $token->text;
     }
@@ -664,7 +667,7 @@ class TokenStream
             case Token::BIN:
                 return $token->binToString();
             default:
-                throw new \RuntimeException("expected string");
+                throw new RuntimeException("Expected string");
         }
     }
 

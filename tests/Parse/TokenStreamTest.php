@@ -322,12 +322,24 @@ class TokenStreamTest extends TestCase
         $stream->expectNumber();
     }
 
+    public function testExpectString()
+    {
+        // An embedded string
+        $stream = $this->makeStream("'this is an embedded string'");
+        $number = $stream->expectString();
+        $this->assertEquals('this is an embedded string', $number);
+
+        // Not an embedded string
+        $stream = $this->makeStream("this is not an embedded string");
+        $this->setExpectedException(\Exception::class);
+        $stream->expectString();
+    }
+
     // TODO -
     // following methods are untested:
     //     expectName
     //     expectOpenParen
     //     expectCloseParen
-    //     expectString
     //     expectStringExtended
     //     contextualise
 }

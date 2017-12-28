@@ -147,6 +147,12 @@ class TokenStream
                     $this->_getSymbol($text, $offset);
 
             case '0':
+                // Handle hex if needed
+                if (isset($text[$offset+1]) && $text[$offset+1] === 'x') {
+                    return
+                        $this->_getHex($text, $offset) ?:
+                        $this->_getIdentifier($text, $offset);
+                }
             case '1':
             case '2':
             case '3':
@@ -433,15 +439,46 @@ class TokenStream
     }
 
     /**
+     * Parse a hex string of the form "0x<hex digits>" or "x'<hex digits>'" as per <MySQL link here>
+     *
+     * - Only an even number of digits is valid.
+     * - Case insensitive for hex digits.
+     * - Case insensitive 'x' in quoted notation.
+     * - Case sensitive 'x' for leading zero notation.
+     *
+     * Valid examples:
+     * - x'BA5EBA11'
+     * - x'decea5ed'
+     * - X'5eed'
+     * - 0xb01dface
+     * - 0xBADC0DED
+     *
+     * Invalid examples
+     * - x'00f' (odd number of digits)
+     * - x'gg'  (invalid hex character)
+     * - 0XFFFF (upper case 'x')
+     *
      * @param string $text
      * @param int $offset
      * @return array|null
      */
     private function _getHex($text, $offset)
     {
-        if (preg_match('/\Ax\'[0-9a-f\']/ims', substr($text, $offset, 3)) &&
-            preg_match('/x\'([0-9a-f]*)\'/ims', $text, $pregMatch, 0, $offset)
-        ) {
+        $pregMatch = [];
+
+        $matchesLeadingZeroNotation = function($text, $offset, &$pregMatch) {
+            return
+                preg_match('/\A0x([0-9a-fA-F]*)/ms', $text, $pregMatch, 0, $offset);
+        };
+
+        $matchesXQuotedNotation = function ($text, $offset, &$pregMatch) {
+            return
+                preg_match('/\Ax\'[0-9a-f\']/ims', substr($text, $offset, 3)) &&
+                preg_match('/x\'([0-9a-f]*)\'/ims', $text, $pregMatch, 0, $offset);
+        };
+
+        if ($matchesLeadingZeroNotation($text, $offset, $pregMatch) ||
+            $matchesXQuotedNotation($text, $offset, $pregMatch)) {
             if (strlen($pregMatch[1]) % 2 != 0) {
                 throw new RuntimeException("Invalid hex literal");
             }
@@ -671,9 +708,9 @@ class TokenStream
             case Token::STRING:
                 return $token->text;
             case Token::HEX:
-                return $token->hexToString();
+                return $token->asString();
             case Token::BIN:
-                return $token->binToString();
+                return $token->asString();
             default:
                 throw new RuntimeException("Expected string");
         }

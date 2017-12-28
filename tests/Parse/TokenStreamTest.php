@@ -120,6 +120,8 @@ class TokenStreamTest extends TestCase
             [ "x'00'",                  Token::HEX, "00" ],
             [ "x'0123456789abcdef'",    Token::HEX, "0123456789abcdef" ],
             [ "x'0123456789ABCDEF'",    Token::HEX, "0123456789ABCDEF" ],
+            [ "0x0123456789abcdef",     Token::HEX, "0123456789abcdef" ],
+            [ "0x0123456789ABCDEF",     Token::HEX, "0123456789ABCDEF" ],
 
             // binary literals
             [ "b''",            Token::BIN, "" ],
@@ -338,26 +340,32 @@ class TokenStreamTest extends TestCase
             // [ function name, token, expected value, should it throw a RuntimeException? ]
 
             [ 'expectCloseParen',   ')',    ')',    false],
-            [ 'expectCloseParen',   'x',    null,   true],
+            [ 'expectCloseParen',   'a',    null,   true],
 
             [ 'expectOpenParen',    '(',    '(',    false],
-            [ 'expectOpenParen',    'x',    null,   true],
+            [ 'expectOpenParen',    'a',    null,   true],
 
             [ 'expectName',         'foo',  'foo',  false],
             [ 'expectName',         '1',    null,   true],
 
             [ 'expectNumber',       '1',    1,      false],
-            [ 'expectNumber',       'x',    null,   true],
+            [ 'expectNumber',       'a',    null,   true],
 
             // An embedded string
-            [ 'expectString',       "'x'",  "x",    false],
-            [ 'expectString',       'x',    null,   true],
+            [ 'expectString',       "'a'",  "a",    false],
+            [ 'expectString',       'a',    null,   true],
+
+            [ 'expectStringExtended',       "'a'",  "a",    false],
+            [ 'expectStringExtended',       "x'68656c6c6f21'",      'hello!',   false],
+            [ 'expectStringExtended',       "X'68656c6c6f21'",      'hello!',   false],
+            [ 'expectStringExtended',       '0x68656c6c6f21',      'hello!',   false],
+            [ 'expectStringExtended',       "b'0111111000100011'",  '~#',       false],
+            [ 'expectStringExtended',       'a',    null,   true],
 
         ];
     }
 
     // TODO -
     // following methods are untested:
-    //     expectStringExtended
     //     contextualise
 }

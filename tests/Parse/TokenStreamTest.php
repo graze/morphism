@@ -309,12 +309,24 @@ class TokenStreamTest extends TestCase
         $stream->expect(Token::IDENTIFIER, 'drop');
     }
 
+    public function testExpectNumber()
+    {
+        // A number
+        $stream = $this->makeStream('1');
+        $number = $stream->expectNumber();
+        $this->assertEquals(1, $number);
+
+        // Not a number
+        $stream = $this->makeStream('a');
+        $this->setExpectedException(\Exception::class);
+        $stream->expectNumber();
+    }
+
     // TODO -
     // following methods are untested:
     //     expectName
     //     expectOpenParen
     //     expectCloseParen
-    //     expectNumber
     //     expectString
     //     expectStringExtended
     //     contextualise

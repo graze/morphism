@@ -343,6 +343,9 @@ class TokenStreamTest extends TestCase
             [ 'expectOpenParen',    '(',    '(',    false],
             [ 'expectOpenParen',    'x',    null,   true],
 
+            [ 'expectName',         'foo',  'foo',  false],
+            [ 'expectName',         '1',    null,   true],
+
             [ 'expectNumber',       '1',    1,      false],
             [ 'expectNumber',       'x',    null,   true],
 
@@ -355,7 +358,6 @@ class TokenStreamTest extends TestCase
 
     // TODO -
     // following methods are untested:
-    //     expectName
     //     expectStringExtended
     //     contextualise
 }

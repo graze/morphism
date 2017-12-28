@@ -153,6 +153,7 @@ class TokenStream
                         $this->_getHex($text, $offset) ?:
                         $this->_getIdentifier($text, $offset);
                 }
+                // Handle non-hex leading zero.
             case '1':
             case '2':
             case '3':
@@ -466,7 +467,7 @@ class TokenStream
     {
         $pregMatch = [];
 
-        $matchesLeadingZeroNotation = function($text, $offset, &$pregMatch) {
+        $matchesLeadingZeroNotation = function ($text, $offset, &$pregMatch) {
             return
                 preg_match('/\A0x([0-9a-fA-F]*)/ms', $text, $pregMatch, 0, $offset);
         };

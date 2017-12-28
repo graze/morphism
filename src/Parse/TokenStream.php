@@ -598,6 +598,7 @@ class TokenStream
     /**
      * @param string $type
      * @param string $text
+     * @return string
      */
     public function expect($type, $text = null)
     {
@@ -605,6 +606,7 @@ class TokenStream
         if (!$token->eq($type, $text)) {
             throw new RuntimeException("Expected '$text'");
         }
+        return $token->text;
     }
 
     /**
@@ -619,14 +621,20 @@ class TokenStream
         return $token->text;
     }
 
+    /**
+     * @return string
+     */
     public function expectOpenParen()
     {
-        $this->expect(Token::SYMBOL, '(');
+        return $this->expect(Token::SYMBOL, '(');
     }
 
+    /**
+     * @return string
+     */
     public function expectCloseParen()
     {
-        $this->expect(Token::SYMBOL, ')');
+        return $this->expect(Token::SYMBOL, ')');
     }
 
     /**

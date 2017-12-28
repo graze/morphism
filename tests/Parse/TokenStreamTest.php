@@ -310,37 +310,52 @@ class TokenStreamTest extends TestCase
         $stream->expect(Token::IDENTIFIER, 'drop');
     }
 
-    public function testExpectNumber()
+    /**
+     * @param string $func
+     * @param string $token
+     * @param mixed $expected
+     * @param bool $throwsException
+     * @dataProvider provideExpectedTokenType
+     */
+    public function testExpectedTokenType($func, $token, $expected, $throwsException)
     {
-        // A number
-        $stream = $this->makeStream('1');
-        $number = $stream->expectNumber();
-        $this->assertEquals(1, $number);
-
-        // Not a number
-        $stream = $this->makeStream('a');
-        $this->setExpectedException(RuntimeException::class);
-        $stream->expectNumber();
+        $stream = $this->makeStream($token);
+        if ($throwsException) {
+            $this->setExpectedException(RuntimeException::class);
+            $stream->$func();
+        } else {
+            $result = $stream->$func();
+            $this->assertEquals($expected, $result);
+        }
     }
 
-    public function testExpectString()
+    /**
+     * @return array
+     */
+    public function provideExpectedTokenType()
     {
-        // An embedded string
-        $stream = $this->makeStream("'this is an embedded string'");
-        $number = $stream->expectString();
-        $this->assertEquals('this is an embedded string', $number);
+        return [
+            // [ function name, token, expected value, should it throw a RuntimeException? ]
 
-        // Not an embedded string
-        $stream = $this->makeStream("this is not an embedded string");
-        $this->setExpectedException(RuntimeException::class);
-        $stream->expectString();
+            [ 'expectCloseParen',   ')',    ')',    false],
+            [ 'expectCloseParen',   'x',    null,   true],
+
+            [ 'expectOpenParen',    '(',    '(',    false],
+            [ 'expectOpenParen',    'x',    null,   true],
+
+            [ 'expectNumber',       '1',    1,      false],
+            [ 'expectNumber',       'x',    null,   true],
+
+            // An embedded string
+            [ 'expectString',       "'x'",  "x",    false],
+            [ 'expectString',       'x',    null,   true],
+
+        ];
     }
 
     // TODO -
     // following methods are untested:
     //     expectName
-    //     expectOpenParen
-    //     expectCloseParen
     //     expectStringExtended
     //     contextualise
 }

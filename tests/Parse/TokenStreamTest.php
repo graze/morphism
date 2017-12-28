@@ -3,6 +3,7 @@
 namespace Graze\Morphism\Parse;
 
 use Graze\Morphism\Test\Parse\TestCase;
+use RuntimeException;
 
 class TokenStreamTest extends TestCase
 {
@@ -318,7 +319,7 @@ class TokenStreamTest extends TestCase
 
         // Not a number
         $stream = $this->makeStream('a');
-        $this->setExpectedException(\Exception::class);
+        $this->setExpectedException(RuntimeException::class);
         $stream->expectNumber();
     }
 
@@ -331,7 +332,7 @@ class TokenStreamTest extends TestCase
 
         // Not an embedded string
         $stream = $this->makeStream("this is not an embedded string");
-        $this->setExpectedException(\Exception::class);
+        $this->setExpectedException(RuntimeException::class);
         $stream->expectString();
     }
 

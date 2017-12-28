@@ -323,7 +323,6 @@ class TokenStream
      */
     private function _getConditionEnd($text, $offset)
     {
-        echo PHP_EOL, $text, PHP_EOL;
         if (substr($text, $offset, 2) === '*/') {
             if (!$this->inConditional) {
                 throw new RuntimeException("Unexpected '*/'");

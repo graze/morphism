@@ -735,6 +735,20 @@ class TokenStream
     }
 
     /**
+     * Provides context for error messages.
+     *
+     * For example, given this invalid table definition ...
+     *
+     *     CREATE TABLE `foo` (
+     *         `a` bar DEFAULT NULL
+     *     );
+     *
+     * ... this function will produce something like this:
+     *
+     *     schema/morphism-test/foo.sql, line 2: unknown datatype 'bar'
+     *     1: CREATE TABLE `foo` (
+     *     2:   `a` bar<<HERE>> DEFAULT NULL
+     *
      * @param string $message
      * @return string
      */

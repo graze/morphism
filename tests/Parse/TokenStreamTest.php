@@ -420,7 +420,29 @@ class TokenStreamTest extends TestCase
         ];
     }
 
-    // TODO -
-    // following methods are untested:
-    //     contextualise
+    function testContextualise()
+    {
+        $sql = <<<EOF
+CREATE TABLE `foo` (
+    `a` bar DEFAULT NULL
+);
+EOF;
+        $expected = <<<EOF
+data://text/plain;base64,Q1JFQVRFIFRBQkxFIGBmb29gICgKICAgIGBhYCBiYXIgREVGQVVMVCBOVUxMCik7, line 2: unknown datatype 'bar'
+1: CREATE TABLE `foo` (
+2:     `a` bar<<HERE>> DEFAULT NULL
+EOF;
+
+        $stream = $this->makeStream($sql);
+
+        $dump = new MysqlDump();
+        try {
+            $dump->parse($stream);
+            $this->fail("Expected a RuntimeException but it was not thrown.");
+        } catch (RuntimeException $e) {
+            $message = $stream->contextualise($e->getMessage());
+            $this->assertEquals($expected, $message);
+        }
+
+    }
 }

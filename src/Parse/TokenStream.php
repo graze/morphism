@@ -587,6 +587,9 @@ class TokenStream
     }
 
     /**
+     * This function will consume the requested content from the stream without trying to parse and tokenise it.
+     * It is used by {@see peek()}.
+     *
      * @param mixed $spec
      * @return bool
      */

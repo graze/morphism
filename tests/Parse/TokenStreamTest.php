@@ -269,6 +269,7 @@ class TokenStreamTest extends TestCase
             ['create table t', 'drop table',      false, Token::IDENTIFIER, 'create'],
             ['create table t', 'create database', false, Token::IDENTIFIER, 'create'],
             ['= "test"',       [[Token::SYMBOL, '=']], true,  Token::STRING, 'test'],
+            ['= "test"',       [[Token::NUMBER, 1  ]], false, Token::SYMBOL, '='],
             ['();',            [[Token::SYMBOL, '('],
                                 [Token::SYMBOL, ')']], true,  Token::SYMBOL, ';'],
         ];

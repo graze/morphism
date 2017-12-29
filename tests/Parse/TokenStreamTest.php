@@ -89,6 +89,7 @@ class TokenStreamTest extends TestCase
             [ "-- comment\n1",  Token::NUMBER, '1'],
             [ "--\n1",          Token::NUMBER, '1'],
             [ "#comment\n1",    Token::NUMBER, '1'],
+            [ "#comment",       Token::EOF,    null],
 
             // conditional comments
             [ "/*! 12345*/",      Token::NUMBER, '12345'],
@@ -205,6 +206,8 @@ class TokenStreamTest extends TestCase
         return [
             // Unterminated quoted identifier
             ['`foo'],
+            // Unterminated '/*'
+            ['/*'],
             // Unexpected end of comment
             ['*/'],
         ];

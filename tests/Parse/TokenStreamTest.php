@@ -420,7 +420,7 @@ class TokenStreamTest extends TestCase
         ];
     }
 
-    function testContextualise()
+    public function testContextualise()
     {
         $sql = <<<EOF
 CREATE TABLE `foo` (
@@ -443,6 +443,5 @@ EOF;
             $message = $stream->contextualise($e->getMessage());
             $this->assertEquals($expected, $message);
         }
-
     }
 }

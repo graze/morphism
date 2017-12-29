@@ -92,7 +92,7 @@ class TokenStreamTest extends TestCase
 
             // conditional comments
             [ "/*! 12345*/",      Token::NUMBER, '12345'],
-            [ "/*!12345 12345*/", Token::NUMBER, '12345'],
+            [ "/*!12345 45678*/", Token::NUMBER, '45678'],
 
             // double quoted strings
             [ "{$dq}{$dq}",                     Token::STRING, ''],
@@ -362,6 +362,48 @@ class TokenStreamTest extends TestCase
             [ 'expectStringExtended',       "b'0111111000100011'",  '~#',       false],
             [ 'expectStringExtended',       'a',    null,   true],
 
+        ];
+    }
+
+    /**
+     * @param string $conditionalComment
+     * @param array $tokenTypes
+     * @dataProvider conditionalCommentProvider
+     */
+    public function testConditionalComment($conditionalComment, array $tokenTypes)
+    {
+        $stream = $this->makeStream($conditionalComment);
+        $token = $stream->nextToken();
+        $expectedType = current($tokenTypes);
+
+        while ($token->type != Token::EOF) {
+            $this->assertEquals($expectedType, $token->type);
+
+            $token = $stream->nextToken();
+            $expectedType = next($tokenTypes);
+        }
+    }
+
+    /**
+     * @return array
+     */
+    public function conditionalCommentProvider()
+    {
+        return [
+            // [ conditional comment, list of expected token types ]
+            [
+                '/*! abcde fghij */',
+                [
+                    Token::IDENTIFIER,
+                    Token::IDENTIFIER,
+                ],
+            ],
+            [
+                '/*!12345 fghij */',
+                [
+                    Token::IDENTIFIER,
+                ],
+            ],
         ];
     }
 

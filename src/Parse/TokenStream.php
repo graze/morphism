@@ -304,12 +304,22 @@ class TokenStream
     }
 
     /**
+     * Get the start of a conditional comment.
+     *
+     * Does not support optimiser hints. See examples below.
+     *
      * @param string $text
      * @param int $offset
      * @return array|null
      */
     private function _getConditionalStart($text, $offset)
     {
+        // Example conditional comments which can't be displayed in the docblock because they clash:
+        // - /*! MySQL-specific code */ (execute the given code)
+        // - /*!12345 MySQL-specific code */ (execute the given code only if the version matches)
+        // Unsupported:
+        // - SELECT /*+ BKA(t1) */ FROM ... ;
+
         if (// 10 comes from allowing for the /*! sequence, a MySQL version number, and a space
             preg_match('_\A/\*!([0-9]*)\s_ms', substr($text, $offset, 10)) &&
             preg_match('_/\*!([0-9]*)\s_ms', $text, $pregMatch, 0, $offset)
@@ -324,6 +334,7 @@ class TokenStream
     }
 
     /**
+     * Get the end of a conditional comment. See _getConditionStart() for details.
      * @param string $text
      * @param int $offset
      * @return array|null

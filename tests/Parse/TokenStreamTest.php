@@ -129,6 +129,11 @@ class TokenStreamTest extends TestCase
             [ "b'0'",           Token::BIN, "0" ],
             [ "b'00011011'",    Token::BIN, "00011011" ],
 
+            // Invalid hex and binary literals - these should probably be failures, tbh.
+            [ "x'GGG'",         Token::IDENTIFIER,  'x'],
+            [ '0Xabc',          Token::NUMBER,      '0'],
+            [ "b'2'",           Token::IDENTIFIER,  'b'],
+
             // unquoted identifiers
        //   [ '1_',       Token::IDENTIFIER, '1_' ],     // TODO - make this pass
             [ '_',        Token::IDENTIFIER, '_' ],
@@ -210,6 +215,10 @@ class TokenStreamTest extends TestCase
             ['/*'],
             // Unexpected end of comment
             ['*/'],
+            // Unterminated string
+            ["'foo"],
+            // Invalid hex literal (not an even number of digits)
+            ['0xaaa'],
         ];
     }
 

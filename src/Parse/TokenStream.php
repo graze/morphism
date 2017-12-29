@@ -541,7 +541,7 @@ class TokenStream
     /**
      * @param string $text
      * @param int $offset
-     * @return array|null
+     * @return array
      */
     private function _getSymbol($text, $offset)
     {
@@ -551,7 +551,6 @@ class TokenStream
                 $offset + strlen($pregMatch[0])
             ];
         }
-        return null;
     }
 
     /**

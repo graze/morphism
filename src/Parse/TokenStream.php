@@ -306,6 +306,8 @@ class TokenStream
     /**
      * Get the start of a conditional comment.
      *
+     * https://dev.mysql.com/doc/refman/5.7/en/comments.html
+     *
      * Does not support optimiser hints. See examples below.
      *
      * @param string $text
@@ -451,7 +453,9 @@ class TokenStream
     }
 
     /**
-     * Parse a hex string of the form "0x<hex digits>" or "x'<hex digits>'" as per <MySQL link here>
+     * Parse a hex string of the form "0x<hex digits>" or "x'<hex digits>'".
+     *
+     * https://dev.mysql.com/doc/refman/5.7/en/hexadecimal-literals.html
      *
      * - Only an even number of digits is valid.
      * - Case insensitive for hex digits.

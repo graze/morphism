@@ -1,6 +1,9 @@
 <?php
 namespace Graze\Morphism\Parse;
 
+use LogicException;
+use RuntimeException;
+
 class TokenStream
 {
     /** @var string */
@@ -53,7 +56,7 @@ class TokenStream
     {
         $text = @file_get_contents($path);
         if ($text === false) {
-            throw new \RuntimeException("$path: could not open file");
+            throw new RuntimeException("$path: could not open file");
         }
         $stream = new self;
         $stream->path = $path;
@@ -144,6 +147,13 @@ class TokenStream
                     $this->_getSymbol($text, $offset);
 
             case '0':
+                // Handle hex if needed
+                if (isset($text[$offset+1]) && $text[$offset+1] === 'x') {
+                    return
+                        $this->_getHex($text, $offset) ?:
+                        $this->_getIdentifier($text, $offset);
+                }
+                // Handle non-hex leading zero.
             case '1':
             case '2':
             case '3':
@@ -257,7 +267,7 @@ class TokenStream
             case '}':
             default:
                 $ch = $text[$offset];
-                throw new \LogicException("lexer is confused by char '$ch' ord " . ord($ch));
+                throw new LogicException("Lexer is confused by char '$ch' ord " . ord($ch));
         }
     }
 
@@ -275,7 +285,7 @@ class TokenStream
                 $pregMatch[2][1]
             ];
         }
-        throw new \RuntimeException("unterminated identifier $quote...$quote");
+        throw new RuntimeException("Unterminated identifier: $text");
     }
 
     /**
@@ -294,12 +304,24 @@ class TokenStream
     }
 
     /**
+     * Get the start of a conditional comment.
+     *
+     * https://dev.mysql.com/doc/refman/5.7/en/comments.html
+     *
+     * Does not support optimiser hints. See examples below.
+     *
      * @param string $text
      * @param int $offset
      * @return array|null
      */
     private function _getConditionalStart($text, $offset)
     {
+        // Example conditional comments which can't be displayed in the docblock because they clash:
+        // - /*! MySQL-specific code */ (execute the given code)
+        // - /*!12345 MySQL-specific code */ (execute the given code only if the version matches)
+        // Unsupported:
+        // - SELECT /*+ BKA(t1) */ FROM ... ;
+
         if (// 10 comes from allowing for the /*! sequence, a MySQL version number, and a space
             preg_match('_\A/\*!([0-9]*)\s_ms', substr($text, $offset, 10)) &&
             preg_match('_/\*!([0-9]*)\s_ms', $text, $pregMatch, 0, $offset)
@@ -314,6 +336,7 @@ class TokenStream
     }
 
     /**
+     * Get the end of a conditional comment. See _getConditionStart() for details.
      * @param string $text
      * @param int $offset
      * @return array|null
@@ -322,7 +345,7 @@ class TokenStream
     {
         if (substr($text, $offset, 2) === '*/') {
             if (!$this->inConditional) {
-                throw new \RuntimeException("unexpected '*/'");
+                throw new RuntimeException("Unexpected '*/'");
             }
             $this->inConditional = false;
             return [
@@ -348,7 +371,7 @@ class TokenStream
                     $pos + 2
                 ];
             }
-            throw new \RuntimeException("unterminated '/*'");
+            throw new RuntimeException("Unterminated '/*'");
         }
         return null;
     }
@@ -408,7 +431,7 @@ class TokenStream
                 $offset + strlen($pregMatch[0])
             ];
         }
-        throw new \RuntimeException("unterminated string $quote...$quote");
+        throw new RuntimeException("Unterminated string $quote...$quote");
     }
 
     /**
@@ -430,17 +453,50 @@ class TokenStream
     }
 
     /**
+     * Parse a hex string of the form "0x<hex digits>" or "x'<hex digits>'".
+     *
+     * https://dev.mysql.com/doc/refman/5.7/en/hexadecimal-literals.html
+     *
+     * - Only an even number of digits is valid.
+     * - Case insensitive for hex digits.
+     * - Case insensitive 'x' in quoted notation.
+     * - Case sensitive 'x' for leading zero notation.
+     *
+     * Valid examples:
+     * - x'BA5EBA11'
+     * - x'decea5ed'
+     * - X'5eed'
+     * - 0xb01dface
+     * - 0xBADC0DED
+     *
+     * Invalid examples
+     * - x'00f' (odd number of digits)
+     * - x'gg'  (invalid hex character)
+     * - 0XFFFF (upper case 'x')
+     *
      * @param string $text
      * @param int $offset
      * @return array|null
      */
     private function _getHex($text, $offset)
     {
-        if (preg_match('/\Ax\'[0-9a-f\']/ims', substr($text, $offset, 3)) &&
-            preg_match('/x\'([0-9a-f]*)\'/ims', $text, $pregMatch, 0, $offset)
-        ) {
+        $pregMatch = [];
+
+        $matchesLeadingZeroNotation = function ($text, $offset, &$pregMatch) {
+            return
+                preg_match('/\A0x([0-9a-fA-F]*)/ms', $text, $pregMatch, 0, $offset);
+        };
+
+        $matchesXQuotedNotation = function ($text, $offset, &$pregMatch) {
+            return
+                preg_match('/\Ax\'[0-9a-f\']/ims', substr($text, $offset, 3)) &&
+                preg_match('/x\'([0-9a-f]*)\'/ims', $text, $pregMatch, 0, $offset);
+        };
+
+        if ($matchesLeadingZeroNotation($text, $offset, $pregMatch) ||
+            $matchesXQuotedNotation($text, $offset, $pregMatch)) {
             if (strlen($pregMatch[1]) % 2 != 0) {
-                throw new \RuntimeException("invalid hex literal");
+                throw new RuntimeException("Invalid hex literal");
             }
             return [
                 new Token(Token::HEX, $pregMatch[1]),
@@ -485,7 +541,7 @@ class TokenStream
     /**
      * @param string $text
      * @param int $offset
-     * @return array|null
+     * @return array
      */
     private function _getSymbol($text, $offset)
     {
@@ -495,7 +551,6 @@ class TokenStream
                 $offset + strlen($pregMatch[0])
             ];
         }
-        return null;
     }
 
     /**
@@ -532,6 +587,9 @@ class TokenStream
     }
 
     /**
+     * This function will consume the requested content from the stream without trying to parse and tokenise it.
+     * It is used by {@see peek()}.
+     *
      * @param mixed $spec
      * @return bool
      */
@@ -595,13 +653,15 @@ class TokenStream
     /**
      * @param string $type
      * @param string $text
+     * @return string
      */
     public function expect($type, $text = null)
     {
         $token = $this->nextToken();
         if (!$token->eq($type, $text)) {
-            throw new \RuntimeException("expected '$text'");
+            throw new RuntimeException("Expected '$text'");
         }
+        return $token->text;
     }
 
     /**
@@ -611,19 +671,25 @@ class TokenStream
     {
         $token = $this->nextToken();
         if ($token->type !== Token::IDENTIFIER) {
-            throw new \RuntimeException("expected identifier");
+            throw new RuntimeException("Expected identifier");
         }
         return $token->text;
     }
 
+    /**
+     * @return string
+     */
     public function expectOpenParen()
     {
-        $this->expect(Token::SYMBOL, '(');
+        return $this->expect(Token::SYMBOL, '(');
     }
 
+    /**
+     * @return string
+     */
     public function expectCloseParen()
     {
-        $this->expect(Token::SYMBOL, ')');
+        return $this->expect(Token::SYMBOL, ')');
     }
 
     /**
@@ -633,7 +699,7 @@ class TokenStream
     {
         $token = $this->nextToken();
         if ($token->type !== Token::NUMBER) {
-            throw new \RuntimeException("expected number");
+            throw new RuntimeException("Expected number");
         }
         return 0 + $token->text;
     }
@@ -645,7 +711,7 @@ class TokenStream
     {
         $token = $this->nextToken();
         if ($token->type !== Token::STRING) {
-            throw new \RuntimeException("expected string");
+            throw new RuntimeException("Expected string");
         }
         return $token->text;
     }
@@ -660,15 +726,29 @@ class TokenStream
             case Token::STRING:
                 return $token->text;
             case Token::HEX:
-                return $token->hexToString();
+                return $token->asString();
             case Token::BIN:
-                return $token->binToString();
+                return $token->asString();
             default:
-                throw new \RuntimeException("expected string");
+                throw new RuntimeException("Expected string");
         }
     }
 
     /**
+     * Provides context for error messages.
+     *
+     * For example, given this invalid table definition ...
+     *
+     *     CREATE TABLE `foo` (
+     *         `a` bar DEFAULT NULL
+     *     );
+     *
+     * ... this function will produce something like this:
+     *
+     *     schema/morphism-test/foo.sql, line 2: unknown datatype 'bar'
+     *     1: CREATE TABLE `foo` (
+     *     2:   `a` bar<<HERE>> DEFAULT NULL
+     *
      * @param string $message
      * @return string
      */

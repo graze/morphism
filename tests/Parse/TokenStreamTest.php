@@ -3,9 +3,16 @@
 namespace Graze\Morphism\Parse;
 
 use Graze\Morphism\Test\Parse\TestCase;
+use RuntimeException;
 
 class TokenStreamTest extends TestCase
 {
+    public function testNewFromText()
+    {
+        $stream = TokenStream::newFromText('', '');
+        $this->assertThat($stream, $this->isInstanceOf(__NAMESPACE__ . '\TokenStream'));
+    }
+
     public function testNewFromFile()
     {
         $stream = TokenStream::newFromFile("/dev/null");
@@ -19,19 +26,6 @@ class TokenStreamTest extends TestCase
     }
 
     /**
-     * @dataProvider nextTokenProvider
-     * @param string $text
-     * @param string $expectedType
-     * @param mixed $expectedValue
-     */
-    public function testNextToken($text, $expectedType, $expectedValue)
-    {
-        $stream = $this->makeStream($text);
-        $token = $stream->nextToken();
-        $this->assertTokenEq($expectedType, $expectedValue, $token);
-    }
-
-    /**
      * @param string $expectedType
      * @param mixed $expectedValue
      * @param string $token
@@ -42,6 +36,19 @@ class TokenStreamTest extends TestCase
             $token->eq($expectedType, $expectedValue),
             "expected {$expectedType}[{$expectedValue}], but got " . $token->toDebugString()
         );
+    }
+
+    /**
+     * @dataProvider nextTokenProvider
+     * @param string $text
+     * @param string $expectedType
+     * @param mixed $expectedNextTokenValue
+     */
+    public function testNextToken($text, $expectedType, $expectedNextTokenValue)
+    {
+        $stream = $this->makeStream($text);
+        $token = $stream->nextToken();
+        $this->assertTokenEq($expectedType, $expectedNextTokenValue, $token);
     }
 
     /**
@@ -82,10 +89,11 @@ class TokenStreamTest extends TestCase
             [ "-- comment\n1",  Token::NUMBER, '1'],
             [ "--\n1",          Token::NUMBER, '1'],
             [ "#comment\n1",    Token::NUMBER, '1'],
+            [ "#comment",       Token::EOF,    null],
 
             // conditional comments
             [ "/*! 12345*/",      Token::NUMBER, '12345'],
-            [ "/*!12345 12345*/", Token::NUMBER, '12345'],
+            [ "/*!12345 45678*/", Token::NUMBER, '45678'],
 
             // double quoted strings
             [ "{$dq}{$dq}",                     Token::STRING, ''],
@@ -109,15 +117,22 @@ class TokenStreamTest extends TestCase
             [ "{$bq}hello{$bs}nworld{$bq}",     Token::IDENTIFIER, "hello{$bs}nworld"],     // \n => \n
 
             // hex literals
-            [ "x''",                    "hex", "" ],
-            [ "x'00'",                  "hex", "00" ],
-            [ "x'0123456789abcdef'",    "hex", "0123456789abcdef" ],
-            [ "x'0123456789ABCDEF'",    "hex", "0123456789ABCDEF" ],
+            [ "x''",                    Token::HEX, "" ],
+            [ "x'00'",                  Token::HEX, "00" ],
+            [ "x'0123456789abcdef'",    Token::HEX, "0123456789abcdef" ],
+            [ "x'0123456789ABCDEF'",    Token::HEX, "0123456789ABCDEF" ],
+            [ "0x0123456789abcdef",     Token::HEX, "0123456789abcdef" ],
+            [ "0x0123456789ABCDEF",     Token::HEX, "0123456789ABCDEF" ],
 
             // binary literals
-            [ "b''",            "bin", "" ],
-            [ "b'0'",           "bin", "0" ],
-            [ "b'00011011'",    "bin", "00011011" ],
+            [ "b''",            Token::BIN, "" ],
+            [ "b'0'",           Token::BIN, "0" ],
+            [ "b'00011011'",    Token::BIN, "00011011" ],
+
+            // Invalid hex and binary literals - these should probably be failures, tbh.
+            [ "x'GGG'",         Token::IDENTIFIER,  'x'],
+            [ '0Xabc',          Token::NUMBER,      '0'],
+            [ "b'2'",           Token::IDENTIFIER,  'b'],
 
             // unquoted identifiers
        //   [ '1_',       Token::IDENTIFIER, '1_' ],     // TODO - make this pass
@@ -131,20 +146,79 @@ class TokenStreamTest extends TestCase
             [ '$_123abc', Token::IDENTIFIER, '$_123abc' ],
 
             // symbols
-            [ "<=_", "symbol", "<=" ],
-            [ ">=_", "symbol", ">=" ],
-            [ "<>_", "symbol", "<>" ],
-            [ "!=_", "symbol", "!=" ],
-            [ ":=_", "symbol", ":=" ],
-            [ "&&_", "symbol", "&&" ],
-            [ "||_", "symbol", "||" ],
-            [ "@@_", "symbol", "@@" ],
-            [ "@_",  "symbol", "@" ],
-            [ "+_",  "symbol", "+"  ],
-            [ "-_",  "symbol", "-"  ],
-            [ "*_",  "symbol", "*"  ],
-            [ "/_",  "symbol", "/"  ],
-            [ "%_",  "symbol", "%"  ],
+            [ "<=_", Token::SYMBOL, "<=" ],
+            [ ">=_", Token::SYMBOL, ">=" ],
+            [ "<>_", Token::SYMBOL, "<>" ],
+            [ "!=_", Token::SYMBOL, "!=" ],
+            [ ":=_", Token::SYMBOL, ":=" ],
+            [ "&&_", Token::SYMBOL, "&&" ],
+            [ "||_", Token::SYMBOL, "||" ],
+            [ "@@_", Token::SYMBOL, "@@" ],
+            [ "@_",  Token::SYMBOL, "@" ],
+            [ "+_",  Token::SYMBOL, "+"  ],
+            [ "-_",  Token::SYMBOL, "-"  ],
+            [ "*_",  Token::SYMBOL, "*"  ],
+            [ "/_",  Token::SYMBOL, "/"  ],
+            [ "%_",  Token::SYMBOL, "%"  ],
+        ];
+    }
+
+    /**
+     * @param string $text
+     * @dataProvider provideBadLogicNextToken
+     * @expectedException LogicException
+     */
+    public function testBadLogicNextToken($text)
+    {
+        $stream = $this->makeStream($text);
+        $token = $stream->nextToken();
+    }
+
+    /**
+     * @return array
+     */
+    public function provideBadLogicNextToken()
+    {
+        return [
+            // All of these are explicitly not valid and will result in a "Lexer is confused by ..." message.
+            ['?'],
+            ['['],
+            [']'],
+            ['\\'],
+            ['{'],
+            ['}'],
+            // This item covers the fall through value for any characters not explicitly listed
+            [chr(0)],
+        ];
+    }
+
+    /**
+     * @param string $text
+     * @dataProvider provideBadRuntimeNextToken
+     * @expectedException RuntimeException
+     */
+    public function testBadRuntimeNextToken($text)
+    {
+        $stream = $this->makeStream($text);
+        $token = $stream->nextToken();
+    }
+
+    /**
+     * @return array
+     */
+    public function provideBadRuntimeNextToken()
+    {
+        return [
+            // Unterminated quoted identifier
+            ['`foo'],
+            // Unterminated '/*'
+            ['/*'],
+            // Unexpected end of comment
+            ['*/'],
+            // Unterminated string
+            ["'foo"],
+            // Invalid hex literal (not an even number of digits)
+            ['0xaaa'],
         ];
     }
 
@@ -195,6 +269,7 @@ class TokenStreamTest extends TestCase
             ['create table t', 'drop table',      false, Token::IDENTIFIER, 'create'],
             ['create table t', 'create database', false, Token::IDENTIFIER, 'create'],
             ['= "test"',       [[Token::SYMBOL, '=']], true,  Token::STRING, 'test'],
+            ['= "test"',       [[Token::NUMBER, 1  ]], false, Token::SYMBOL, '='],
             ['();',            [[Token::SYMBOL, '('],
                                 [Token::SYMBOL, ')']], true,  Token::SYMBOL, ';'],
         ];
@@ -250,13 +325,123 @@ class TokenStreamTest extends TestCase
         $stream->expect(Token::IDENTIFIER, 'drop');
     }
 
-    // TODO -
-    // following methods are untested:
-    //     expectName
-    //     expectOpenParen
-    //     expectCloseParen
-    //     expectNumber
-    //     expectString
-    //     expectStringExtended
-    //     contextualise
+    /**
+     * @param string $func
+     * @param string $token
+     * @param mixed $expected
+     * @param bool $throwsException
+     * @dataProvider provideExpectedTokenType
+     */
+    public function testExpectedTokenType($func, $token, $expected, $throwsException)
+    {
+        $stream = $this->makeStream($token);
+        if ($throwsException) {
+            $this->setExpectedException(RuntimeException::class);
+            $stream->$func();
+        } else {
+            $result = $stream->$func();
+            $this->assertEquals($expected, $result);
+        }
+    }
+
+    /**
+     * @return array
+     */
+    public function provideExpectedTokenType()
+    {
+        return [
+            // [ function name, token, expected value, should it throw a RuntimeException? ]
+
+            [ 'expectCloseParen',   ')',    ')',    false],
+            [ 'expectCloseParen',   'a',    null,   true],
+
+            [ 'expectOpenParen',    '(',    '(',    false],
+            [ 'expectOpenParen',    'a',    null,   true],
+
+            [ 'expectName',         'foo',  'foo',  false],
+            [ 'expectName',         '1',    null,   true],
+
+            [ 'expectNumber',       '1',    1,      false],
+            [ 'expectNumber',       'a',    null,   true],
+
+            // An embedded string
+            [ 'expectString',       "'a'",  "a",    false],
+            [ 'expectString',       'a',    null,   true],
+
+            [ 'expectStringExtended',       "'a'",  "a",    false],
+            [ 'expectStringExtended',       "x'68656c6c6f21'",      'hello!',   false],
+            [ 'expectStringExtended',       "X'68656c6c6f21'",      'hello!',   false],
+            [ 'expectStringExtended',       '0x68656c6c6f21',      'hello!',   false],
+            [ 'expectStringExtended',       "b'0111111000100011'",  '~#',       false],
+            [ 'expectStringExtended',       'a',    null,   true],
+
+        ];
+    }
+
+    /**
+     * @param string $conditionalComment
+     * @param array $tokenTypes
+     * @dataProvider conditionalCommentProvider
+     */
+    public function testConditionalComment($conditionalComment, array $tokenTypes)
+    {
+        $stream = $this->makeStream($conditionalComment);
+        $token = $stream->nextToken();
+        $expectedType = current($tokenTypes);
+
+        while ($token->type != Token::EOF) {
+            $this->assertEquals($expectedType, $token->type);
+
+            $token = $stream->nextToken();
+            $expectedType = next($tokenTypes);
+        }
+    }
+
+    /**
+     * @return array
+     */
+    public function conditionalCommentProvider()
+    {
+        return [
+            // [ conditional comment, list of expected token types ]
+            [
+                '/*! abcde fghij */',
+                [
+                    Token::IDENTIFIER,
+                    Token::IDENTIFIER,
+                ],
+            ],
+            [
+                '/*!12345 fghij */',
+                [
+                    Token::IDENTIFIER,
+                ],
+            ],
+        ];
+    }
+
+    public function testContextualise()
+    {
+        $sql = <<<EOF
+CREATE TABLE `foo` (
+    `a` bar DEFAULT NULL
+);
+EOF;
+        $expected = <<<EOF
+data://text/plain;base64,Q1JFQVRFIFRBQkxFIGBmb29gICgKICAgIGBhYCBiYXIgREVGQVVMVCBOVUxMCik7, line 2: unknown datatype 'bar'
+1: CREATE TABLE `foo` (
+2:     `a` bar<<HERE>> DEFAULT NULL
+EOF;
+
+        $stream = $this->makeStream($sql);
+
+        // Use reflection to set the internal offset to the place where error is.
+        $reflection = new \ReflectionClass($stream);
+        $property = $reflection->getProperty('offset');
+        $property->setAccessible(true);
+        $property->setValue($stream, 32);
+
+        $message = $stream->contextualise("unknown datatype 'bar'");
+        $this->assertEquals($expected, $message);
+    }
 }

@@ -4,12 +4,12 @@ create table t (
     x text
 );
 CREATE TABLE `t` (
-    `x` text 
+    `x` text
 ) ENGINE=InnoDB;
 
 -- test ----------------------------------------
 create table if not exists t (
-    x text 
+    x text
 );
 CREATE TABLE `t` (
     `x` text
@@ -47,7 +47,7 @@ exception RuntimeException "unknown datatype 'a'"
 
 -- test ----------------------------------------
 create table x ();
-exception RuntimeException "expected identifier"
+exception RuntimeException "Expected identifier"
 
 -- test ----------------------------------------
 create table `table` (a int);

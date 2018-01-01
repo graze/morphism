@@ -435,13 +435,13 @@ EOF;
 
         $stream = $this->makeStream($sql);
 
-        $dump = new MysqlDump();
-        try {
-            $dump->parse($stream);
-            $this->fail("Expected a RuntimeException but it was not thrown.");
-        } catch (RuntimeException $e) {
-            $message = $stream->contextualise($e->getMessage());
-            $this->assertEquals($expected, $message);
-        }
+        // Use reflection to set the internal offset to the place where error is.
+        $reflection = new \ReflectionClass($stream);
+        $property = $reflection->getProperty('offset');
+        $property->setAccessible(true);
+        $property->setValue($stream, 32);
+
+        $message = $stream->contextualise("unknown datatype 'bar'");
+        $this->assertEquals($expected, $message);
     }
 }

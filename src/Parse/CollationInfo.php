@@ -98,7 +98,10 @@ class CollationInfo
             throw new \LogicException("getCollation called when collation is unspecified");
         }
         if ($this->_isBinaryCollation) {
-            return self::_getCharsetBinaryCollation($this->_charset);
+            $collations = self::_getCharsetCollations($this->_charset);
+            if (null !== $collations) {
+                return $collations[count($collations) - 1];
+            }
         }
         return $this->_collation;
     }
@@ -139,6 +142,8 @@ class CollationInfo
      * Throws a RuntimeException if $charset is in conflict with an already
      * specified character set or collation.
      *
+     * Hidden side effect: Also sets the collation. :(
+     *
      * @param string $charset
      * @throws \RuntimeException
      * @return void
@@ -164,6 +169,8 @@ class CollationInfo
      *
      * Throws a RuntimeException if a character set has already been specified,
      * but $collation is not compatible with it.
+     *
+     * Hidden side effect: Also sets the character set. :(
      *
      * @param string $collation
      * @throws \RuntimeException
@@ -201,7 +208,7 @@ class CollationInfo
      * Get all the available collations for the given character set.
      *
      * @param string $charset
-     * @return string|null
+     * @return array|null
      */
     private static function _getCharsetCollations($charset)
     {
@@ -221,21 +228,6 @@ class CollationInfo
         $collations = self::_getCharsetCollations($charset);
         if (null !== $collations) {
             return $collations[0];
-        }
-        return null;
-    }
-
-    /**
-     * Get the binary collation for the given character set.
-     *
-     * @param string $charset
-     * @return string|null
-     */
-    private static function _getCharsetBinaryCollation($charset)
-    {
-        $collations = self::_getCharsetCollations($charset);
-        if (null !== $collations) {
-            return $collations[count($collations) - 1];
         }
         return null;
     }

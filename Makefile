@@ -9,21 +9,22 @@ test: ## Run test suite
 test: lint
 	@test -f ./vendor/bin/phpunit || ${MAKE} install
 	@docker-compose run --rm php    ./vendor/bin/phpunit --testsuite tests
+	@docker-compose run --rm php-71 ./vendor/bin/phpunit --testsuite tests
 	@docker-compose run --rm php-70 ./vendor/bin/phpunit --testsuite tests
 	@docker-compose run --rm php-56 ./vendor/bin/phpunit --testsuite tests
 	@docker-compose run --rm php-55 ./vendor/bin/phpunit --testsuite tests
 
 lint: ## Run phpcs against the code.
-	@docker-compose run --rm php-55 vendor/bin/phpcs -p --warning-severity=0 src/ tests/
+	@docker-compose run --rm php vendor/bin/phpcs -p --warning-severity=0 src/ tests/
 
 test-coverage: ## Run all tests and output coverage to the console.
-	@docker-compose run --rm php phpdbg -qrr vendor/bin/phpunit --coverage-text
+	@docker-compose run --rm php-71 phpdbg -qrr vendor/bin/phpunit --coverage-text
 
 test-coverage-html: ## Run all tests and output html results
-	@docker-compose run --rm php phpdbg -qrr vendor/bin/phpunit --coverage-html ./tests/report/html
+	@docker-compose run --rm php-71 phpdbg -qrr vendor/bin/phpunit --coverage-html ./tests/report/html
 
 test-coverage-clover: ## Run all tests and output clover coverage to file.
-	@docker-compose run --rm php phpdbg -qrr vendor/bin/phpunit --coverage-clover=./tests/report/coverage.clover
+	@docker-compose run --rm php-71 phpdbg -qrr vendor/bin/phpunit --coverage-clover=./tests/report/coverage.clover
 
 start-db: ## Start up the test database
 	@docker-compose up -d db

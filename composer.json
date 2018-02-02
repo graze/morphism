@@ -10,6 +10,15 @@
     ],
     "homepage": "https://github.com/graze/morphism",
     "license": "MIT",
+    "config": {
+        "platform": {
+            "ext-simplexml": "1.0",
+            "ext-dom": "1.0",
+            "ext-tokenizer": "1.0",
+            "ext-xmlwriter": "1.0",
+            "php": "5.5"
+        }
+    },
     "authors": [
         {
             "name": "Burhan Ali",

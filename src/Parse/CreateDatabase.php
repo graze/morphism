@@ -1,6 +1,8 @@
 <?php
 namespace Graze\Morphism\Parse;
 
+use RuntimeException;
+
 /**
  * Represents the definition of a database.
  */
@@ -47,7 +49,7 @@ class CreateDatabase
         if ($stream->consume('CREATE DATABASE')) {
             $stream->consume('IF NOT EXISTS');
         } else {
-            throw new \RuntimeException("expected CREATE DATABASE");
+            throw new RuntimeException("Expected CREATE DATABASE");
         }
 
         $this->name = $stream->expectName();

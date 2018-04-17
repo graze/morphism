@@ -27,6 +27,11 @@ class CollationInfo
             'utf8_unicode_ci',
             'utf8_bin',
         ],
+        'utf8mb4' => [
+            'utf8mb4_general_ci',
+            'utf8mb4_unicode_ci',
+            'utf8mb4_bin',
+        ],
         'binary' => [
             'binary',
         ],

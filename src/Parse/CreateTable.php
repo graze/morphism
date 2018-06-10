@@ -136,7 +136,7 @@ class CreateTable
     /**
      * Returns an array of SQL DDL statements to create the table.
      *
-     * @return string
+     * @return array
      */
     public function getDDL()
     {

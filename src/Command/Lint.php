@@ -48,6 +48,8 @@ class Lint extends Command
         );
         $this->setHelp($helpText);
 
+        $this->setDescription("Check database schema files for correctness");
+
         $this->addArgument(
             self::ARGUMENT_PATH,
             InputArgument::OPTIONAL | InputArgument::IS_ARRAY,

@@ -97,6 +97,8 @@ class Diff extends Command
         );
         $this->setHelp($helpText);
 
+        $this->setDescription("Show necessary DDL statements to make a given database match the schema files (and optionally apply the changes)");
+
         $this->addArgument(
             self::ARGUMENT_CONFIG_FILE,
             InputArgument::REQUIRED

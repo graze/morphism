@@ -42,10 +42,10 @@ $ composer require graze/morphism
 
 All commands support the `--help` parameter which give more information on usage.
 
-* **morphism-extract**: Extract schema definitions from a mysqldump file.
-* **morphism-dump**: Dump database schema for a named database connection.
-* **morphism-lint**: Check database schema files for correctness.
-* **morphism-diff**: Show necessary DDL statements to make a given database match the schema files. Optionally apply the changes too.
+* **morphism extract**: Extract schema definitions from a mysqldump file.
+* **morphism dump**: Dump database schema for a named database connection.
+* **morphism lint**: Check database schema files for correctness.
+* **morphism diff**: Show necessary DDL statements to make a given database match the schema files. Optionally apply the changes too.
 
 ## Config File
 
@@ -66,7 +66,7 @@ databases:
         unix_socket: '/var/lib/mysql/catalog.sock'
         # morphism specific options
         morphism:
-            # morphism-diff only operates on connections with 'enable: true'
+            # morphism diff only operates on connections with 'enable: true'
             enable: true
             # Path where schema files live.
             # Defaults to "schema/<connection-name>"
@@ -89,12 +89,12 @@ databases:
 
 ## Example Usage
 
-This example uses `morphism-dump` to generate schema files from a database, `morphism-lint` for checking the files and `morphism-diff` to apply changes both interactively and automatically.
+This example uses `morphism dump` to generate schema files from a database, `morphism lint` for checking the files and `morphism diff` to apply changes both interactively and automatically.
 
 ```
 (master) $ # create a baseline for the schema
 (master) $ mkdir schema
-(master) $ bin/morphism-dump --write config.yml catalog
+(master) $ bin/morphism dump --write config.yml catalog
 (master) $ git add schema/catalog
 (master) $ git commit -m "initial checkin of catalog schema"
 (master) $
@@ -102,17 +102,17 @@ This example uses `morphism-dump` to generate schema files from a database, `mor
 (master) $ git checkout -b catalog-fixes
 (catalog-fixes) $ vi schema/catalog/product.sql             # edit table definition
 (catalog-fixes) $ vi schema/catalog/product_dimensions.sql  # add new table
-(catalog-fixes) $ bin/morphism-lint schema/catalog   # check syntax
+(catalog-fixes) $ bin/morphism lint schema/catalog   # check syntax
 ERROR schema/catalog/product_dimensions.sql, line 2: unknown datatype 'intt'
 1: CREATE TABLE product_dimensions (
 2:   `pd_id` intt<<HERE>>(10) unsigned NOT NULL AUTO_INCREMENT,
 (catalog-fixes) $ vi schema/catalog/product_dimensions.sql  # fix table definition
-(catalog-fixes) $ bin/morphism-lint schema/catalog   # check syntax
+(catalog-fixes) $ bin/morphism lint schema/catalog   # check syntax
 (catalog-fixes) $ git add schema/catalog
 (catalog-fixes) $ git rm schema/catalog/discontinued.sql    # delete a table
 (catalog-fixes) $ git commit -m "various changes to catalog schema"
 (catalog-fixes) $ # alter the database to match the schema files
-(catalog-fixes) $ bin/morphism-diff --apply-changes=confirm config.yml catalog
+(catalog-fixes) $ bin/morphism diff --apply-changes=confirm config.yml catalog
 -- --------------------------------
 --   Connection: catalog
 -- --------------------------------
@@ -158,7 +158,7 @@ CREATE TABLE `product_dimensions` (
 (catalog-fixes) $ # do some work back on master...
 (catalog-fixes) $ git checkout master
 (master) $ # restore schema to previous state
-(master) $ bin/morphism-diff --apply-changes=yes config.yml catalog
+(master) $ bin/morphism diff --apply-changes=yes config.yml catalog
 ```
 
 ## Testing

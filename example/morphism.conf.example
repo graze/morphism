@@ -15,7 +15,7 @@ databases:
         #unix_socket: '/var/lib/mysql/foo.sock'
         # morphism specific options
         morphism:
-            # morphism-diff only operates on connections with 'enable: true'
+            # morphism diff only operates on connections with 'enable: true'
             enable: true
             # Path where schema files live.
             # Defaults to "schema/<connection-name>"

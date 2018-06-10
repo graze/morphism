@@ -61,6 +61,8 @@ class Fastdump extends Command
         );
         $this->setHelp($helpText);
 
+        $this->setDescription("Dump database schema for a named database connection");
+
         $this->addArgument(
             self::ARGUMENT_CONFIG_FILE,
             InputArgument::REQUIRED

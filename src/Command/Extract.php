@@ -55,6 +55,8 @@ class Extract extends Command
         );
         $this->setHelp($helpText);
 
+        $this->setDescription("Extract schema definitions from a mysqldump file");
+
         $this->addArgument(
             self::ARGUMENT_MYSQL_DUMP_FILE,
             InputArgument::OPTIONAL,

@@ -34,13 +34,15 @@
     ],
     "require": {
         "php": ">=5.5",
-        "symfony/yaml": "~2.6",
-        "doctrine/dbal": "~2.5"
+
+        "doctrine/dbal": "~2.5",
+        "symfony/console": "^2.8",
+        "symfony/yaml": "~2.6"
     },
     "require-dev": {
+        "graze/standards": "^1.0",
         "phpunit/phpunit": "~4.5",
-        "squizlabs/php_codesniffer": "^2.5",
-        "graze/standards": "^1.0"
+        "squizlabs/php_codesniffer": "^2.5"
     },
     "autoload": {
         "psr-4": {
@@ -53,9 +55,6 @@
         }
     },
     "bin": [
-        "./bin/morphism-diff",
-        "./bin/morphism-dump",
-        "./bin/morphism-extract",
-        "./bin/morphism-lint"
+        "./bin/morphism"
     ]
 }

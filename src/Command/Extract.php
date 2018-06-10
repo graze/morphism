@@ -2,13 +2,29 @@
 
 namespace Graze\Morphism\Command;
 
+use Exception;
 use Graze\Morphism\Parse\MysqlDump;
 use Graze\Morphism\Parse\TokenStream;
+use RuntimeException;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
-class Extract implements Argv\ConsumerInterface
+class Extract extends Command
 {
-    /** @var bool */
-    private $quoteNames = true;
+    const COMMAND_NAME              = 'extract';
+
+    // Command line arguments
+    const ARGUMENT_MYSQL_DUMP_FILE  = 'mysql-dump-file';
+
+    // Command line options
+    const OPTION_SCHEMA_PATH        = 'schema-path';
+    const OPTION_DATABASE           = 'database';
+    const OPTION_WRITE              = 'write';
+    const OPTION_NO_WRITE           = 'no-write';
+
     /** @var string */
     private $schemaPath = './schema';
     /** @var bool */
@@ -18,12 +34,11 @@ class Extract implements Argv\ConsumerInterface
     /** @var string|null */
     private $databaseName = null;
 
-    /**
-     * @param string $prog
-     */
-    public function consumeHelp($prog)
+    protected function configure()
     {
-        printf(
+        $this->setName(self::COMMAND_NAME);
+
+        $helpText = sprintf(
             "Usage: %s [OPTIONS] [MYSQL-DUMP-FILE]\n" .
             "Extracts schema definition(s) from a mysqldump file. Multiple databases may\n" .
             "be defined in the dump, and they will be extracted to separate directories.\n" .
@@ -32,95 +47,77 @@ class Extract implements Argv\ConsumerInterface
             "\n" .
             "OPTIONS\n" .
             "  -h, -help, --help   display this message, and exit\n" .
-            "  --[no-]quote-names  [do not] quote names with `...`; default: no\n" .
             "  --schema-path=PATH  location of schemas; default: ./schema\n" .
             "  --database=NAME     name of database if not specified in dump\n" .
             "  --[no-]write        write schema files to schema path; default: no\n" .
             "",
-            $prog
+            self::COMMAND_NAME
         );
+        $this->setHelp($helpText);
+
+        $this->addArgument(
+            self::ARGUMENT_MYSQL_DUMP_FILE,
+            InputArgument::OPTIONAL,
+            null,
+            'php://stdin'
+        );
+
+        $this->addOption(
+            self::OPTION_SCHEMA_PATH,
+            null,
+            InputOption::VALUE_REQUIRED,
+            null,
+            './schema'
+        );
+
+        $this->addOption(
+            self::OPTION_DATABASE,
+            null,
+            InputOption::VALUE_REQUIRED
+        );
+
+        $this->addOption(self::OPTION_WRITE);
+        $this->addOption(self::OPTION_NO_WRITE);
     }
 
     /**
-     * @param array $argv
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @throws Exception
      */
-    public function argv(array $argv)
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $argvParser = new Argv\Parser($argv);
-        $argvParser->consumeWith($this);
-    }
+        $this->mysqldump = $input->getArgument(self::ARGUMENT_MYSQL_DUMP_FILE);
 
-    /**
-     * @param Argv\Option $option
-     */
-    public function consumeOption(Argv\Option $option)
-    {
-        switch ($option->getOption()) {
-            case '--quote-names':
-            case '--no-quote-names':
-                $this->quoteNames = $option->bool();
-                break;
+        $this->schemaPath = $input->getOption(self::OPTION_SCHEMA_PATH);
+        $this->databaseName = $input->getOption(self::OPTION_DATABASE);
 
-            case '--schema-path':
-                $this->schemaPath = $option->required();
-                break;
-
-            case '--database':
-                $this->databaseName = $option->required();
-                break;
-
-            case '--write':
-            case '--no-write':
-                $this->write = $option->bool();
-                break;
-
-            default:
-                $option->unrecognised();
-                break;
+        if ($input->getOption(self::OPTION_WRITE)) {
+            $this->write = true;
         }
-    }
 
-    /**
-     * @param array $args
-     */
-    public function consumeArgs(array $args)
-    {
-        if (count($args) == 0) {
-            $this->mysqldump = 'php://stdin';
-        } elseif (count($args) == 1) {
-            $this->mysqldump = $args[0];
-        } else {
-            throw new Argv\Exception("expected a mysqldump file");
-        }
-    }
-
-    /**
-     * @throws \Exception
-     */
-    public function run()
-    {
         $stream = TokenStream::newFromFile($this->mysqldump);
 
         $dump = new MysqlDump();
         try {
             $dump->parse($stream);
-        } catch (\RuntimeException $e) {
-            throw new \RuntimeException($stream->contextualise($e->getMessage()));
-        } catch (\Exception $e) {
-            throw new \Exception($e->getMessage() . "\n\n" . $e->getTraceAsString());
+        } catch (RuntimeException $e) {
+            throw new RuntimeException($stream->contextualise($e->getMessage()));
+        } catch (Exception $e) {
+            throw new Exception($e->getMessage() . "\n\n" . $e->getTraceAsString());
         }
 
         if ($this->write) {
             foreach ($dump->databases as $database) {
                 $databaseName = ($database->name == '') ? $this->databaseName : $database->name;
                 if ($databaseName == '') {
-                    throw new \RuntimeException("no database name specified in dump - please use --database=NAME to supply one");
+                    throw new RuntimeException("No database name specified in dump - please use --database=NAME to supply one");
                 }
                 $output = "{$this->schemaPath}/$databaseName";
 
                 if (!is_dir($output)) {
-                    if (!@mkdir($output, 0777, true)) {
-                        throw new \RuntimeException("could not make directory $output");
+                    if (!@mkdir($output, 0755, true)) {
+                        throw new RuntimeException("Could not make directory $output");
                     }
                 }
                 foreach ($database->tables as $table) {
@@ -130,7 +127,7 @@ class Extract implements Argv\ConsumerInterface
                         $text .= "$query;\n\n";
                     }
                     if (false === @file_put_contents($path, $text)) {
-                        throw new \RuntimeException("could not write $path");
+                        throw new RuntimeException("Could not write $path");
                     }
                     fprintf(STDERR, "wrote $path\n");
                 }

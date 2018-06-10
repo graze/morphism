@@ -2,13 +2,31 @@
 
 namespace Graze\Morphism\Command;
 
+use Exception;
 use Graze\Morphism\Parse\TokenStream;
 use Graze\Morphism\Parse\MysqlDump;
 use Graze\Morphism\Extractor;
 use Graze\Morphism\Config;
+use RuntimeException;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
-class Fastdump implements Argv\ConsumerInterface
+class Fastdump extends Command
 {
+    const COMMAND_NAME          = 'dump';
+
+    // Command line arguments
+    const ARGUMENT_CONFIG_FILE  = 'config-file';
+    const ARGUMENT_CONNECTIONS  = 'connections';
+
+    // Command line options
+    const OPTION_QUOTE_NAMES    = 'quote-names';
+    const OPTION_NO_QUOTE_NAMES = 'no-quote-names';
+    const OPTION_WRITE          = 'write';
+    const OPTION_NO_WRITE       = 'no-write';
+
     /** @var bool */
     private $quoteNames = true;
     /** @var string|null */
@@ -18,80 +36,74 @@ class Fastdump implements Argv\ConsumerInterface
     /** @var array */
     private $connectionNames = [];
 
-    /**
-     * @param string $prog
-     */
-    public function consumeHelp($prog)
+    protected function configure()
     {
-        printf(
-            "Usage: %s [OPTIONS] CONFIG-FILE CONN [CONN ...]\n" .
+        $this->setName(self::COMMAND_NAME);
+
+        $helpText = sprintf(
+            "Usage: %s [OPTIONS] CONFIG-FILE [CONN ...]\n" .
             "Dumps database schemas for named connections. This tool is considerably faster\n" .
             "than mysqldump, especially for large schemas. You might use this tool to\n" .
             "(re-)initalise your project's schema directory from a local database.\n" .
+            "If no connections are specified, all connections\n" .
+            "in the config with 'morphism: enable: true' will be used.\n" .
             "\n" .
             "OPTIONS\n" .
             "  -h, -help, --help   display this message, and exit\n" .
-            "  --[no-]quote-names  [do not] quote names with `...`; default: no\n" .
+            "  --[no-]quote-names  [do not] quote names with `...`; default: yes\n" .
             "  --[no-]write        write schema files to schema path; default: no\n" .
             "\n" .
             "CONFIG-FILE\n" .
             "A YAML file mapping connection names to parameters. See the morphism project's\n" .
             "README.md file for detailed information.\n" .
             "",
-            $prog
+            self::COMMAND_NAME
         );
+        $this->setHelp($helpText);
+
+        $this->addArgument(
+            self::ARGUMENT_CONFIG_FILE,
+            InputArgument::REQUIRED
+        );
+
+        $this->addArgument(
+            self::ARGUMENT_CONNECTIONS,
+            InputArgument::OPTIONAL | InputArgument::IS_ARRAY,
+            null,
+            []
+        );
+
+        $this->addOption(self::OPTION_QUOTE_NAMES);
+        $this->addOption(self::OPTION_NO_QUOTE_NAMES);
+
+        $this->addOption(self::OPTION_WRITE);
+        $this->addOption(self::OPTION_NO_WRITE);
     }
 
     /**
-     * @param array $argv
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @throws Exception
      */
-    public function argv(array $argv)
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $argvParser = new Argv\Parser($argv);
-        $argvParser->consumeWith($this);
-    }
+        $this->configFile = $input->getArgument(self::ARGUMENT_CONFIG_FILE);
+        $this->connectionNames = $input->getArgument(self::ARGUMENT_CONNECTIONS);
 
-    /**
-     * @param Argv\Option $option
-     */
-    public function consumeOption(Argv\Option $option)
-    {
-        switch ($option->getOption()) {
-            case '--quote-names':
-            case '--no-quote-names':
-                $this->quoteNames = $option->bool();
-                break;
-
-            case '--write':
-            case '--no-write':
-                $this->write = $option->bool();
-                break;
-
-            default:
-                $option->unrecognised();
-                break;
+        if ($input->getOption(self::OPTION_QUOTE_NAMES)) {
+            $this->quoteNames = false;
         }
-    }
 
-    /**
-     * @param array $args
-     */
-    public function consumeArgs(array $args)
-    {
-        if (count($args) < 2) {
-            throw new Argv\Exception("expected CONFIG-FILE CONN [CONN ...]");
+        if ($input->getOption(self::OPTION_WRITE)) {
+            $this->write = true;
         }
-        $this->configFile = array_shift($args);
-        $this->connectionNames = $args;
-    }
 
-    /**
-     * @throws \Exception
-     */
-    public function run()
-    {
         $config = new Config($this->configFile);
         $config->parse();
+
+        if (! $this->connectionNames) {
+            $this->connectionNames = $config->getConnectionNames();
+        }
 
         foreach ($this->connectionNames as $connectionName) {
             $connection = $config->getConnection($connectionName);
@@ -120,16 +132,16 @@ class Fastdump implements Argv\ConsumerInterface
             $dump = new MysqlDump();
             try {
                 $dump->parse($stream, ['matchTables' => $matchTables]);
-            } catch (\RuntimeException $e) {
-                throw new \RuntimeException($stream->contextualise($e->getMessage()));
-            } catch (\Exception $e) {
-                throw new \Exception($e->getMessage() . "\n\n" . $e->getTraceAsString());
+            } catch (RuntimeException $e) {
+                throw new RuntimeException($stream->contextualise($e->getMessage()));
+            } catch (Exception $e) {
+                throw new Exception($e->getMessage() . "\n\n" . $e->getTraceAsString());
             }
 
             if ($this->write) {
                 if (!is_dir($schemaDefinitionPath)) {
-                    if (!@mkdir($schemaDefinitionPath, 0777, true)) {
-                        throw new \RuntimeException("could not make directory $schemaDefinitionPath");
+                    if (!@mkdir($schemaDefinitionPath, 0755, true)) {
+                        throw new RuntimeException("could not make directory $schemaDefinitionPath");
                     }
                 }
                 $database = reset($dump->databases);
@@ -140,7 +152,7 @@ class Fastdump implements Argv\ConsumerInterface
                         $text .= "$query;\n\n";
                     }
                     if (false === @file_put_contents($path, $text)) {
-                        throw new \RuntimeException("could not write $path");
+                        throw new RuntimeException("could not write $path");
                     }
                     fprintf(STDERR, "wrote $path\n");
                 }

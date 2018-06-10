@@ -330,7 +330,7 @@ class Diff extends Command
 
             if (!is_null($this->logDir)) {
                 if (!is_dir($this->logDir)) {
-                    if (!@mkdir($this->logDir, 0777, true)) {
+                    if (!@mkdir($this->logDir, 0755, true)) {
                         fprintf(STDERR, "Could not create log directory: {$this->logDir}\n");
                         exit(1);
                     }

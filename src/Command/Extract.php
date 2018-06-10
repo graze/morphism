@@ -116,7 +116,7 @@ class Extract extends Command
                 $output = "{$this->schemaPath}/$databaseName";
 
                 if (!is_dir($output)) {
-                    if (!@mkdir($output, 0777, true)) {
+                    if (!@mkdir($output, 0755, true)) {
                         throw new RuntimeException("Could not make directory $output");
                     }
                 }

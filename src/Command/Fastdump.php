@@ -140,7 +140,7 @@ class Fastdump extends Command
 
             if ($this->write) {
                 if (!is_dir($schemaDefinitionPath)) {
-                    if (!@mkdir($schemaDefinitionPath, 0777, true)) {
+                    if (!@mkdir($schemaDefinitionPath, 0755, true)) {
                         throw new RuntimeException("could not make directory $schemaDefinitionPath");
                     }
                 }

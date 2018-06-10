@@ -2,21 +2,37 @@
 
 namespace Graze\Morphism\Command;
 
+use GlobIterator;
 use Graze\Morphism\Parse\MysqlDump;
 use Graze\Morphism\Parse\TokenStream;
+use RuntimeException;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
-class Lint implements Argv\ConsumerInterface
+class Lint extends Command
 {
+    const COMMAND_NAME      = 'lint';
+
+    // Command line arguments
+    const ARGUMENT_PATH     = 'path';
+
+    // Command line options
+    const OPTION_VERBOSE    = 'verbose';
+    const OPTION_NO_VERBOSE = 'no-verbose';
+
     /** @var bool */
     private $verbose = false;
+    /** @var array  */
+    private $paths = [];
 
-    /**
-     * @param string $prog
-     */
-    public function consumeHelp($prog)
+    protected function configure()
     {
-        printf(
-            "Usage: %s [OPTIONS] PATH ...\n" .
+        $this->setName(self::COMMAND_NAME);
+
+        $helpText = sprintf(
+            "Usage: %s [OPTIONS] [PATH ...]\n" .
             "Checks all schema files below the specified paths for correctness. If no PATH\n" .
             "is given, checks standard input. By default output is only produced if errors\n" .
             "are detected.\n" .
@@ -28,50 +44,32 @@ class Lint implements Argv\ConsumerInterface
             "EXIT STATUS\n" .
             "The exit status will be 1 if any errors were detected, or 0 otherwise.\n" .
             "",
-            $prog
+            self::COMMAND_NAME
         );
+        $this->setHelp($helpText);
+
+        $this->addArgument(
+            self::ARGUMENT_PATH,
+            InputArgument::OPTIONAL | InputArgument::IS_ARRAY,
+            null,
+            ['php://stdin']
+        );
+
+        $this->addOption(self::OPTION_NO_VERBOSE);
     }
 
     /**
-     * @param array $argv
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
      */
-    public function argv(array $argv)
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $argvParser = new Argv\Parser($argv);
-        $argvParser->consumeWith($this);
-    }
+        $this->paths = $input->getArgument(self::ARGUMENT_PATH);
 
-    /**
-     * @param Argv\Option $option
-     */
-    public function consumeOption(Argv\Option $option)
-    {
-        switch ($option->getOption()) {
-            case '--verbose':
-            case '--no-verbose':
-                $this->verbose = $option->bool();
-                break;
-
-            default:
-                $option->unrecognised();
-                break;
+        if ($input->getOption(self::OPTION_VERBOSE)) {
+            $this->verbose = true;
         }
-    }
-
-    /**
-     * @param array $args
-     */
-    public function consumeArgs(array $args)
-    {
-        $this->paths = count($args) == 0 ? ['php://stdin'] : $args;
-    }
-
-    /**
-     * @return bool
-     */
-    public function run()
-    {
-        $success = true;
 
         $engine = null;
         $collation = null;
@@ -86,7 +84,7 @@ class Lint implements Argv\ConsumerInterface
                 if ($this->verbose) {
                     echo "$path\n";
                 }
-                foreach (new \GlobIterator("$path/*.sql") as $fileInfo) {
+                foreach (new GlobIterator("$path/*.sql") as $fileInfo) {
                     $files[] = $fileInfo->getPathname();
                 }
             } else {
@@ -100,7 +98,7 @@ class Lint implements Argv\ConsumerInterface
                     if ($this->verbose) {
                         echo "OK    $file\n";
                     }
-                } catch (\RuntimeException $e) {
+                } catch (RuntimeException $e) {
                     $errorFiles[] = $file;
                     $message = $stream->contextualise($e->getMessage());
                     echo "ERROR $message\n";
@@ -108,6 +106,6 @@ class Lint implements Argv\ConsumerInterface
             }
         }
 
-        return count($errorFiles) == 0;
+        return count($errorFiles);
     }
 }

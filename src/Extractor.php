@@ -267,7 +267,7 @@ class Extractor
     /**
      * Returns an array of SQL DDL statements to create the specified database.
      *
-     * @param object $schema SCHEMA-object
+     * @param mixed $schema SCHEMA-object
      * @return string[]
      */
     private function getCreateDatabase($schema)
@@ -284,7 +284,7 @@ class Extractor
      * Returns an array of SQL statements to select the specified database
      * as the default for the connection.
      *
-     * @param object $schema SCHEMA-object
+     * @param mixed $schema SCHEMA-object
      * @return string[]
      */
     private function getUseDatabase($schema)
@@ -425,7 +425,7 @@ class Extractor
      * Returns an array of table options which will form part of the DDL
      * necessary to create the specified table.
      *
-     * @param object $table TABLES-object[]
+     * @param mixed $table TABLES-object[]
      * @return string[]
      */
     private function getTableOptionDefs($table)
@@ -453,7 +453,7 @@ class Extractor
     /**
      * Returns an array of SQL DDL statements to create the specified table.
      *
-     * @param object $table TABLES-object
+     * @param mixed $table TABLES-object
      * @param array $columns COLUMNS-object[]
      * @param array $keys [$index => STATISTICS-object[]]
      * @param array $references [$constraint => [KEY_COLUMN_USAGE-object, ...], ...]

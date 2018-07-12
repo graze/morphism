@@ -336,7 +336,7 @@ class TokenStreamTest extends TestCase
     {
         $stream = $this->makeStream($token);
         if ($throwsException) {
-            $this->setExpectedException(RuntimeException::class);
+            $this->expectException(RuntimeException::class);
             $stream->$func();
         } else {
             $result = $stream->$func();

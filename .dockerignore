@@ -1,0 +1,13 @@
+/tests
+/example
+/vendor
+.git
+.travis.yml
+CHANGELOG.md
+CONTRIBUTING.md
+docker-compose.yml
+LICENSE.md
+Makefile
+phpcs.xml
+phpunit.xml.dist
+README.md

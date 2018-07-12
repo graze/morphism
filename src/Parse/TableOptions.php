@@ -19,11 +19,11 @@ class TableOptions
     public $options = [];
 
     /** @var string */
-    private $_defaultEngine = null;
+    private $defaultEngine = null;
     /** @var CollationInfo|null */
-    private $_defaultCollation = null;
+    private $defaultCollation = null;
     /** @var array */
-    private $_defaultOptions = [
+    private $defaultOptions = [
         'AUTO_INCREMENT'  => null,
         'MIN_ROWS'        => 0,
         'MAX_ROWS'        => 0,
@@ -44,7 +44,7 @@ class TableOptions
     public function __construct(CollationInfo $databaseCollation)
     {
         $this->collation = new CollationInfo;
-        $this->_defaultCollation = clone $databaseCollation;
+        $this->defaultCollation = clone $databaseCollation;
     }
 
     /**
@@ -55,7 +55,7 @@ class TableOptions
      */
     public function setDefaultEngine($engine)
     {
-        $this->_defaultEngine = self::normaliseEngine($engine);
+        $this->defaultEngine = self::normaliseEngine($engine);
     }
 
     /**
@@ -64,8 +64,8 @@ class TableOptions
      */
     public function parse(TokenStream $stream)
     {
-        $this->engine = $this->_defaultEngine;
-        $this->options = $this->_defaultOptions;
+        $this->engine = $this->defaultEngine;
+        $this->options = $this->defaultOptions;
 
         while (true) {
             $mark = $stream->getMark();
@@ -84,11 +84,11 @@ class TableOptions
                 }
             }
 
-            $this->_parseOption($stream, strtoupper($token->text));
+            $this->parseOption($stream, strtoupper($token->text));
         }
 
         if (!$this->collation->isSpecified()) {
-            $this->collation = clone $this->_defaultCollation;
+            $this->collation = clone $this->defaultCollation;
         }
     }
 
@@ -96,18 +96,18 @@ class TableOptions
      * @param TokenStream $stream
      * @param string $option
      */
-    private function _parseOption(TokenStream $stream, $option)
+    private function parseOption(TokenStream $stream, $option)
     {
         switch ($option) {
             case 'ENGINE':
             case 'COLLATE':
             case 'CHARSET':
-                $this->_parseIdentifier($stream, $option);
+                $this->parseIdentifier($stream, $option);
                 break;
 
             case 'CHARACTER':
                 $stream->expect(Token::IDENTIFIER, 'SET');
-                $this->_parseIdentifier($stream, 'CHARSET');
+                $this->parseIdentifier($stream, 'CHARSET');
                 break;
 
             case 'AUTO_INCREMENT':
@@ -115,16 +115,16 @@ class TableOptions
             case 'KEY_BLOCK_SIZE':
             case 'MAX_ROWS':
             case 'MIN_ROWS':
-                $this->_parseNumber($stream, $option);
+                $this->parseNumber($stream, $option);
                 break;
 
             case 'CHECKSUM':
             case 'DELAY_KEY_WRITE':
-                $this->_parseEnum($stream, $option, ['0', '1']);
+                $this->parseEnum($stream, $option, ['0', '1']);
                 break;
 
             case 'PACK_KEYS':
-                $this->_parseEnum($stream, $option, ['DEFAULT', '0', '1']);
+                $this->parseEnum($stream, $option, ['DEFAULT', '0', '1']);
                 break;
 
             case 'DATA':
@@ -134,15 +134,15 @@ class TableOptions
             case 'COMMENT':
             case 'CONNECTION':
             case 'PASSWORD':
-                $this->_parseString($stream, $option);
+                $this->parseString($stream, $option);
                 break;
 
             case 'INSERT_METHOD':
-                $this->_parseEnum($stream, $option, ['NO', 'FIRST', 'LAST']);
+                $this->parseEnum($stream, $option, ['NO', 'FIRST', 'LAST']);
                 throw new \RuntimeException("$option is not currently supported by this tool");
 
             case 'ROW_FORMAT':
-                $this->_parseEnum($stream, $option, ['DEFAULT', 'DYNAMIC', 'FIXED', 'COMPRESSED', 'REDUNDANT', 'COMPACT']);
+                $this->parseEnum($stream, $option, ['DEFAULT', 'DYNAMIC', 'FIXED', 'COMPRESSED', 'REDUNDANT', 'COMPACT']);
                 break;
 
             case 'PARTITION':
@@ -212,7 +212,7 @@ class TableOptions
      * @param TokenStream $stream
      * @param string $option
      */
-    private function _parseIdentifier(TokenStream $stream, $option)
+    private function parseIdentifier(TokenStream $stream, $option)
     {
         $stream->consume([[Token::SYMBOL, '=']]);
         $token = $stream->nextToken();
@@ -229,7 +229,7 @@ class TableOptions
      * @param TokenStream $stream
      * @param string $option
      */
-    private function _parseNumber(TokenStream $stream, $option)
+    private function parseNumber(TokenStream $stream, $option)
     {
         $stream->consume([[Token::SYMBOL, '=']]);
         $this->setOption($option, $stream->expectNumber());
@@ -240,7 +240,7 @@ class TableOptions
      * @param string $option
      * @param array $enums
      */
-    private function _parseEnum(TokenStream $stream, $option, array $enums)
+    private function parseEnum(TokenStream $stream, $option, array $enums)
     {
         $stream->consume([[Token::SYMBOL, '=']]);
         $token = $stream->nextToken();
@@ -258,7 +258,7 @@ class TableOptions
      * @param TokenStream $stream
      * @param string $option
      */
-    private function _parseString(TokenStream $stream, $option)
+    private function parseString(TokenStream $stream, $option)
     {
         $stream->consume([[Token::SYMBOL, '=']]);
         $this->setOption($option, $stream->expectString());
@@ -296,7 +296,7 @@ class TableOptions
             'COMMENT',
             'CONNECTION',
         ] as $option) {
-            if ($this->options[$option] !== $this->_defaultOptions[$option]) {
+            if ($this->options[$option] !== $this->defaultOptions[$option]) {
                 $value = $this->options[$option];
                 if (in_array($option, ['COMMENT', 'CONNECTION'])) {
                     $value = Token::escapeString($value);

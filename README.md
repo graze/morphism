@@ -38,6 +38,12 @@ Via Composer
 $ composer require graze/morphism
 ```
 
+With Docker
+
+```bash
+$ docker run --rm graze/morphism
+```
+
 ## Tools
 
 All commands support the `--help` parameter which give more information on usage.

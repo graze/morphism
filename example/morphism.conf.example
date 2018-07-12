@@ -9,8 +9,8 @@ databases:
         password: 'morphism'
         driver: 'pdo_mysql'
         # database on a remote host
-        host: 'DOCKER_HOST'
-        port: 33333
+        host: 'db'
+        port: 3306
         # local database
         #unix_socket: '/var/lib/mysql/foo.sock'
         # morphism specific options

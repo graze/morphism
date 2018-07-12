@@ -24,7 +24,7 @@ class CreateTable
     public $options = null;
 
     /** @var array */
-    private $_covers = [];
+    private $covers = [];
 
     /**
      * Constructor.
@@ -72,39 +72,39 @@ class CreateTable
         while (true) {
             $hasConstraintKeyword = $stream->consume('CONSTRAINT');
             if ($stream->consume('PRIMARY KEY')) {
-                $this->_parseIndex($stream, 'PRIMARY KEY');
+                $this->parseIndex($stream, 'PRIMARY KEY');
             } elseif ($stream->consume('KEY') ||
                 $stream->consume('INDEX')
             ) {
                 if ($hasConstraintKeyword) {
                     throw new RuntimeException("Bad CONSTRAINT");
                 }
-                $this->_parseIndex($stream, 'KEY');
+                $this->parseIndex($stream, 'KEY');
             } elseif ($stream->consume('FULLTEXT')) {
                 if ($hasConstraintKeyword) {
                     throw new RuntimeException("Bad CONSTRAINT");
                 }
                 $stream->consume('KEY') || $stream->consume('INDEX');
-                $this->_parseIndex($stream, 'FULLTEXT KEY');
+                $this->parseIndex($stream, 'FULLTEXT KEY');
             } elseif ($stream->consume('UNIQUE')) {
                 $stream->consume('KEY') || $stream->consume('INDEX');
-                $this->_parseIndex($stream, 'UNIQUE KEY');
+                $this->parseIndex($stream, 'UNIQUE KEY');
             } elseif ($stream->consume('FOREIGN KEY')) {
-                $this->_parseIndex($stream, 'FOREIGN KEY');
+                $this->parseIndex($stream, 'FOREIGN KEY');
             } elseif ($hasConstraintKeyword) {
                 $constraint = $stream->expectName();
                 if ($stream->consume('PRIMARY KEY')) {
-                    $this->_parseIndex($stream, 'PRIMARY KEY', $constraint);
+                    $this->parseIndex($stream, 'PRIMARY KEY', $constraint);
                 } elseif ($stream->consume('UNIQUE')) {
                     $stream->consume('KEY') || $stream->consume('INDEX');
-                    $this->_parseIndex($stream, 'UNIQUE KEY', $constraint);
+                    $this->parseIndex($stream, 'UNIQUE KEY', $constraint);
                 } elseif ($stream->consume('FOREIGN KEY')) {
-                    $this->_parseIndex($stream, 'FOREIGN KEY', $constraint);
+                    $this->parseIndex($stream, 'FOREIGN KEY', $constraint);
                 } else {
                     throw new RuntimeException("Bad CONSTRAINT");
                 }
             } else {
-                $this->_parseColumn($stream);
+                $this->parseColumn($stream);
             }
             $token = $stream->nextToken();
             if ($token->eq(Token::SYMBOL, ',')) {
@@ -116,11 +116,11 @@ class CreateTable
             }
         }
 
-        $this->_processTimestamps();
-        $this->_processIndexes();
-        $this->_processAutoIncrement();
-        $this->_parseTableOptions($stream);
-        $this->_processColumnCollations();
+        $this->processTimestamps();
+        $this->processIndexes();
+        $this->processAutoIncrement();
+        $this->parseTableOptions($stream);
+        $this->processColumnCollations();
     }
 
     /**
@@ -167,7 +167,7 @@ class CreateTable
     /**
      * @param TokenStream $stream
      */
-    private function _parseColumn(TokenStream $stream)
+    private function parseColumn(TokenStream $stream)
     {
         $column = new ColumnDefinition();
         $column->parse($stream);
@@ -186,7 +186,7 @@ class CreateTable
      * @param string $type
      * @param string|null $constraint
      */
-    private function _parseIndex(TokenStream $stream, $type, $constraint = null)
+    private function parseIndex(TokenStream $stream, $type, $constraint = null)
     {
         $index = new IndexDefinition();
         $index->parse($stream, $type, $constraint);
@@ -196,12 +196,12 @@ class CreateTable
     /**
      * @param TokenStream $stream
      */
-    private function _parseTableOptions(TokenStream $stream)
+    private function parseTableOptions(TokenStream $stream)
     {
         $this->options->parse($stream);
     }
 
-    private function _processTimestamps()
+    private function processTimestamps()
     {
         // To specify automatic properties, use the DEFAULT CURRENT_TIMESTAMP
         // and ON UPDATE CURRENT_TIMESTAMP clauses. The order of the clauses
@@ -252,7 +252,7 @@ class CreateTable
         }
     }
 
-    private function _processIndexes()
+    private function processIndexes()
     {
         // check indexes are sane wrt available columns
         foreach ($this->indexes as $index) {
@@ -269,7 +269,7 @@ class CreateTable
             if ($index->type !== 'FOREIGN KEY') {
                 foreach ($index->getCovers() as $cover) {
                     $lookup = implode('\0', $cover);
-                    $this->_covers[$lookup] = true;
+                    $this->covers[$lookup] = true;
                 }
             }
         }
@@ -282,7 +282,7 @@ class CreateTable
             if ($index->type === 'FOREIGN KEY') {
                 // TODO - doesn't correctly deal with indexes like foo(10)
                 $lookup = implode('\0', $index->getColumns());
-                if (!array_key_exists($lookup, $this->_covers)) {
+                if (!array_key_exists($lookup, $this->covers)) {
                     $newIndex = new IndexDefinition();
                     $newIndex->type = 'KEY';
                     $newIndex->columns = $index->columns;
@@ -365,7 +365,7 @@ class CreateTable
         }
     }
 
-    private function _processAutoIncrement()
+    private function processAutoIncrement()
     {
         $count = 0;
         foreach ($this->columns as $column) {
@@ -373,14 +373,14 @@ class CreateTable
                 if (++$count > 1) {
                     throw new RuntimeException("There can be only one AUTO_INCREMENT column");
                 }
-                if (! array_key_exists($column->name, $this->_covers)) {
+                if (! array_key_exists($column->name, $this->covers)) {
                     throw new RuntimeException("AUTO_INCREMENT column must be defined as a key");
                 }
             }
         }
     }
 
-    private function _processColumnCollations()
+    private function processColumnCollations()
     {
         foreach ($this->columns as $column) {
             $column->applyTableCollation($this->getCollation());
@@ -407,9 +407,9 @@ class CreateTable
         ];
 
         $alters = array_merge(
-            $this->_diffColumns($that),
-            $this->_diffIndexes($that),
-            $this->_diffOptions($that, [
+            $this->diffColumns($that),
+            $this->diffIndexes($that),
+            $this->diffOptions($that, [
                 'alterEngine' => $flags['alterEngine']
             ])
         );
@@ -425,7 +425,7 @@ class CreateTable
      * @param CreateTable $that
      * @return array
      */
-    private function _diffColumns(CreateTable $that)
+    private function diffColumns(CreateTable $that)
     {
         $alters = [];
         $permutation = [];
@@ -499,7 +499,7 @@ class CreateTable
      * @param CreateTable $that
      * @return array
      */
-    private function _diffIndexes(CreateTable $that)
+    private function diffIndexes(CreateTable $that)
     {
         $alters = [];
 
@@ -538,7 +538,7 @@ class CreateTable
      * @param array $flags
      * @return array
      */
-    private function _diffOptions(CreateTable $that, array $flags = [])
+    private function diffOptions(CreateTable $that, array $flags = [])
     {
         $flags += [
             'alterEngine' => true

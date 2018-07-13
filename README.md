@@ -38,17 +38,26 @@ Via Composer
 $ composer require graze/morphism
 ```
 
-With Docker
+## Running With Docker
 
 ```bash
 $ docker run --rm graze/morphism
 ```
 
-Examples:
+### Examples:
 
 ```bash
 $ docker run --rm -v $PWD/config:/app/config -v $PWD/schema:/app/schema:cached graze/morphsim diff config/morphism.yml
 $ docker run --rm -v $PWD/config:/app/config -v $PWD/schema:/app/schema:delegated graze/morphsim dump config/morphism.yml
+```
+
+### Attaching to an existing network when developing
+
+You can add morphism to your `docker-compose` file and can talk to your databases locally.
+Or if you have an existing docker network you can do:
+
+```bash
+$ docker run --rm -v $PWD/config:/app/config -v $PWD/schema:/app/schema:cached --network app_default graze/morphsim diff config/morphism.yml
 ```
 
 ## Tools

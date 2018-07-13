@@ -5,6 +5,8 @@ COPY . /app
 
 RUN composer install --no-ansi --no-dev --no-interaction --no-progress --no-scripts --optimize-autoloader --prefer-dist
 
+FROM graze/php-alpine:7.2 AS run
+
 LABEL org.label-schema.schema-version="1.0" \
     org.label-schema.vendor="graze" \
     org.label-schema.name="morphism" \
@@ -12,8 +14,6 @@ LABEL org.label-schema.schema-version="1.0" \
     org.label-schema.vcs-url="https://github.com/graze/morphism" \
     maintainer="developers@graze.com" \
     license="MIT"
-
-FROM graze/php-alpine:7.2 AS run
 
 WORKDIR /app
 COPY --from=build /app /app

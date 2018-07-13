@@ -13,7 +13,6 @@
 
     </testsuites>
 
-
     <filter>
         <whitelist>
             <directory suffix=".php">src/</directory>

@@ -44,6 +44,13 @@ With Docker
 $ docker run --rm graze/morphism
 ```
 
+Examples:
+
+```bash
+$ docker run --rm -v $PWD/config:/app/config -v $PWD/schema:/app/schema:cached graze/morphsim diff config/morphism.yml
+$ docker run --rm -v $PWD/config:/app/config -v $PWD/schema:/app/schema:delegated graze/morphsim dump config/morphism.yml
+```
+
 ## Tools
 
 All commands support the `--help` parameter which give more information on usage.

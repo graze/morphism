@@ -109,7 +109,7 @@ class CreateDatabase
      * the necessary DDL to create any contained tables. For that you will need
      * to iterate over the $tables property, calling getDDL() on each element.
      *
-     * @return string
+     * @return array
      */
     public function getDDL()
     {

@@ -138,4 +138,61 @@ class CreateDatabaseTest extends TestCase
         $database = new CreateDatabase(new CollationInfo());
         $database->addTable($createTable);
     }
+
+    /**
+     * @param CreateDatabase $database
+     * @param string $sql
+     * @dataProvider testGetDDLProvider
+     */
+    public function testGetDDL(CreateDatabase $database, $sql)
+    {
+        $ddl = $database->getDDL();
+
+        $this->assertInternalType('array', $ddl);
+        $this->assertEquals(1, count($ddl));
+        $this->assertEquals($sql, $ddl[0]);
+    }
+
+    /**
+     * @return array
+     */
+    public function testGetDDLProvider()
+    {
+        $testCases = [];
+
+        // Basic database creation with out any specific collation
+        $database = new CreateDatabase(new CollationInfo());
+        $database->name = 'alpha';
+        $testCases[] = [
+            $database,
+            'CREATE DATABASE IF NOT EXISTS `alpha`'
+        ];
+
+        // Explicit charset specified
+        $database = new CreateDatabase(new CollationInfo('utf8'));
+        $database->name = 'beta';
+        $testCases[] = [
+            $database,
+            'CREATE DATABASE IF NOT EXISTS `beta` DEFAULT CHARACTER SET utf8'
+        ];
+
+        // Explicit collation and charset specified
+        $database = new CreateDatabase(new CollationInfo('utf8', 'utf8_unicode_ci'));
+        $database->name = 'gamma';
+        $testCases[] = [
+            $database,
+            'CREATE DATABASE IF NOT EXISTS `gamma` DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci'
+        ];
+
+        return $testCases;
+    }
+
+    /**
+     * @expectedException \RuntimeException
+     */
+    function testBadGetDDL()
+    {
+        $database = new CreateDatabase(new CollationInfo());
+        $database->getDDL();
+    }
 }

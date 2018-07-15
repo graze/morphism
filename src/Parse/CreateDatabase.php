@@ -93,6 +93,7 @@ class CreateDatabase
 
     /**
      * @param CreateTable $table
+     * @throws RuntimeException
      */
     public function addTable(CreateTable $table)
     {
@@ -111,9 +112,14 @@ class CreateDatabase
      * to iterate over the $tables property, calling getDDL() on each element.
      *
      * @return array
+     * @throws RuntimeException
      */
     public function getDDL()
     {
+        if(!$this->name) {
+            throw new RuntimeException('No database name spacified');
+        }
+
         $text = "CREATE DATABASE IF NOT EXISTS " . Token::escapeIdentifier($this->name);
 
         $collation = $this->getCollation();

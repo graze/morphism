@@ -118,4 +118,24 @@ class CreateDatabaseTest extends TestCase
             [ 'create database foo default charset = bar' ],
         ];
     }
+
+    public function testAddTable()
+    {
+        $createTable = new CreateTable(new CollationInfo());
+        $createTable->name = "foo";
+        $database = new CreateDatabase(new CollationInfo());
+        $database->addTable($createTable);
+
+        $this->assertArrayHasKey($createTable->name, $database->tables);
+    }
+
+    /**
+     * @expectedException \RuntimeException
+     */
+    public function testBadAddTable()
+    {
+        $createTable = new CreateTable(new CollationInfo());
+        $database = new CreateDatabase(new CollationInfo());
+        $database->addTable($createTable);
+    }
 }

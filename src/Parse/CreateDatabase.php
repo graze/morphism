@@ -92,9 +92,6 @@ class CreateDatabase
     }
 
     /**
-     * Asserts that the table described by $table belongs to this
-     * database.
-     *
      * @param CreateTable $table
      */
     public function addTable(CreateTable $table)

@@ -116,7 +116,7 @@ class CreateDatabase
      */
     public function getDDL()
     {
-        if(!$this->name) {
+        if (!$this->name) {
             throw new RuntimeException('No database name spacified');
         }
 

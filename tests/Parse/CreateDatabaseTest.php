@@ -8,6 +8,7 @@ class CreateDatabaseTest extends TestCase
 {
     /**
      * @param string $text
+     * @param string $expectedName
      * @dataProvider parseNameProvider
      */
     public function testParseName($text, $expectedName)
@@ -102,6 +103,9 @@ class CreateDatabaseTest extends TestCase
         $database->parse($stream);
     }
 
+    /**
+     * @return array
+     */
     public function badParseProvider()
     {
         return [
@@ -190,7 +194,7 @@ class CreateDatabaseTest extends TestCase
     /**
      * @expectedException \RuntimeException
      */
-    function testBadGetDDL()
+    public function testBadGetDDL()
     {
         $database = new CreateDatabase(new CollationInfo());
         $database->getDDL();

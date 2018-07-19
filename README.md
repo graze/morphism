@@ -7,6 +7,7 @@
 [![Quality Score](https://img.shields.io/scrutinizer/g/graze/morphism.svg?style=flat-square)](https://scrutinizer-ci.com/g/graze/morphism)
 [![Total Downloads](https://img.shields.io/packagist/dt/graze/morphism.svg?style=flat-square)](https://packagist.org/packages/graze/morphism)
 [![PHP Version](https://img.shields.io/packagist/php-v/graze/morphism.svg?style=flat-square)](https://php.net)
+[![MicroBadger Size](https://img.shields.io/microbadger/image-size/graze/morphism.svg?style=flat-square)](https://microbadger.com/images/graze/morphism)
 
 <img src="http://i.imgur.com/QSX6EUj.gif" alt="Morph and Chas" align="right" />
 

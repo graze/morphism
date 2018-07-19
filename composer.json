@@ -31,9 +31,9 @@
     "require": {
         "php": "^5.5 | ^7.0",
 
-        "doctrine/dbal": "~2.5",
-        "symfony/console": "^2.8",
-        "symfony/yaml": "~2.6"
+        "doctrine/dbal": "^2.5",
+        "symfony/console": "^2.8 | ^3 | ^4",
+        "symfony/yaml": "^2.6 | ^3 | ^4"
     },
     "require-dev": {
         "graze/standards": "^2.0",

@@ -60,7 +60,7 @@ class Extract extends Command
         $this->addArgument(
             self::ARGUMENT_MYSQL_DUMP_FILE,
             InputArgument::OPTIONAL,
-            null,
+            '',
             'php://stdin'
         );
 
@@ -68,7 +68,7 @@ class Extract extends Command
             self::OPTION_SCHEMA_PATH,
             null,
             InputOption::VALUE_REQUIRED,
-            null,
+            '',
             './schema'
         );
 

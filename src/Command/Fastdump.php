@@ -71,7 +71,7 @@ class Fastdump extends Command
         $this->addArgument(
             self::ARGUMENT_CONNECTIONS,
             InputArgument::OPTIONAL | InputArgument::IS_ARRAY,
-            null,
+            '',
             []
         );
 

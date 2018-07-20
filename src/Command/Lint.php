@@ -53,7 +53,7 @@ class Lint extends Command
         $this->addArgument(
             self::ARGUMENT_PATH,
             InputArgument::OPTIONAL | InputArgument::IS_ARRAY,
-            null,
+            '',
             ['php://stdin']
         );
 

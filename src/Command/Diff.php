@@ -107,7 +107,7 @@ class Diff extends Command
         $this->addArgument(
             self::ARGUMENT_CONNECTIONS,
             InputArgument::OPTIONAL | InputArgument::IS_ARRAY,
-            null,
+            '',
             []
         );
 
@@ -141,7 +141,7 @@ class Diff extends Command
             self::OPTION_APPLY_CHANGES,
             null,
             InputOption::VALUE_REQUIRED,
-            null,
+            '',
             "no"
         );
 

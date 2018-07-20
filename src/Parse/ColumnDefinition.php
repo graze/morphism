@@ -49,12 +49,12 @@ class ColumnDefinition
     public $indexes = [];
 
     /** @var bool */
-    private $_primaryKey = false;
+    private $primaryKey = false;
     /** @var bool */
-    private $_uniqueKey = false;
+    private $uniqueKey = false;
 
     /** @var array */
-    private static $_typeInfoMap = [
+    private static $typeInfoMap = [
         //                             format   default  allow   allow   allow   uninitialised
         // datatype       kind         Spec     Lengths  Autoinc Binary  Charset Value
         'bit'        => [ 'bit',       [0,1  ], [1],     false,  false,  false,  0,    ],
@@ -87,10 +87,10 @@ class ColumnDefinition
         'set'        => [ 'set',       [0    ], null,    false,  false,  true,   '',   ],
     ];
     /** @var array */
-    private static $_typeInfoCache = [];
+    private static $typeInfoCache = [];
 
     /** @var array */
-    private static $_aliasMap = [
+    private static $aliasMap = [
         'bool'      => 'tinyint',
         'boolean'   => 'tinyint',
         'int1'      => 'tinyint',
@@ -125,21 +125,21 @@ class ColumnDefinition
     public function parse(TokenStream $stream)
     {
         $this->name = $stream->expectName();
-        $this->_parseColumnDatatype($stream);
-        $this->_parseColumnOptions($stream);
+        $this->parseColumnDatatype($stream);
+        $this->parseColumnOptions($stream);
 
-        if ($this->_primaryKey) {
-            $this->_addIndex('PRIMARY KEY');
+        if ($this->primaryKey) {
+            $this->addIndex('PRIMARY KEY');
         }
-        if ($this->_uniqueKey) {
-            $this->_addIndex('UNIQUE KEY');
+        if ($this->uniqueKey) {
+            $this->addIndex('UNIQUE KEY');
         }
     }
 
     /**
      * @param string $type
      */
-    private function _addIndex($type)
+    private function addIndex($type)
     {
         // TODO - crying out for an IndexPart class
         $index = new IndexDefinition();
@@ -155,17 +155,17 @@ class ColumnDefinition
     /**
      * @return object|null
      */
-    private function _getTypeInfo()
+    private function getTypeInfo()
     {
-        if (array_key_exists($this->type, self::$_typeInfoCache)) {
-            return self::$_typeInfoCache[$this->type];
+        if (array_key_exists($this->type, self::$typeInfoCache)) {
+            return self::$typeInfoCache[$this->type];
         }
 
-        if (!array_key_exists($this->type, self::$_typeInfoMap)) {
+        if (!array_key_exists($this->type, self::$typeInfoMap)) {
             return null;
         }
 
-        $data = self::$_typeInfoMap[$this->type];
+        $data = self::$typeInfoMap[$this->type];
 
         $typeInfo = (object) [
             'kind'               => $data[0],
@@ -178,7 +178,7 @@ class ColumnDefinition
             'uninitialisedValue' => $data[6],
         ];
         $typeInfo->allowSign = $typeInfo->allowZerofill = in_array($typeInfo->kind, ['int', 'decimal']);
-        self::$_typeInfoCache[$this->type] = $typeInfo;
+        self::$typeInfoCache[$this->type] = $typeInfo;
 
         return $typeInfo;
     }
@@ -186,7 +186,7 @@ class ColumnDefinition
     /**
      * @param TokenStream $stream
      */
-    private function _parseColumnDatatype(TokenStream $stream)
+    private function parseColumnDatatype(TokenStream $stream)
     {
         $token = $stream->nextToken();
         if ($token->type !== Token::IDENTIFIER) {
@@ -195,8 +195,8 @@ class ColumnDefinition
 
         // map aliases to concrete type
         $sqlType = strtolower($token->text);
-        if (array_key_exists($sqlType, self::$_aliasMap)) {
-            $type = self::$_aliasMap[$sqlType];
+        if (array_key_exists($sqlType, self::$aliasMap)) {
+            $type = self::$aliasMap[$sqlType];
         } else {
             switch ($sqlType) {
                 case 'serial':
@@ -206,7 +206,7 @@ class ColumnDefinition
                     $this->unsigned = true;
                     $this->nullable = false;
                     $this->autoIncrement = true;
-                    $this->_uniqueKey = true;
+                    $this->uniqueKey = true;
                     return;
 
                 case 'character':
@@ -243,7 +243,7 @@ class ColumnDefinition
 
         $this->type = $type;
 
-        $typeInfo = $this->_getTypeInfo();
+        $typeInfo = $this->getTypeInfo();
         if (is_null($typeInfo)) {
             throw new \RuntimeException("unknown datatype '$type'");
         }
@@ -397,7 +397,7 @@ class ColumnDefinition
     /**
      * @param TokenStream $stream
      */
-    private function _parseColumnOptions(TokenStream $stream)
+    private function parseColumnOptions(TokenStream $stream)
     {
         while (true) {
             $mark = $stream->getMark();
@@ -434,7 +434,7 @@ class ColumnDefinition
                 }
 
                 try {
-                    $this->default = $this->_defaultValue($token2);
+                    $this->default = $this->defaultValue($token2);
                 } catch (Exception $e) {
                     throw new \RuntimeException("invalid DEFAULT for '" . $this->name . "'");
                 }
@@ -461,7 +461,7 @@ class ColumnDefinition
                 }
             } elseif ($token1->eq(Token::IDENTIFIER, 'AUTO_INCREMENT')
             ) {
-                if (!$this->_getTypeInfo()->allowAutoIncrement) {
+                if (!$this->getTypeInfo()->allowAutoIncrement) {
                     throw new \RuntimeException("AUTO_INCREMENT not allowed for this datatype");
                 }
                 $this->autoIncrement = true;
@@ -469,11 +469,11 @@ class ColumnDefinition
             } elseif ($token1->eq(Token::IDENTIFIER, 'UNIQUE')
             ) {
                 $stream->consume('KEY');
-                $this->_uniqueKey = true;
+                $this->uniqueKey = true;
             } elseif ($token1->eq(Token::IDENTIFIER, 'PRIMARY') && $stream->consume('KEY') ||
                 $token1->eq(Token::IDENTIFIER, 'KEY')
             ) {
-                $this->_primaryKey = true;
+                $this->primaryKey = true;
                 $this->nullable = false;
             } elseif ($token1->eq(Token::IDENTIFIER, 'COMMENT')
             ) {
@@ -481,10 +481,10 @@ class ColumnDefinition
             } elseif ($token1->eq(Token::IDENTIFIER, 'SERIAL') &&
                 $stream->consume('DEFAULT VALUE')
             ) {
-                if (!$this->_getTypeInfo()->allowAutoIncrement) {
+                if (!$this->getTypeInfo()->allowAutoIncrement) {
                     throw new \RuntimeException("SERIAL DEFAULT VALUE is not allowed for this datatype");
                 }
-                $this->_uniqueKey = true;
+                $this->uniqueKey = true;
                 $this->autoIncrement = true;
                 $this->nullable = false;
                 $this->default = null;
@@ -506,7 +506,7 @@ class ColumnDefinition
      */
     public function getUninitialisedValue()
     {
-        $typeInfo = $this->_getTypeInfo();
+        $typeInfo = $this->getTypeInfo();
         switch ($typeInfo->kind) {
             case 'enum':
                 return $this->elements[0];
@@ -538,7 +538,7 @@ class ColumnDefinition
      * @return string|null
      * @throws \Exception
      */
-    private function _defaultValue(Token $token)
+    private function defaultValue(Token $token)
     {
         if ($token->eq(Token::IDENTIFIER, 'NULL')) {
             if (!$this->nullable) {
@@ -558,7 +558,7 @@ class ColumnDefinition
             throw new \Exception("Invalid token type for default value: $token->type");
         }
 
-        $typeInfo = $this->_getTypeInfo();
+        $typeInfo = $this->getTypeInfo();
 
         switch ($typeInfo->kind) {
             case 'bit':
@@ -717,7 +717,7 @@ class ColumnDefinition
     public function toString(CollationInfo $tableCollation)
     {
         $text = Token::escapeIdentifier($this->name) . " " . $this->type;
-        $typeInfo = $this->_getTypeInfo();
+        $typeInfo = $this->getTypeInfo();
 
         if ($this->length) {
             $text .= "(" . $this->length;

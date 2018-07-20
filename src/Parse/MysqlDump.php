@@ -17,18 +17,18 @@ class MysqlDump
     /** @var string */
     private $database = null;
     /** @var string */
-    private $_defaultDatabaseName = '';
+    private $defaultDatabaseName = '';
     /** @var string */
-    private $_defaultEngine = 'InnoDB';
+    private $defaultEngine = 'InnoDB';
     /** @var CollationInfo|null */
-    private $_defaultCollation = null;
+    private $defaultCollation = null;
 
     /**
      * Constructor
      */
     public function __construct()
     {
-        $this->_defaultCollation = new CollationInfo();
+        $this->defaultCollation = new CollationInfo();
     }
 
     /**
@@ -87,7 +87,7 @@ class MysqlDump
      */
     public function setDefaultDatabase($databaseName)
     {
-        $this->_defaultDatabaseName = $databaseName;
+        $this->defaultDatabaseName = $databaseName;
     }
 
     /**
@@ -98,7 +98,7 @@ class MysqlDump
      */
     public function setDefaultEngine($engine)
     {
-        $this->_defaultEngine = $engine;
+        $this->defaultEngine = $engine;
     }
 
     /**
@@ -109,7 +109,7 @@ class MysqlDump
      */
     public function setDefaultCollation(CollationInfo $collation)
     {
-        $this->_defaultCollation = clone $collation;
+        $this->defaultCollation = clone $collation;
     }
 
     /**
@@ -134,20 +134,20 @@ class MysqlDump
 
         while (true) {
             if ($stream->peek('CREATE DATABASE')) {
-                $this->database = new CreateDatabase($this->_defaultCollation);
+                $this->database = new CreateDatabase($this->defaultCollation);
                 $this->database->parse($stream);
                 $stream->expect(Token::SYMBOL, ';');
 
                 $this->databases[$this->database->name] = $this->database;
             } elseif ($stream->peek('CREATE TABLE')) {
                 if (is_null($this->database)) {
-                    $name = $this->_defaultDatabaseName;
-                    $this->database = new CreateDatabase($this->_defaultCollation);
+                    $name = $this->defaultDatabaseName;
+                    $this->database = new CreateDatabase($this->defaultCollation);
                     $this->database->name = $name;
                     $this->databases[$name] = $this->database;
                 }
                 $table = new CreateTable($this->database->getCollation());
-                $table->setDefaultEngine($this->_defaultEngine);
+                $table->setDefaultEngine($this->defaultEngine);
                 $table->parse($stream);
                 $stream->expect(Token::SYMBOL, ';');
 
@@ -158,7 +158,7 @@ class MysqlDump
                 ) {
                     $this->database->addTable($table);
                 }
-            } elseif (!$this->_skipQuery($stream)) {
+            } elseif (!$this->skipQuery($stream)) {
                 break;
             }
         }
@@ -168,7 +168,7 @@ class MysqlDump
      * @param TokenStream $stream
      * @return bool
      */
-    private function _skipQuery(TokenStream $stream)
+    private function skipQuery(TokenStream $stream)
     {
         while (true) {
             $token = $stream->nextToken();
@@ -279,7 +279,7 @@ class MysqlDump
             ]);
 
             if ($databaseDiff !== '') {
-                if ($databaseName !== $this->_defaultDatabaseName) {
+                if ($databaseName !== $this->defaultDatabaseName) {
                     $diff[] = "USE " . Token::escapeIdentifier($databaseName);
                 }
                 $diff = array_merge($diff, $databaseDiff);

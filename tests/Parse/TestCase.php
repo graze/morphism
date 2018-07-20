@@ -4,18 +4,22 @@ namespace Graze\Morphism\Test\Parse;
 
 use \Graze\Morphism\Parse\Token;
 use \Graze\Morphism\Parse\TokenStream;
+use PHPUnit\Framework\TestCase as PHPUnitTestCase;
 
-class TestCase extends \PHPUnit_Framework_TestCase
+class TestCase extends PHPUnitTestCase
 {
+    /** @var bool */
+    protected $oldQuoteNames;
+
     public function setUp()
     {
-        $this->_oldQuoteNames = Token::getQuoteNames();
+        $this->oldQuoteNames = Token::getQuoteNames();
         Token::setQuoteNames(true);
     }
 
     public function tearDown()
     {
-        Token::setQuoteNames($this->_oldQuoteNames);
+        Token::setQuoteNames($this->oldQuoteNames);
     }
 
     /**

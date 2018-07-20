@@ -33,7 +33,7 @@ class Token
     public $text;
 
     /** @var bool */
-    static private $_quoteNames = false;
+    static private $quoteNames = false;
 
     /**
      * Constructor
@@ -58,7 +58,7 @@ class Token
      */
     public static function setQuoteNames($quoteNames)
     {
-        self::$_quoteNames = !!$quoteNames;
+        self::$quoteNames = !!$quoteNames;
     }
 
     /**
@@ -70,7 +70,7 @@ class Token
      */
     public static function getQuoteNames()
     {
-        return self::$_quoteNames;
+        return self::$quoteNames;
     }
 
     /**
@@ -203,7 +203,7 @@ class Token
      */
     public static function escapeIdentifier($string)
     {
-        if (!self::$_quoteNames) {
+        if (!self::$quoteNames) {
             return $string;
         }
         $string = strtr($string, [ "`" => "``" ]);

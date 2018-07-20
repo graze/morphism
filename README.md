@@ -6,6 +6,8 @@
 [![Coverage Status](https://img.shields.io/scrutinizer/coverage/g/graze/morphism.svg?style=flat-square)](https://scrutinizer-ci.com/g/graze/morphism/code-structure)
 [![Quality Score](https://img.shields.io/scrutinizer/g/graze/morphism.svg?style=flat-square)](https://scrutinizer-ci.com/g/graze/morphism)
 [![Total Downloads](https://img.shields.io/packagist/dt/graze/morphism.svg?style=flat-square)](https://packagist.org/packages/graze/morphism)
+[![PHP Version](https://img.shields.io/packagist/php-v/graze/morphism.svg?style=flat-square)](https://php.net)
+[![MicroBadger Size](https://img.shields.io/microbadger/image-size/graze/morphism.svg?style=flat-square)](https://microbadger.com/images/graze/morphism)
 
 <img src="http://i.imgur.com/QSX6EUj.gif" alt="Morph and Chas" align="right" />
 
@@ -36,6 +38,28 @@ Via Composer
 
 ``` bash
 $ composer require graze/morphism
+```
+
+## Running With Docker
+
+```bash
+$ docker run --rm graze/morphism
+```
+
+### Examples:
+
+```bash
+$ docker run --rm -v $PWD/config:/app/config -v $PWD/schema:/app/schema:cached graze/morphsim diff config/morphism.yml
+$ docker run --rm -v $PWD/config:/app/config -v $PWD/schema:/app/schema:delegated graze/morphsim dump config/morphism.yml
+```
+
+### Attaching to an existing network when developing
+
+You can add morphism to your `docker-compose` file and can talk to your databases locally.
+Or if you have an existing docker network you can do:
+
+```bash
+$ docker run --rm -v $PWD/config:/app/config -v $PWD/schema:/app/schema:cached --network app_default graze/morphsim diff config/morphism.yml
 ```
 
 ## Tools

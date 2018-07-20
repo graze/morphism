@@ -114,7 +114,7 @@ class IndexDefinitionTest extends TestCase
     {
         $stream = $this->makeStream($text);
 
-        $this->setExpectedException($exception);
+        $this->expectException($exception);
 
         $index = new IndexDefinition();
         $index->parse($stream, $type);

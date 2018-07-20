@@ -82,7 +82,7 @@ class TokenStream
             $token = new Token(Token::EOF);
             $this->offset = $this->len;
         } else {
-            list($token, $offset) = $this->_nextTokenRaw($this->text, $this->offset);
+            list($token, $offset) = $this->getNextTokenRaw($this->text, $this->offset);
             $this->offset = $offset;
         }
 
@@ -100,7 +100,7 @@ class TokenStream
      * @param int $offset
      * @return array|null
      */
-    private function _nextTokenRaw($text, $offset)
+    private function getNextTokenRaw($text, $offset)
     {
         // currently unsupported:
         //
@@ -121,37 +121,37 @@ class TokenStream
 
             case '#':
                 return
-                    $this->_getComment($text, $offset);
+                    $this->getComment($text, $offset);
 
             case '.':
             case '+':
                 return
-                    $this->_getNumber($text, $offset) ?:
-                    $this->_getSymbol($text, $offset);
+                    $this->getNumber($text, $offset) ?:
+                    $this->getSymbol($text, $offset);
 
             case '-':
                 return
-                    $this->_getComment($text, $offset) ?:
-                    $this->_getNumber($text, $offset) ?:
-                    $this->_getSymbol($text, $offset);
+                    $this->getComment($text, $offset) ?:
+                    $this->getNumber($text, $offset) ?:
+                    $this->getSymbol($text, $offset);
 
             case '*':
                 return
-                    $this->_getConditionEnd($text, $offset) ?:
-                    $this->_getSymbol($text, $offset);
+                    $this->getConditionEnd($text, $offset) ?:
+                    $this->getSymbol($text, $offset);
 
             case '/':
                 return
-                    $this->_getConditionalStart($text, $offset) ?:
-                    $this->_getMultilineComment($text, $offset) ?:
-                    $this->_getSymbol($text, $offset);
+                    $this->getConditionalStart($text, $offset) ?:
+                    $this->getMultilineComment($text, $offset) ?:
+                    $this->getSymbol($text, $offset);
 
             case '0':
                 // Handle hex if needed
                 if (isset($text[$offset+1]) && $text[$offset+1] === 'x') {
                     return
-                        $this->_getHex($text, $offset) ?:
-                        $this->_getIdentifier($text, $offset);
+                        $this->getHex($text, $offset) ?:
+                        $this->getIdentifier($text, $offset);
                 }
                 // Handle non-hex leading zero.
             case '1':
@@ -164,29 +164,29 @@ class TokenStream
             case '8':
             case '9':
                 return
-                    $this->_getNumber($text, $offset) ?:
-                    $this->_getIdentifier($text, $offset);
+                    $this->getNumber($text, $offset) ?:
+                    $this->getIdentifier($text, $offset);
 
             case '"':
             case "'":
                 return
-                    $this->_getString($text, $offset);
+                    $this->getString($text, $offset);
 
             case '`':
                 return
-                    $this->_getQuotedIdentifier($text, $offset);
+                    $this->getQuotedIdentifier($text, $offset);
 
             case 'B':
             case 'b':
                 return
-                    $this->_getBin($text, $offset) ?:
-                    $this->_getIdentifier($text, $offset);
+                    $this->getBin($text, $offset) ?:
+                    $this->getIdentifier($text, $offset);
 
             case 'X':
             case 'x':
                 return
-                    $this->_getHex($text, $offset) ?:
-                    $this->_getIdentifier($text, $offset);
+                    $this->getHex($text, $offset) ?:
+                    $this->getIdentifier($text, $offset);
 
             case '$':
             case '_':
@@ -239,7 +239,7 @@ class TokenStream
             case 'Z':
             case 'z':
                 return
-                    $this->_getIdentifier($text, $offset);
+                    $this->getIdentifier($text, $offset);
 
             case '!':
             case '%':
@@ -257,7 +257,7 @@ class TokenStream
             case '|':
             case '~':
                 return
-                    $this->_getSpecialSymbol($text, $offset);
+                    $this->getSpecialSymbol($text, $offset);
 
             case '?':
             case '[':
@@ -276,7 +276,7 @@ class TokenStream
      * @param int $offset
      * @return array
      */
-    private function _getQuotedIdentifier($text, $offset)
+    private function getQuotedIdentifier($text, $offset)
     {
         if (preg_match('/`((?:[^`]|``)*)`()/ms', $text, $pregMatch, PREG_OFFSET_CAPTURE, $offset)) {
             $token = Token::fromIdentifier($pregMatch[1][0]);
@@ -293,7 +293,7 @@ class TokenStream
      * @param int $offset
      * @return array
      */
-    private function _getSpecialSymbol($text, $offset)
+    private function getSpecialSymbol($text, $offset)
     {
         // TODO - should probably be a new token type 'variable' for @ and @@
         preg_match('/\A(?:<=|>=|<>|!=|:=|@@|&&|\|\||[=~!@%^&();:,<>|])()/xms', substr($text, $offset, 2), $pregMatch, PREG_OFFSET_CAPTURE);
@@ -314,7 +314,7 @@ class TokenStream
      * @param int $offset
      * @return array|null
      */
-    private function _getConditionalStart($text, $offset)
+    private function getConditionalStart($text, $offset)
     {
         // Example conditional comments which can't be displayed in the docblock because they clash:
         // - /*! MySQL-specific code */ (execute the given code)
@@ -341,7 +341,7 @@ class TokenStream
      * @param int $offset
      * @return array|null
      */
-    private function _getConditionEnd($text, $offset)
+    private function getConditionEnd($text, $offset)
     {
         if (substr($text, $offset, 2) === '*/') {
             if (!$this->inConditional) {
@@ -361,7 +361,7 @@ class TokenStream
      * @param int $offset
      * @return array|null
      */
-    private function _getMultilineComment($text, $offset)
+    private function getMultilineComment($text, $offset)
     {
         if (substr($text, $offset, 2) === '/*') {
             $pos = strpos($text, '*/', $offset);
@@ -381,7 +381,7 @@ class TokenStream
      * @param int $offset
      * @return array|null
      */
-    private function _getComment($text, $offset)
+    private function getComment($text, $offset)
     {
         if (preg_match('/\A(?:#|--\s)/ms', substr($text, $offset, 3))) {
             $pos = strpos($text, "\n", $offset);
@@ -404,7 +404,7 @@ class TokenStream
      * @param int $offset
      * @return array
      */
-    private function _getString($text, $offset)
+    private function getString($text, $offset)
     {
         $quote = $text[$offset];
         if (preg_match(
@@ -439,7 +439,7 @@ class TokenStream
      * @param int $offset
      * @return array|null
      */
-    private function _getNumber($text, $offset)
+    private function getNumber($text, $offset)
     {
         if (preg_match('/\A[-+]?[.]?[0-9]/ms', substr($text, $offset, 3)) &&
             preg_match('/[-+]?(?:[0-9]+(?:[.][0-9]*)?|[.][0-9]+)(?:[eE][-+]?[0-9]+)?/ms', $text, $pregMatch, 0, $offset)
@@ -478,7 +478,7 @@ class TokenStream
      * @param int $offset
      * @return array|null
      */
-    private function _getHex($text, $offset)
+    private function getHex($text, $offset)
     {
         $pregMatch = [];
 
@@ -511,7 +511,7 @@ class TokenStream
      * @param int $offset
      * @return array|null
      */
-    private function _getBin($text, $offset)
+    private function getBin($text, $offset)
     {
         if (preg_match('/\Ab\'[01\']/ms', substr($text, $offset, 3)) &&
             preg_match('/b\'([01]*)\'/ms', $text, $pregMatch, 0, $offset)
@@ -529,7 +529,7 @@ class TokenStream
      * @param int $offset
      * @return array
      */
-    private function _getIdentifier($text, $offset)
+    private function getIdentifier($text, $offset)
     {
         preg_match('/[a-zA-Z0-9$_]+()/ms', $text, $pregMatch, PREG_OFFSET_CAPTURE, $offset);
         return [
@@ -543,7 +543,7 @@ class TokenStream
      * @param int $offset
      * @return array
      */
-    private function _getSymbol($text, $offset)
+    private function getSymbol($text, $offset)
     {
         if (preg_match('/\A(?:[-+*.\/])/xms', substr($text, $offset, 2), $pregMatch)) {
             return [
@@ -578,7 +578,7 @@ class TokenStream
     }
 
     /**
-     * @param object $mark
+     * @param mixed $mark
      */
     public function rewind($mark)
     {

@@ -1,50 +1,19 @@
 version: '3'
 
 services:
-    composer:
-        image: graze/composer
-        volumes:
-            - .:/usr/src/app
-            - ~/.composer:/home/composer/.composer
+  db:
+    image: mysql:5.6
+    volumes:
+      - ./example/schema:/docker-entrypoint-initdb.d
+    environment:
+      - MYSQL_DATABASE=morphism-test
+      - MYSQL_USER=morphism
+      - MYSQL_PASSWORD=morphism
+      - MYSQL_ROOT_PASSWORD=morphism
 
-    php:
-        image: php:alpine
-        volumes:
-            - .:/usr/src/app
-        working_dir: /usr/src/app
-
-    php-71:
-        image: php:7.1-alpine
-        volumes:
-            - .:/usr/src/app
-        working_dir: /usr/src/app
-
-    php-70:
-        image: php:7.0-alpine
-        volumes:
-            - .:/usr/src/app
-        working_dir: /usr/src/app
-
-    php-56:
-        image: php:5.6-alpine
-        volumes:
-            - .:/usr/src/app
-        working_dir: /usr/src/app
-
-    php-55:
-        image: php:5.5-alpine
-        volumes:
-            - .:/usr/src/app
-        working_dir: /usr/src/app
-
-    db:
-        image: mysql:5.6
-        volumes:
-            - ./example/schema:/docker-entrypoint-initdb.d
-        environment:
-            - MYSQL_DATABASE=morphism-test
-            - MYSQL_USER=morphism
-            - MYSQL_PASSWORD=morphism
-            - MYSQL_ROOT_PASSWORD=morphism
-        ports:
-            - 33333:3306
+  morphism:
+    image: graze/php-alpine:7.2
+    volumes:
+      - .:/src
+    command:
+      - /src/bin/morphism

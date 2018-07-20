@@ -18,9 +18,9 @@ class CreateDatabase
     public $tables = [];
 
     /** @var CollationInfo|null */
-    private $_collation = null;
+    private $collation = null;
     /** @var CollationInfo|null */
-    private $_defaultCollation = null;
+    private $defaultCollation = null;
 
     /**
      * Constructor.
@@ -29,8 +29,8 @@ class CreateDatabase
      */
     public function __construct(CollationInfo $defaultCollation)
     {
-        $this->_collation = new CollationInfo();
-        $this->_defaultCollation = clone $defaultCollation;
+        $this->collation = new CollationInfo();
+        $this->defaultCollation = clone $defaultCollation;
     }
 
     /**
@@ -59,17 +59,17 @@ class CreateDatabase
                 $stream->consume([[Token::SYMBOL, '=']]);
                 $charset = $stream->expectName();
                 if (strtoupper($charset) === 'DEFAULT') {
-                    $this->_collation = new CollationInfo();
+                    $this->collation = new CollationInfo();
                 } else {
-                    $this->_collation->setCharset($charset);
+                    $this->collation->setCharset($charset);
                 }
             } elseif ($stream->consume('COLLATE')) {
                 $stream->consume([[Token::SYMBOL, '=']]);
                 $collation = $stream->expectName();
                 if (strtoupper($collation) === 'DEFAULT') {
-                    $this->_collation = new CollationInfo();
+                    $this->collation = new CollationInfo();
                 } else {
-                    $this->_collation->setCollation($collation);
+                    $this->collation->setCollation($collation);
                 }
             } else {
                 break;
@@ -84,9 +84,9 @@ class CreateDatabase
      */
     public function getCollation()
     {
-        return $this->_collation->isSpecified()
-            ? $this->_collation
-            : $this->_defaultCollation;
+        return $this->collation->isSpecified()
+            ? $this->collation
+            : $this->defaultCollation;
     }
 
     /**

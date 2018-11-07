@@ -75,6 +75,15 @@ test-coverage-html: ## Run all tests and output coverage to html.
 test-coverage-clover: ## Run all tests and output clover coverage to file.
 	${DOCKER_RUN} phpdbg7 -qrr vendor/bin/phpunit --coverage-clover=./tests/report/coverage.clover
 
+.PHONY: example
+example: ## Set up example project and schema
+	[ ! -f morphism.conf ] && cp example/morphism.conf.example morphism.conf || true
+	rm -rf schema schema2
+	mkdir -p schema/morphism-test schema2/morphism-test
+	cp example/schema/product.sql example/schema/ingredient.sql schema/morphism-test
+	cp example/schema/product_ingredient_map.sql schema2/morphism-test
+	docker-compose run --rm morphism diff --apply-changes yes morphism.conf
+
 # Database
 
 start-db: ## Start up the test database

@@ -61,16 +61,16 @@ class Config
                 $matchTables[$key] = $regex;
             }
 
-            $schemaDefinitionPath = $morphism['schemaDefinitionPath'];
-            if (!$schemaDefinitionPath) {
-                $schemaDefinitionPath = 'schema/'.$connectionName;
+            $schemaDefinitionPaths = $morphism['schemaDefinitionPath'];
+            if (!$schemaDefinitionPaths) {
+                $schemaDefinitionPaths = [ 'schema/'.$connectionName ];
             }
 
             $entries[$connectionName] = [
                 'connection' => $entry,
                 'morphism'   => [
                     'matchTables' => $matchTables,
-                    'schemaDefinitionPath' => $schemaDefinitionPath,
+                    'schemaDefinitionPath' => $schemaDefinitionPaths,
                 ],
             ];
         }

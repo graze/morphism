@@ -44,7 +44,7 @@ test: ## Run the unit and integration testsuites.
 test: lint test-unit
 
 lint: ## Run phpcs against the code.
-	${DOCKER_RUN} vendor/bin/phpcs -p --warning-severity=0 src/ tests/
+	${DOCKER_RUN} vendor/bin/phpcs -p --colors --extensions=php --warning-severity=0 --ignore=*/vendor/* src/ tests/
 
 lint-fix: ## Run phpcsf and fix possible lint errors.
 	${DOCKER_RUN} vendor/bin/phpcbf -p src/ tests/

@@ -152,6 +152,8 @@ class Fastdump extends Command
                 $database = reset($dump->databases);
                 foreach ($database->tables as $table) {
                     // Find any existing schema file. If it doesn't exist, use the first schema path.
+                    $path = null;
+
                     foreach ($schemaDefinitionPaths as $schemaPath) {
                         $possiblePath = "$schemaPath/{$table->name}.sql";
                         if (file_exists($possiblePath)) {
@@ -160,7 +162,7 @@ class Fastdump extends Command
                         }
                     }
 
-                    if (! isset($path)) {
+                    if (! $path) {
                         $path = "{$schemaDefinitionPaths[0]}/{$table->name}.sql";
                     }
 

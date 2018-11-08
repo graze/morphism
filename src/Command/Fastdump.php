@@ -114,9 +114,6 @@ class Fastdump extends Command
             $dbName = $entry['connection']['dbname'];
             $matchTables = $entry['morphism']['matchTables'];
             $schemaDefinitionPaths = $entry['morphism']['schemaDefinitionPath'];
-            if (! is_array($schemaDefinitionPaths)) {
-                $schemaDefinitionPaths = [$schemaDefinitionPaths];
-            }
 
             if (!$this->write) {
                 echo "\n";

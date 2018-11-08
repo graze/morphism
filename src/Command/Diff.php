@@ -347,9 +347,6 @@ class Diff extends Command
                 $entry = $config->getEntry($connectionName);
                 $dbName = $entry['connection']['dbname'];
                 $schemaDefinitionPaths = $entry['morphism']['schemaDefinitionPath'];
-                if (! is_array($schemaDefinitionPaths)) {
-                    $schemaDefinitionPaths = [$schemaDefinitionPaths];
-                }
                 $matchTables = [
                     $dbName => $entry['morphism']['matchTables'],
                 ];

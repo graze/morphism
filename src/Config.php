@@ -63,7 +63,10 @@ class Config
 
             $schemaDefinitionPaths = $morphism['schemaDefinitionPath'];
             if (!$schemaDefinitionPaths) {
-                $schemaDefinitionPaths = [ 'schema/'.$connectionName ];
+                $schemaDefinitionPaths = 'schema/'.$connectionName;
+            }
+            if (! is_array($schemaDefinitionPaths)) {
+                $schemaDefinitionPaths = [ $schemaDefinitionPaths ];
             }
 
             $entries[$connectionName] = [

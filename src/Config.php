@@ -2,6 +2,8 @@
 
 namespace Graze\Morphism;
 
+use RuntimeException;
+
 /**
  * A parser for config files
  */
@@ -27,11 +29,15 @@ class Config
      */
     public function parse()
     {
+        if (! file_exists($this->path)) {
+            throw new RuntimeException("Specified config file does not exist: {$this->path}");
+        }
+
         $parser = new \Symfony\Component\Yaml\Parser;
         $config = $parser->parse(file_get_contents($this->path));
 
         if (!isset($config['databases'])) {
-            throw new \RuntimeException("missing databases section in '{$this->path}'");
+            throw new RuntimeException("Missing databases section in '{$this->path}'");
         }
 
         $entries = [];
@@ -55,16 +61,19 @@ class Config
                 $matchTables[$key] = $regex;
             }
 
-            $schemaDefinitionPath = $morphism['schemaDefinitionPath'];
-            if (!$schemaDefinitionPath) {
-                $schemaDefinitionPath = 'schema/'.$connectionName;
+            $schemaDefinitionPaths = $morphism['schemaDefinitionPath'];
+            if (!$schemaDefinitionPaths) {
+                $schemaDefinitionPaths = 'schema/'.$connectionName;
+            }
+            if (! is_array($schemaDefinitionPaths)) {
+                $schemaDefinitionPaths = [ $schemaDefinitionPaths ];
             }
 
             $entries[$connectionName] = [
                 'connection' => $entry,
                 'morphism'   => [
                     'matchTables' => $matchTables,
-                    'schemaDefinitionPath' => $schemaDefinitionPath,
+                    'schemaDefinitionPath' => $schemaDefinitionPaths,
                 ],
             ];
         }
@@ -91,7 +100,7 @@ class Config
     public function getEntry($connectionName)
     {
         if (!isset($this->entries[$connectionName])) {
-            throw new \RuntimeException("unknown connection '$connectionName'");
+            throw new RuntimeException("Unknown connection '$connectionName'");
         }
 
         return $this->entries[$connectionName];

@@ -49,8 +49,8 @@ $ docker run --rm graze/morphism
 ### Examples:
 
 ```bash
-$ docker run --rm -v $PWD/config:/app/config -v $PWD/schema:/app/schema:cached graze/morphsim diff config/morphism.yml
-$ docker run --rm -v $PWD/config:/app/config -v $PWD/schema:/app/schema:delegated graze/morphsim dump config/morphism.yml
+$ docker run --rm -v $PWD/config:/app/config -v $PWD/schema:/app/schema:cached graze/morphism diff config/morphism.yml
+$ docker run --rm -v $PWD/config:/app/config -v $PWD/schema:/app/schema:delegated graze/morphism dump config/morphism.yml
 ```
 
 ### Attaching to an existing network when developing
@@ -94,7 +94,8 @@ databases:
             enable: true
             # Path where schema files live.
             # Defaults to "schema/<connection-name>"
-            schemaDefinitionPath: schema/catalog
+            schemaDefinitionPath:
+                - schema/catalog
             # you may optionally specify one or more regexes matching tables
             # to exclude (any changes, creation or deletion of matching tables
             # will be ignored). The regex must match the entire table name, i.e.

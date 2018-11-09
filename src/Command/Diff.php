@@ -181,15 +181,15 @@ class Diff extends Command
     }
 
     /**
-     * @param string $schemaDefinitionPath
+     * @param string[] $schemaDefinitionPaths
      * @param string $dbName
      *
      * @return MySqlDump
      */
-    private function getTargetSchema($schemaDefinitionPath, $dbName)
+    private function getTargetSchema(array $schemaDefinitionPaths, $dbName)
     {
         return MysqlDump::parseFromPaths(
-            [$schemaDefinitionPath],
+            $schemaDefinitionPaths,
             $this->engine,
             $this->collation,
             $dbName
@@ -346,13 +346,13 @@ class Diff extends Command
                 $connection = $config->getConnection($connectionName);
                 $entry = $config->getEntry($connectionName);
                 $dbName = $entry['connection']['dbname'];
-                $schemaDefinitionPath = $entry['morphism']['schemaDefinitionPath'];
+                $schemaDefinitionPaths = $entry['morphism']['schemaDefinitionPath'];
                 $matchTables = [
                     $dbName => $entry['morphism']['matchTables'],
                 ];
 
                 $currentSchema = $this->getCurrentSchema($connection, $dbName);
-                $targetSchema = $this->getTargetSchema($schemaDefinitionPath, $dbName);
+                $targetSchema = $this->getTargetSchema($schemaDefinitionPaths, $dbName);
 
                 $diff = $currentSchema->diff(
                     $targetSchema,

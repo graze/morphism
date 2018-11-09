@@ -44,7 +44,7 @@ test: ## Run the unit and integration testsuites.
 test: lint test-unit
 
 lint: ## Run phpcs against the code.
-	${DOCKER_RUN} vendor/bin/phpcs -p --warning-severity=0 src/ tests/
+	${DOCKER_RUN} vendor/bin/phpcs -p --colors --extensions=php --warning-severity=0 --ignore=*/vendor/* src/ tests/
 
 lint-fix: ## Run phpcsf and fix possible lint errors.
 	${DOCKER_RUN} vendor/bin/phpcbf -p src/ tests/
@@ -74,6 +74,15 @@ test-coverage-html: ## Run all tests and output coverage to html.
 
 test-coverage-clover: ## Run all tests and output clover coverage to file.
 	${DOCKER_RUN} phpdbg7 -qrr vendor/bin/phpunit --coverage-clover=./tests/report/coverage.clover
+
+.PHONY: example
+example: ## Set up example project and schema
+	[ ! -f morphism.conf ] && cp example/morphism.conf.example morphism.conf || true
+	rm -rf schema schema2
+	mkdir -p schema/morphism-test schema2/morphism-test
+	cp example/schema/product.sql example/schema/ingredient.sql schema/morphism-test
+	cp example/schema/product_ingredient_map.sql schema2/morphism-test
+	docker-compose run --rm morphism diff --apply-changes yes morphism.conf
 
 # Database
 

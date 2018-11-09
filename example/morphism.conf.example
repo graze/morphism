@@ -17,9 +17,12 @@ databases:
         morphism:
             # morphism diff only operates on connections with 'enable: true'
             enable: true
-            # Path where schema files live.
+            # Path(s) where schema files live.
+            # This can be a single directory or multiple directories
             # Defaults to "schema/<connection-name>"
-            schemaDefinitionPath: schema/morphism-test
+            schemaDefinitionPath:
+                - schema/morphism-test
+                - schema2/morphism-test
             # you may optionally specify one or more regexes matching tables
             # to exclude (any changes, creation or deletion of matching tables
             # will be ignored). The regex must match the entire table name, i.e.

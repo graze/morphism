@@ -113,7 +113,7 @@ class Fastdump extends Command
             $entry = $config->getEntry($connectionName);
             $dbName = $entry['connection']['dbname'];
             $matchTables = $entry['morphism']['matchTables'];
-            $schemaDefinitionPath = $entry['morphism']['schemaDefinitionPath'];
+            $schemaDefinitionPaths = $entry['morphism']['schemaDefinitionPath'];
 
             if (!$this->write) {
                 echo "\n";
@@ -141,20 +141,37 @@ class Fastdump extends Command
             }
 
             if ($this->write) {
-                if (!is_dir($schemaDefinitionPath)) {
-                    if (!@mkdir($schemaDefinitionPath, 0755, true)) {
-                        throw new RuntimeException("could not make directory $schemaDefinitionPath");
+                // Ensure the schema directories to write to exist
+                foreach ($schemaDefinitionPaths as $schemaPath) {
+                    if (!is_dir($schemaPath)) {
+                        if (!@mkdir($schemaPath, 0755, true)) {
+                            throw new RuntimeException("Could not make directory $schemaPath");
+                        }
                     }
                 }
                 $database = reset($dump->databases);
                 foreach ($database->tables as $table) {
-                    $path = "$schemaDefinitionPath/{$table->name}.sql";
+                    // Find any existing schema file. If it doesn't exist, use the first schema path.
+                    $path = null;
+
+                    foreach ($schemaDefinitionPaths as $schemaPath) {
+                        $possiblePath = "$schemaPath/{$table->name}.sql";
+                        if (file_exists($possiblePath)) {
+                            $path = $possiblePath;
+                            break;
+                        }
+                    }
+
+                    if (! $path) {
+                        $path = "{$schemaDefinitionPaths[0]}/{$table->name}.sql";
+                    }
+
                     $text = '';
                     foreach ($table->getDDL() as $query) {
                         $text .= "$query;\n\n";
                     }
                     if (false === @file_put_contents($path, $text)) {
-                        throw new RuntimeException("could not write $path");
+                        throw new RuntimeException("Could not write $path");
                     }
                     fprintf(STDERR, "wrote $path\n");
                 }

@@ -77,6 +77,7 @@ test-coverage-clover: ## Run all tests and output clover coverage to file.
 
 .PHONY: example
 example: ## Set up example project and schema
+example: start-db
 	[ ! -f morphism.conf ] && cp example/morphism.conf.example morphism.conf || true
 	rm -rf schema schema2
 	mkdir -p schema/morphism-test schema2/morphism-test

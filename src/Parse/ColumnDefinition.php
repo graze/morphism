@@ -274,6 +274,8 @@ class ColumnDefinition
             case 'bool':
             case 'boolean':
                 $format = [1];
+                /* Take a copy so that edits don't make it back into the runtime cache. */
+                $typeInfo = clone $typeInfo;
                 $typeInfo->allowSign = false;
                 $typeInfo->allowZerofill = false;
                 break;

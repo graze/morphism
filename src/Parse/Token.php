@@ -33,7 +33,7 @@ class Token
     public $text;
 
     /** @var bool */
-    static private $quoteNames = false;
+    private static $quoteNames = false;
 
     /**
      * Constructor

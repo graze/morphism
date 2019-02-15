@@ -9,7 +9,7 @@ use RuntimeException;
 class CreateTable
 {
     /** @var string */
-    public $name = '';
+    private $name = '';
 
     /** @var ColumnDefinition[] */
     public $columns = [];

@@ -126,12 +126,15 @@ class CreateDatabaseTest extends TestCase
 
     public function testAddTable()
     {
-        $createTable = new CreateTable(new CollationInfo());
-        $createTable->name = "foo";
-        $database = new CreateDatabase(new CollationInfo());
+        $tableName = 'foo';
+
+        $createTable = Mockery::mock(CreateTable::class);
+        $createTable->shouldReceive('getName')->andReturn($tableName);
+
+        $database = new CreateDatabase(Mockery::mock(CollationInfo::class));
         $database->addTable($createTable);
 
-        $this->assertArrayHasKey($createTable->name, $database->tables);
+        $this->assertArrayHasKey($tableName, $database->tables);
     }
 
     /**

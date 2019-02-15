@@ -117,7 +117,7 @@ class CreateDatabase
     public function getDDL()
     {
         if (!$this->name) {
-            throw new RuntimeException('No database name spacified');
+            throw new RuntimeException('No database name specified');
         }
 
         $text = "CREATE DATABASE IF NOT EXISTS " . Token::escapeIdentifier($this->name);

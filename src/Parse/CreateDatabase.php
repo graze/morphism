@@ -97,8 +97,8 @@ class CreateDatabase
      */
     public function addTable(CreateTable $table)
     {
-        if ($table->name) {
-            $this->tables[$table->name] = $table;
+        if ($table->getName()) {
+            $this->tables[$table->getName()] = $table;
         } else {
             throw new RuntimeException("No table name in Create Table object");
         }

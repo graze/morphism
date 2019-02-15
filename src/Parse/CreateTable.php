@@ -37,6 +37,14 @@ class CreateTable
     }
 
     /**
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
      * Sets the storage engine the table is assumed to use, unless
      * explicitly overridden via an ENGINE= clause at the end of
      * the table definition.

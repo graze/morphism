@@ -3,6 +3,7 @@
 namespace Graze\Morphism\Parse;
 
 use Graze\Morphism\Test\Parse\TestCase;
+use Mockery;
 
 class CreateDatabaseTest extends TestCase
 {
@@ -198,5 +199,183 @@ class CreateDatabaseTest extends TestCase
     {
         $database = new CreateDatabase(new CollationInfo());
         $database->getDDL();
+    }
+
+    /**
+     * @param CreateDatabase $db1
+     * @param CreateDatabase $db2
+     * @param array $flags
+     * @param array $expected
+     * @dataProvider diffProvider
+     */
+    public function testDiff(CreateDatabase $db1, CreateDatabase $db2, array $flags, array $expected)
+    {
+        $diff = $db1->diff($db2, $flags);
+
+        $this->assertEquals($expected, $diff);
+    }
+
+    /**
+     * @return array
+     */
+    public function diffProvider()
+    {
+        // [
+        //    [ create database 1, create database 2, diff flags, array of statements to execute ],
+        //    ...
+        // ]
+        $testCases = [];
+
+        /** @var CollationInfo|Mockery\MockInterface $collationInfo */
+        $collationInfo = Mockery::mock(CollationInfo::class);
+        $collationInfo->shouldReceive('isSpecified');
+
+        // Completely empty objects
+        $testCases[] = [
+            new CreateDatabase($collationInfo),
+            new CreateDatabase($collationInfo),
+            [],
+            []
+        ];
+
+        // Named databases
+        // Morphism does not support renaming databases
+        $db1 = new CreateDatabase($collationInfo);
+        $db1->name = 'foo';
+
+        $db2 = new CreateDatabase($collationInfo);
+        $db2->name = 'bar';
+
+        $testCases[] = [
+            $db1,
+            $db2,
+            [],
+            []
+        ];
+
+        // Table added
+        $db1 = new CreateDatabase($collationInfo);
+
+        /** @var CreateTable|Mockery\MockInterface $tableA */
+        $tableA = Mockery::mock(CreateTable::class);
+        $tableA->shouldReceive('getName')->andReturn('t');
+        $tableA->shouldReceive('getDDL')->andReturn(["CREATE TABLE `t` (\n  `a` int(11) DEFAULT NULL\n) ENGINE=E"]);
+
+        $db2 = new CreateDatabase($collationInfo);
+        $db2->addTable($tableA);
+
+        $testCases[] = [
+            $db1,
+            $db2,
+            [],
+            ["CREATE TABLE `t` (\n  `a` int(11) DEFAULT NULL\n) ENGINE=E"]
+        ];
+
+        // Table added
+        $db1 = new CreateDatabase($collationInfo);
+
+        $db2 = new CreateDatabase($collationInfo);
+        $db2->addTable($tableA);
+
+        $testCases[] = [
+            $db1,
+            $db2,
+            [],
+            ["CREATE TABLE `t` (\n  `a` int(11) DEFAULT NULL\n) ENGINE=E"]
+        ];
+
+        // Table added (but ignored)
+        $db1 = new CreateDatabase($collationInfo);
+
+        $db2 = new CreateDatabase($collationInfo);
+        $db2->addTable($tableA);
+
+        $testCases[] = [
+            $db1,
+            $db2,
+            ['createTable' => false],
+            []
+        ];
+
+        // Table removed
+        $db1 = new CreateDatabase($collationInfo);
+        $db1->addTable($tableA);
+
+        $db2 = new CreateDatabase($collationInfo);
+
+        $testCases[] = [
+            $db1,
+            $db2,
+            [],
+            ["DROP TABLE IF EXISTS `t`"]
+        ];
+
+        // Table removed (but ignored)
+        $db1 = new CreateDatabase($collationInfo);
+        $db1->addTable($tableA);
+
+        $db2 = new CreateDatabase($collationInfo);
+
+        $testCases[] = [
+            $db1,
+            $db2,
+            ['dropTable' => false],
+            []
+        ];
+
+        // Engine changed
+        /** @var CreateTable|Mockery\MockInterface $tableWithEngineBar */
+        $tableWithEngineBar = Mockery::mock(CreateTable::class);
+        $tableWithEngineBar->shouldReceive('getName')->andReturn('t');
+        $tableWithEngineBar->shouldReceive('getDDL')->andReturn(["CREATE TABLE `t` (\n  `a` int(11) DEFAULT NULL\n) ENGINE=BAR"]);
+
+        /** @var CreateTable|Mockery\MockInterface $tableWithEngineFoo */
+        $tableWithEngineFoo = Mockery::mock(CreateTable::class);
+        $tableWithEngineFoo->shouldReceive('getName')->andReturn('t');
+        $tableWithEngineFoo->shouldReceive('getDDL')->andReturn(["CREATE TABLE `t` (\n  `a` int(11) DEFAULT NULL\n) ENGINE=FOO"]);
+        $tableWithEngineFoo
+            ->shouldReceive('diff')
+            ->with(
+                $tableWithEngineBar,
+                ['alterEngine' => true]
+            )
+            ->andReturn(["ALTER TABLE `t`\nENGINE=BAR"]);
+
+        $db1 = new CreateDatabase($collationInfo);
+        $db1->addTable($tableWithEngineFoo);
+
+        $db2 = new CreateDatabase($collationInfo);
+        $db2->addTable($tableWithEngineBar);
+
+        $testCases[] = [
+            $db1,
+            $db2,
+            [],
+            ["ALTER TABLE `t`\nENGINE=BAR"]
+        ];
+
+        // Engine changed (but ignored)
+        $db1 = new CreateDatabase($collationInfo);
+        $db1->addTable($tableWithEngineFoo);
+
+        $tableWithEngineFoo
+            ->shouldReceive('diff')
+            ->with(
+                $tableWithEngineBar,
+                ['alterEngine' => false]
+            )
+            ->andReturn([]);
+
+        $db2 = new CreateDatabase($collationInfo);
+        $db2->addTable($tableWithEngineBar);
+
+        $testCases[] = [
+            $db1,
+            $db2,
+            ['alterEngine' => false],
+            []
+        ];
+
+        return $testCases;
     }
 }

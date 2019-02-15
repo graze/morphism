@@ -1,6 +1,8 @@
 <?php
 namespace Graze\Morphism\Parse;
 
+use RuntimeException;
+
 /**
  * Represents the definition of a database.
  */
@@ -47,7 +49,7 @@ class CreateDatabase
         if ($stream->consume('CREATE DATABASE')) {
             $stream->consume('IF NOT EXISTS');
         } else {
-            throw new \RuntimeException("expected CREATE DATABASE");
+            throw new RuntimeException("Expected CREATE DATABASE");
         }
 
         $this->name = $stream->expectName();
@@ -90,14 +92,16 @@ class CreateDatabase
     }
 
     /**
-     * Asserts that the table described by $table belongs to this
-     * database.
-     *
      * @param CreateTable $table
+     * @throws RuntimeException
      */
     public function addTable(CreateTable $table)
     {
-        $this->tables[$table->name] = $table;
+        if ($table->getName()) {
+            $this->tables[$table->getName()] = $table;
+        } else {
+            throw new RuntimeException("No table name in Create Table object");
+        }
     }
 
     /**
@@ -107,10 +111,15 @@ class CreateDatabase
      * the necessary DDL to create any contained tables. For that you will need
      * to iterate over the $tables property, calling getDDL() on each element.
      *
-     * @return string
+     * @return array
+     * @throws RuntimeException
      */
     public function getDDL()
     {
+        if (!$this->name) {
+            throw new RuntimeException('No database name specified');
+        }
+
         $text = "CREATE DATABASE IF NOT EXISTS " . Token::escapeIdentifier($this->name);
 
         $collation = $this->getCollation();

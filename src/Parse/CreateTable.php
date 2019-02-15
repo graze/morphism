@@ -9,7 +9,7 @@ use RuntimeException;
 class CreateTable
 {
     /** @var string */
-    public $name = '';
+    private $name = '';
 
     /** @var ColumnDefinition[] */
     public $columns = [];
@@ -34,6 +34,14 @@ class CreateTable
     public function __construct(CollationInfo $databaseCollation)
     {
         $this->options = new TableOptions($databaseCollation);
+    }
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
     }
 
     /**

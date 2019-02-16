@@ -123,7 +123,7 @@ class Extract extends Command
                     }
                 }
                 foreach ($database->tables as $table) {
-                    $path = "$output/{$table->name}.sql";
+                    $path = "$output/{$table->getName()}.sql";
                     $text = '';
                     foreach ($table->getDDL() as $query) {
                         $text .= "$query;\n\n";

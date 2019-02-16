@@ -52,6 +52,14 @@ lint-fix: ## Run phpcsf and fix possible lint errors.
 test-unit: ## Run the unit testsuite.
 	${DOCKER_RUN} vendor/bin/phpunit --testsuite tests
 
+test-functional: example
+	docker-compose run --rm morphism diff morphism.conf
+	docker-compose run --rm morphism dump morphism.conf
+	docker-compose run --rm db mysqldump -hdb -umorphism -pmorphism morphism-test > dump.sql
+	docker-compose run --rm morphism lint dump.sql
+	docker-compose run --rm morphism extract dump.sql
+	@rm -f dump.sql
+
 test-lowest: ## Test using the lowest possible versions of the dependencies
 test-lowest: PREFER_LOWEST=--prefer-lowest
 test-lowest: build-update test

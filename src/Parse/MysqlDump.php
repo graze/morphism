@@ -153,8 +153,8 @@ class MysqlDump
 
                 $includeTablesRegex = $flags['matchTables']['include'];
                 $excludeTablesRegex = $flags['matchTables']['exclude'];
-                if (($includeTablesRegex == '' || preg_match($includeTablesRegex, $table->name)) &&
-                    ($excludeTablesRegex == '' || !preg_match($excludeTablesRegex, $table->name))
+                if (($includeTablesRegex == '' || preg_match($includeTablesRegex, $table->getName())) &&
+                    ($excludeTablesRegex == '' || !preg_match($excludeTablesRegex, $table->getName()))
                 ) {
                     $this->database->addTable($table);
                 }

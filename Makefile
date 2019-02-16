@@ -97,6 +97,7 @@ example: start-db
 
 start-db: ## Start up the test database
 	@docker-compose up -d db
+	docker-compose run --rm --entrypoint sh morphism ./bin/wait-for-db.sh db 3306
 
 stop: ## Stop all docker containers
 	@docker-compose stop

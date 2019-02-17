@@ -155,7 +155,7 @@ class Fastdump extends Command
                     $path = null;
 
                     foreach ($schemaDefinitionPaths as $schemaPath) {
-                        $possiblePath = "$schemaPath/{$table->name}.sql";
+                        $possiblePath = sprintf('%s/%s.sql', $schemaPath, $table->getName());
                         if (file_exists($possiblePath)) {
                             $path = $possiblePath;
                             break;
@@ -163,7 +163,7 @@ class Fastdump extends Command
                     }
 
                     if (! $path) {
-                        $path = "{$schemaDefinitionPaths[0]}/{$table->name}.sql";
+                        $path = sprintf('%s/%s.sql', $schemaDefinitionPaths[0], $table->getName());
                     }
 
                     $text = '';

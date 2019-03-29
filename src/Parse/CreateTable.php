@@ -475,7 +475,7 @@ class CreateTable
                         // Column is being inserted at position $j, and is currently residing at $i.
 
                         // remove from current location
-                        array_splice($permutation, $i, 1, []);
+                        array_splice($permutation, /** @scrutinizer ignore-type */ $i, 1, []);
 
                         // insert at new location
                         array_splice($permutation, $j, 0, $columnName);

@@ -95,7 +95,7 @@ class Config
      *      'unix_socket' => $socket
      *
      * @param string $connectionName Name of the connection to look up
-     * @return ['connection' => [$param => $value, ...], 'morphism' => [ ... ] ]
+     * @return array ['connection' => [$param => $value, ...], 'morphism' => [ ... ] ]
      */
     public function getEntry($connectionName)
     {
@@ -112,6 +112,7 @@ class Config
      *
      * @param string $connectionName
      * @return \Doctrine\DBAL\Connection
+     * @throws \Doctrine\DBAL\DBALException
      */
     public function getConnection($connectionName)
     {

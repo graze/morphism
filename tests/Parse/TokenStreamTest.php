@@ -2,7 +2,11 @@
 
 namespace Graze\Morphism\Parse;
 
+use Exception;
 use Graze\Morphism\Test\Parse\TestCase;
+use LogicException;
+use ReflectionClass;
+use ReflectionException;
 use RuntimeException;
 
 class TokenStreamTest extends TestCase
@@ -19,7 +23,7 @@ class TokenStreamTest extends TestCase
         $this->assertThat($stream, $this->isInstanceOf(__NAMESPACE__ . '\TokenStream'));
     }
 
-    /** @expectedException \Exception */
+    /** @expectedException Exception */
     public function testNewFromFileNotFound()
     {
         TokenStream::newFromFile(dirname(__FILE__) . "/file_not_found");
@@ -28,9 +32,9 @@ class TokenStreamTest extends TestCase
     /**
      * @param string $expectedType
      * @param mixed $expectedValue
-     * @param string $token
+     * @param Token $token
      */
-    public function assertTokenEq($expectedType, $expectedValue, $token)
+    public function assertTokenEq($expectedType, $expectedValue, Token $token)
     {
         $this->assertTrue(
             $token->eq($expectedType, $expectedValue),
@@ -171,7 +175,7 @@ class TokenStreamTest extends TestCase
     public function testBadLogicNextToken($text)
     {
         $stream = $this->makeStream($text);
-        $token = $stream->nextToken();
+        $stream->nextToken();
     }
 
     /**
@@ -200,7 +204,7 @@ class TokenStreamTest extends TestCase
     public function testBadRuntimeNextToken($text)
     {
         $stream = $this->makeStream($text);
-        $token = $stream->nextToken();
+        $stream->nextToken();
     }
 
     /**
@@ -318,7 +322,7 @@ class TokenStreamTest extends TestCase
         $stream->expect(Token::IDENTIFIER, 'create');
     }
 
-    /** @expectedException \Exception */
+    /** @expectedException Exception */
     public function testExpectFail()
     {
         $stream = $this->makeStream('create table t');
@@ -420,6 +424,9 @@ class TokenStreamTest extends TestCase
         ];
     }
 
+    /**
+     * @throws ReflectionException
+     */
     public function testContextualise()
     {
         $sql = <<<EOF
@@ -436,7 +443,7 @@ EOF;
         $stream = $this->makeStream($sql);
 
         // Use reflection to set the internal offset to the place where error is.
-        $reflection = new \ReflectionClass($stream);
+        $reflection = new ReflectionClass($stream);
         $property = $reflection->getProperty('offset');
         $property->setAccessible(true);
         $property->setValue($stream, 32);

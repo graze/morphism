@@ -157,7 +157,7 @@ class CreateDatabaseTest extends TestCase
     {
         $ddl = $database->getDDL();
 
-        $this->assertInternalType('array', $ddl);
+        $this->assertIsArray($ddl);
         $this->assertEquals(1, count($ddl));
         $this->assertEquals($sql, $ddl[0]);
     }

@@ -3,6 +3,7 @@
 namespace Graze\Morphism\Parse;
 
 use Graze\Morphism\Test\Parse\TestCase;
+use RuntimeException;
 
 class TableOptionsTest extends TestCase
 {
@@ -117,7 +118,7 @@ class TableOptionsTest extends TestCase
     /**
      * @dataProvider badParseProvider
      * @param string $text
-     * @expectedException \RuntimeException
+     * @expectedException RuntimeException
      */
     public function testBadParse($text)
     {

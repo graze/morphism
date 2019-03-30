@@ -3,6 +3,7 @@
 namespace Graze\Morphism\Command;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DBALException;
 use Exception;
 use Graze\Morphism\Parse\TokenStream;
 use Graze\Morphism\Parse\Token;
@@ -159,6 +160,7 @@ class Diff extends Command
      * @param Connection $connection
      * @param string $dbName
      * @return MysqlDump
+     * @throws DBALException
      */
     private function getCurrentSchema(Connection $connection, $dbName)
     {
@@ -340,9 +342,11 @@ class Diff extends Command
             }
 
             foreach ($connectionNames as $connectionName) {
-                echo "-- --------------------------------\n";
-                echo "--   Connection: $connectionName\n";
-                echo "-- --------------------------------\n";
+                $output->writeln("<info>");
+                $output->writeln("-- --------------------------------");
+                $output->writeln("--   Connection: $connectionName");
+                $output->writeln("-- --------------------------------");
+                $output->writeln("</info>");
                 $connection = $config->getConnection($connectionName);
                 $entry = $config->getEntry($connectionName);
                 $dbName = $entry['connection']['dbname'];
@@ -377,7 +381,7 @@ class Diff extends Command
                 }, []);
 
                 foreach ($statements as $query) {
-                    echo "$query;\n\n";
+                    $output->writeln("$query;\n");
                 }
 
                 $this->applyChanges($connection, $connectionName, $statements);

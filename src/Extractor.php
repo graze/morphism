@@ -3,7 +3,9 @@
 namespace Graze\Morphism;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DBALException;
 use Graze\Morphism\Parse\Token;
+use PDO;
 
 /**
  * Fast database schema extractor - instead of using mysqldump, it talks
@@ -11,7 +13,7 @@ use Graze\Morphism\Parse\Token;
  */
 class Extractor
 {
-    /** @var Connection|null */
+    /** @var Connection */
     private $dbh = null;
     /** @var array */
     private $databases = null;
@@ -69,13 +71,14 @@ class Extractor
      *
      * @param string $sql
      * @param mixed[] $binds
-     * @return result-row-object[]
+     * @return array result-row-object[]
+     * @throws DBALException
      */
     private function query($sql, array $binds = [])
     {
         $sth = $this->dbh->prepare($sql);
         $sth->execute($binds);
-        $rows = $sth->fetchAll(\PDO::FETCH_OBJ);
+        $rows = $sth->fetchAll(PDO::FETCH_OBJ);
         return $rows;
     }
 
@@ -84,7 +87,7 @@ class Extractor
      * or "NULL" if $count is zero, suitable for use with an IN() clause in
      * a prepared query.
      *
-     * @param int $count
+     * @param int|array $count
      * @return string
      */
     private static function placeholders($count)
@@ -99,7 +102,8 @@ class Extractor
     }
 
     /**
-     * @return [$schema => SCHEMATA-object, ...]
+     * @return array [$schema => SCHEMATA-object, ...]
+     * @throws DBALException
      */
     private function getSchemata()
     {
@@ -132,6 +136,7 @@ class Extractor
     /**
      * @param array $databases
      * @return array [$schema => [$table => TABLES-object, ...], ...]
+     * @throws DBALException
      */
     private function getTables(array $databases)
     {
@@ -158,7 +163,8 @@ class Extractor
 
     /**
      * @param string[] $databases
-     * @return [$schema => [$table => [COLUMNS-object, ...], ...], ...]
+     * @return array [$schema => [$table => [COLUMNS-object, ...], ...], ...]
+     * @throws DBALException
      */
     private function getColumns(array $databases)
     {
@@ -184,7 +190,8 @@ class Extractor
 
     /**
      * @param string[] $databases
-     * @return [$schema => [$table => [$index => [STATISTICS-object, ...], ...], ...], ...]
+     * @return array [$schema => [$table => [$index => [STATISTICS-object, ...], ...], ...], ...]
+     * @throws DBALException
      */
     private function getKeys(array $databases)
     {
@@ -212,7 +219,8 @@ class Extractor
 
     /**
      * @param string[] $databases
-     * @return [$schema => [$table => [$constraint => [KEY_COLUMN_USAGE-object, ...], ...], ...], ...]
+     * @return array [$schema => [$table => [$constraint => [KEY_COLUMN_USAGE-object, ...], ...], ...], ...]
+     * @throws DBALException
      */
     private function getReferences(array $databases)
     {
@@ -241,6 +249,7 @@ class Extractor
     /**
      * @param array $databases
      * @return array
+     * @throws DBALException
      */
     private function getConstraints(array $databases)
     {
@@ -350,7 +359,6 @@ class Extractor
     {
         $defKeys = [];
         foreach ($keys as $key) {
-            $defKey = '';
             $firstKeyPart = $key[0];
             if ($firstKeyPart->INDEX_NAME == 'PRIMARY') {
                 $defKey = 'PRIMARY KEY';
@@ -458,7 +466,7 @@ class Extractor
      * @param array $keys [$index => STATISTICS-object[]]
      * @param array $references [$constraint => [KEY_COLUMN_USAGE-object, ...], ...]
      * @param array $constraints [$constraint => REFERENTIAL_CONSTRAINTS-object, ...]
-     * @return string
+     * @return array
      */
     private function getCreateTable($table, array $columns, array $keys, array $references, array $constraints)
     {
@@ -481,10 +489,10 @@ class Extractor
      * connection provided at construction.
      *
      * @return string[]
+     * @throws DBALException
      */
     public function extract()
     {
-        $text = '';
         Token::setQuoteNames($this->quoteNames);
 
         $schemata = $this->getSchemata();

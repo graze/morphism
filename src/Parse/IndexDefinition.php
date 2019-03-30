@@ -39,10 +39,10 @@ class IndexDefinition
     public $options = [];
 
     /**
-     * @var string[] Only present for FOREIGN KEYS
+     * @var array Only present for FOREIGN KEYS
      *
      * 'table'     => string name of foreign table
-     * 'columns'   => array('name' => string, 'length' => int|null)[] columns referenced in foreign table
+     * 'columns'   => [ 'name' => string, 'length' => int|null, 'sort' => string][] columns referenced in foreign table
      * 'ON DELETE' => string 'RESTRICT' | 'CASCADE' | 'SET NULL' | 'NO ACTION'
      * 'ON UPDATE' => string 'RESTRICT' | 'CASCADE' | 'SET NULL' | 'NO ACTION'
      */

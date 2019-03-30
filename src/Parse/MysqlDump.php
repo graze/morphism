@@ -1,6 +1,9 @@
 <?php
 namespace Graze\Morphism\Parse;
 
+use GlobIterator;
+use RuntimeException;
+
 /**
  * Represents a dump of one or more databases.
  */
@@ -14,13 +17,13 @@ class MysqlDump
      */
     public $databases = [];
 
-    /** @var string */
+    /** @var CreateDatabase */
     private $database = null;
     /** @var string */
     private $defaultDatabaseName = '';
     /** @var string */
     private $defaultEngine = 'InnoDB';
-    /** @var CollationInfo|null */
+    /** @var CollationInfo */
     private $defaultCollation = null;
 
     /**
@@ -59,7 +62,7 @@ class MysqlDump
         $files = [];
         foreach ($paths as $path) {
             if (is_dir($path)) {
-                foreach (new \GlobIterator("$path/*.sql") as $fileInfo) {
+                foreach (new GlobIterator("$path/*.sql") as $fileInfo) {
                     $files[] = $fileInfo->getPathname();
                 }
             } else {
@@ -71,9 +74,9 @@ class MysqlDump
             $stream = TokenStream::newFromFile($file);
             try {
                 $dump->parse($stream);
-            } catch (\RuntimeException $e) {
+            } catch (RuntimeException $e) {
                 $message = $stream->contextualise($e->getMessage());
-                throw new \RuntimeException($message);
+                throw new RuntimeException($message);
             }
         }
 
@@ -165,6 +168,8 @@ class MysqlDump
     }
 
     /**
+     * Skip any statements which aren't create database/table statements.
+     *
      * @param TokenStream $stream
      * @return bool
      */
@@ -179,6 +184,9 @@ class MysqlDump
                 return true;
             }
         }
+
+        // Shoud never get here, but treat it as EOF
+        return false;
     }
 
     /**
@@ -218,7 +226,7 @@ class MysqlDump
      *
      * @param MysqlDump $that
      * @param bool[] $flags controls what to include in the generated DDL
-     * @return \string[]
+     * @return string[]
      */
     public function diff(MysqlDump $that, array $flags = [])
     {
@@ -261,7 +269,7 @@ class MysqlDump
                     if (($includeTablesRegex == '' || preg_match($includeTablesRegex, $table->getName())) &&
                         ($excludeTablesRegex == '' || !preg_match($excludeTablesRegex, $table->getName()))
                     ) {
-                        $diff[] = $table->getDDL($thatDatabase->getCollation());
+                        $diff[] = $table->getDDL();
                     }
                 }
             }

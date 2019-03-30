@@ -1,6 +1,9 @@
 <?php
 namespace Graze\Morphism\Parse;
 
+use Exception;
+use RuntimeException;
+
 /**
  * Represents the definition of a single column in a table.
  */
@@ -12,7 +15,7 @@ class ColumnDefinition
     /** @var string */
     public $type = '';
 
-    /** @var int|null */
+    /** @var int */
     public $length = null;
 
     /** @var int */
@@ -36,7 +39,7 @@ class ColumnDefinition
     /** @var bool */
     public $autoIncrement = false;
 
-    /** @var string|null */
+    /** @var string */
     public $default = null;
 
     /** @var string|null */
@@ -190,7 +193,7 @@ class ColumnDefinition
     {
         $token = $stream->nextToken();
         if ($token->type !== Token::IDENTIFIER) {
-            throw new \RuntimeException("expected a datatype");
+            throw new RuntimeException("Expected a datatype");
         }
 
         // map aliases to concrete type
@@ -245,7 +248,7 @@ class ColumnDefinition
 
         $typeInfo = $this->getTypeInfo();
         if (is_null($typeInfo)) {
-            throw new \RuntimeException("unknown datatype '$type'");
+            throw new RuntimeException("Unknown datatype '$type'");
         }
 
         $format = [];
@@ -267,7 +270,7 @@ class ColumnDefinition
                     if ($token->eq(Token::SYMBOL, ')')) {
                         break;
                     }
-                    throw new \RuntimeException("expected ',' or ')'");
+                    throw new RuntimeException("Expected ',' or ')'");
                 }
                 break;
 
@@ -284,23 +287,23 @@ class ColumnDefinition
                 $spec = $typeInfo->formatSpec;
                 if ($stream->consume([[Token::SYMBOL, '(']])) {
                     if (!($spec[1] || $spec[2])) {
-                        throw new \RuntimeException("unexpected '('");
+                        throw new RuntimeException("Unexpected '('");
                     }
                     $format[] = $stream->expectNumber();
                     if ($stream->consume([[Token::SYMBOL, ',']])) {
                         if (!$spec[2]) {
-                            throw new \RuntimeException("unexpected ','");
+                            throw new RuntimeException("Unexpected ','");
                         }
                         $format[] = $stream->expectNumber();
                     } elseif (!$spec[1]) {
                         $mark = $stream->getMark();
                         $unexpectedToken = $stream->nextToken();
                         $stream->rewind($mark);
-                        throw new \RuntimeException("expected ',' but got: '$unexpectedToken->text'");
+                        throw new RuntimeException("Expected ',' but got: '$unexpectedToken->text'");
                     }
                     $stream->expectCloseParen();
                 } elseif (!$spec[0]) {
-                    throw new \RuntimeException("expected '('");
+                    throw new RuntimeException("Expected '('");
                 }
                 break;
         }
@@ -315,17 +318,17 @@ class ColumnDefinition
 
             if ($token1->eq(Token::IDENTIFIER, 'ZEROFILL')) {
                 if (!$typeInfo->allowZerofill) {
-                    throw new \RuntimeException("unexpected ZEROFILL");
+                    throw new RuntimeException("Unexpected ZEROFILL");
                 }
                 $this->zerofill = true;
             } elseif ($token1->eq(Token::IDENTIFIER, 'UNSIGNED')) {
                 if (!$typeInfo->allowSign) {
-                    throw new \RuntimeException("unexpected UNSIGNED");
+                    throw new RuntimeException("Unexpected UNSIGNED");
                 }
                 $this->unsigned = true;
             } elseif ($token1->eq(Token::IDENTIFIER, 'SIGNED')) {
                 if (!$typeInfo->allowSign) {
-                    throw new \RuntimeException("unexpected SIGNED");
+                    throw new RuntimeException("Unexpected SIGNED");
                 }
                 $this->unsigned = false;
             } else {
@@ -357,7 +360,7 @@ class ColumnDefinition
         }
 
         if ($this->type === 'year' && $this->length !== 4) {
-            throw new \RuntimeException("this tool will only accept 4 as a valid width for YEAR columns");
+            throw new RuntimeException("This tool will only accept 4 as a valid width for YEAR columns");
         }
 
         while (true) {
@@ -370,14 +373,14 @@ class ColumnDefinition
 
             if ($token1->eq(Token::IDENTIFIER, 'BINARY')) {
                 if (!$typeInfo->allowBinary) {
-                    throw new \RuntimeException("unexpected BINARY");
+                    throw new RuntimeException("Unexpected BINARY");
                 }
                 $this->collation->setBinaryCollation();
             } elseif ($token1->eq(Token::IDENTIFIER, 'CHARSET') ||
                 $token1->eq(Token::IDENTIFIER, 'CHARACTER') && $stream->consume('SET')
             ) {
                 if (!$typeInfo->allowCharset) {
-                    throw new \RuntimeException("unexpected CHARSET");
+                    throw new RuntimeException("Unexpected CHARSET");
                 }
                 $charset = $stream->expectName();
                 $this->collation->setCharset($charset);
@@ -389,7 +392,7 @@ class ColumnDefinition
 
         if ($stream->consume('COLLATE')) {
             if (!$typeInfo->allowCharset) {
-                throw new \RuntimeException("unexpected COLLATE");
+                throw new RuntimeException("Unexpected COLLATE");
             }
             $collation = $stream->expectName();
             $this->collation->setCollation($collation);
@@ -430,7 +433,7 @@ class ColumnDefinition
                     if (!$stream->consume([[Token::SYMBOL, '('], [Token::SYMBOL, ')']]) &&
                         $token2->eq(Token::IDENTIFIER, 'NOW')
                     ) {
-                        throw new \RuntimeException("expected () after keyword NOW");
+                        throw new RuntimeException("Expected () after keyword NOW");
                     }
                     $token2 = new Token(Token::IDENTIFIER, 'CURRENT_TIMESTAMP');
                 }
@@ -438,7 +441,7 @@ class ColumnDefinition
                 try {
                     $this->default = $this->defaultValue($token2);
                 } catch (Exception $e) {
-                    throw new \RuntimeException("invalid DEFAULT for '" . $this->name . "'");
+                    throw new RuntimeException("Invalid DEFAULT for '" . $this->name . "'");
                 }
             } elseif ($token1->eq(Token::IDENTIFIER, 'ON') &&
                 $stream->consume('UPDATE')
@@ -452,19 +455,19 @@ class ColumnDefinition
                     if (!$stream->consume([[Token::SYMBOL, '('], [Token::SYMBOL, ')']]) &&
                         $token2->eq(Token::IDENTIFIER, 'NOW')
                     ) {
-                        throw new \RuntimeException("expected () after keyword NOW");
+                        throw new RuntimeException("Expected () after keyword NOW");
                     }
                     if (!in_array($this->type, ['timestamp', 'datetime'])) {
-                        throw new \RuntimeException("ON UPDATE CURRENT_TIMESTAMP only valid for TIMESTAMP and DATETIME columns");
+                        throw new RuntimeException("ON UPDATE CURRENT_TIMESTAMP only valid for TIMESTAMP and DATETIME columns");
                     }
                     $this->onUpdateCurrentTimestamp = true;
                 } else {
-                    throw new \RuntimeException("expected CURRENT_TIMESTAMP, NOW, LOCALTIME or LOCALTIMESTAMP");
+                    throw new RuntimeException("Expected CURRENT_TIMESTAMP, NOW, LOCALTIME or LOCALTIMESTAMP");
                 }
             } elseif ($token1->eq(Token::IDENTIFIER, 'AUTO_INCREMENT')
             ) {
                 if (!$this->getTypeInfo()->allowAutoIncrement) {
-                    throw new \RuntimeException("AUTO_INCREMENT not allowed for this datatype");
+                    throw new RuntimeException("AUTO_INCREMENT not allowed for this datatype");
                 }
                 $this->autoIncrement = true;
                 $this->nullable = false;
@@ -484,7 +487,7 @@ class ColumnDefinition
                 $stream->consume('DEFAULT VALUE')
             ) {
                 if (!$this->getTypeInfo()->allowAutoIncrement) {
-                    throw new \RuntimeException("SERIAL DEFAULT VALUE is not allowed for this datatype");
+                    throw new RuntimeException("SERIAL DEFAULT VALUE is not allowed for this datatype");
                 }
                 $this->uniqueKey = true;
                 $this->autoIncrement = true;
@@ -538,26 +541,26 @@ class ColumnDefinition
      *
      * @param Token $token
      * @return string|null
-     * @throws \Exception
+     * @throws Exception
      */
     private function defaultValue(Token $token)
     {
         if ($token->eq(Token::IDENTIFIER, 'NULL')) {
             if (!$this->nullable) {
-                throw new \Exception("Column type cannot have NULL default: $this->type");
+                throw new Exception("Column type cannot have NULL default: $this->type");
             }
             return null;
         }
 
         if ($token->eq(Token::IDENTIFIER, 'CURRENT_TIMESTAMP')) {
             if (!in_array($this->type, ['timestamp', 'datetime'])) {
-                throw new \Exception("Only 'timestamp' and 'datetime' types can have default value of CURRENT_TIMESTAMP");
+                throw new Exception("Only 'timestamp' and 'datetime' types can have default value of CURRENT_TIMESTAMP");
             }
             return 'CURRENT_TIMESTAMP';
         }
 
         if (!in_array($token->type, [Token::STRING, Token::HEX, Token::BIN, Token::NUMBER])) {
-            throw new \Exception("Invalid token type for default value: $token->type");
+            throw new Exception("Invalid token type for default value: $token->type");
         }
 
         $typeInfo = $this->getTypeInfo();
@@ -612,7 +615,7 @@ class ColumnDefinition
                 } elseif (1901 <= $year && $year <= 2155) {
                     return (string)round($year);
                 } else {
-                    throw new \Exception("Invalid default year (1901-2155): $year");
+                    throw new Exception("Invalid default year (1901-2155): $year");
                 }
                 // Comment to appease this phpcs rule:
                 // PSR2.ControlStructures.SwitchDeclaration.TerminatingComment
@@ -627,18 +630,18 @@ class ColumnDefinition
 
             case 'enum':
                 if ($token->type !== Token::STRING) {
-                    throw new \Exception("Invalid data type for default enum value: $token->type");
+                    throw new Exception("Invalid data type for default enum value: $token->type");
                 }
                 foreach ($this->elements as $element) {
                     if (strtolower($token->text) === strtolower($element)) {
                         return $element;
                     }
                 }
-                throw new \Exception("Default enum value not found in enum: $token->text");
+                throw new Exception("Default enum value not found in enum: $token->text");
 
             case 'set':
                 if ($token->type !== Token::STRING) {
-                    throw new \Exception("Invalid type for default set value: $token->type");
+                    throw new Exception("Invalid type for default set value: $token->type");
                 }
                 if ($token->text === '') {
                     return '';
@@ -653,7 +656,7 @@ class ColumnDefinition
                         }
                     }
                     if (is_null($match)) {
-                        throw new \Exception("Default set value not found in set: $token->text");
+                        throw new Exception("Default set value not found in set: $token->text");
                     }
                     $matches[$match] = $this->elements[$match];
                 }
@@ -661,7 +664,7 @@ class ColumnDefinition
                 return implode(',', $matches);
 
             default:
-                throw new \Exception("This kind of data type cannot have a default value: $typeInfo->kind");
+                throw new Exception("This kind of data type cannot have a default value: $typeInfo->kind");
         }
     }
 
@@ -721,7 +724,7 @@ class ColumnDefinition
         $text = Token::escapeIdentifier($this->name) . " " . $this->type;
         $typeInfo = $this->getTypeInfo();
 
-        if ($this->length) {
+        if ($this->length !== null) {
             $text .= "(" . $this->length;
             if ($typeInfo->kind === 'decimal') {
                 $text .= "," . $this->decimals;
@@ -778,7 +781,7 @@ class ColumnDefinition
         ) {
             $text .= " DEFAULT CURRENT_TIMESTAMP";
         } elseif ($this->type === 'bit') {
-            $text .= " DEFAULT b'" . decbin($this->default) . "'";
+            $text .= " DEFAULT b'" . decbin((int)$this->default) . "'";
         } else {
             $text .= " DEFAULT " . Token::escapeString($this->default);
         }

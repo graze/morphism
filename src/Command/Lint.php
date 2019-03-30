@@ -84,7 +84,7 @@ class Lint extends Command
             $files = [];
             if (is_dir($path)) {
                 if ($this->verbose) {
-                    echo "$path\n";
+                    $output->writeln("$path");
                 }
                 foreach (new GlobIterator("$path/*.sql") as $fileInfo) {
                     $files[] = $fileInfo->getPathname();
@@ -98,12 +98,12 @@ class Lint extends Command
                 try {
                     $dump->parse($stream);
                     if ($this->verbose) {
-                        echo "OK    $file\n";
+                        $output->writeln("OK    $file");
                     }
                 } catch (RuntimeException $e) {
                     $errorFiles[] = $file;
                     $message = $stream->contextualise($e->getMessage());
-                    echo "ERROR $message\n";
+                    $output->writeln("<error>ERROR $message</error>");
                 }
             }
         }

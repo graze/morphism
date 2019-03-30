@@ -19,9 +19,9 @@ class CreateDatabase
      */
     public $tables = [];
 
-    /** @var CollationInfo|null */
+    /** @var CollationInfo */
     private $collation = null;
-    /** @var CollationInfo|null */
+    /** @var CollationInfo */
     private $defaultCollation = null;
 
     /**
@@ -146,7 +146,7 @@ class CreateDatabase
      *
      * @param CreateDatabase $that
      * @param array $flags
-     * @return \string[]
+     * @return string[]
      */
     public function diff(CreateDatabase $that, array $flags = [])
     {
@@ -201,7 +201,7 @@ class CreateDatabase
                 $tableDiff = $thisTable->diff($thatTable, [
                     'alterEngine' => $flags['alterEngine'],
                 ]);
-                if ($tableDiff) {
+                if (! empty($tableDiff)) {
                     $diff = array_merge($diff, $tableDiff);
                 }
             }

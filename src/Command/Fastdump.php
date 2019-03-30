@@ -116,9 +116,9 @@ class Fastdump extends Command
             $schemaDefinitionPaths = $entry['morphism']['schemaDefinitionPath'];
 
             if (!$this->write) {
-                echo "\n";
-                echo "/********* Connection: $connectionName Database: $dbName *********/\n";
-                echo "\n";
+                $output->writeln('<info>');
+                $output->writeln("/********* Connection: $connectionName Database: $dbName *********/");
+                $output->writeln('</info>');
             }
 
             $extractor = new Extractor($connection);
@@ -177,7 +177,7 @@ class Fastdump extends Command
                 }
             } else {
                 foreach ($dump->getDDL() as $query) {
-                    echo "$query;\n\n";
+                    $output->writeln("$query;\n");
                 }
             }
         }

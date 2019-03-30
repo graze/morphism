@@ -33,7 +33,7 @@ exception RuntimeException "Expected ',' or '\)'"
 
 -- test ----------------------------------------
 create table x (a);
-exception RuntimeException "expected a datatype"
+exception RuntimeException "Expected a datatype"
 
 -- test ----------------------------------------
 create table x (int int);
@@ -43,7 +43,7 @@ CREATE TABLE `x` (
 
 -- test ----------------------------------------
 create table x (a a);
-exception RuntimeException "unknown datatype 'a'"
+exception RuntimeException "Unknown datatype 'a'"
 
 -- test ----------------------------------------
 create table x ();

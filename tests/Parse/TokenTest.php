@@ -2,6 +2,7 @@
 
 namespace Graze\Morphism\Parse;
 
+use Exception;
 use Graze\Morphism\Test\Parse\TestCase;
 
 class TokenTest extends TestCase
@@ -274,7 +275,7 @@ class TokenTest extends TestCase
 
     /**
      * @dataProvider providerAsXyzError
-     * @expectedException \Exception
+     * @expectedException Exception
      * @param string $method
      * @param string $type
      * @param string $arg
@@ -308,6 +309,7 @@ class TokenTest extends TestCase
 
             ['asString',   Token::SYMBOL, 'abc'       ],
 
+            ['asNumber',   Token::STRING, 'abc'       ],
             ['asNumber',   Token::SYMBOL, 'abc'       ],
         ];
     }

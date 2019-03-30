@@ -551,6 +551,8 @@ class TokenStream
                 $offset + strlen($pregMatch[0])
             ];
         }
+
+        return [];
     }
 
     /**
@@ -564,6 +566,8 @@ class TokenStream
                 return $token;
             }
         }
+
+        return null;
     }
 
     /**
@@ -701,7 +705,7 @@ class TokenStream
         if ($token->type !== Token::NUMBER) {
             throw new RuntimeException("Expected number");
         }
-        return 0 + $token->text;
+        return 1 * $token->text;
     }
 
     /**

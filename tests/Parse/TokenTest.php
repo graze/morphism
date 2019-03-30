@@ -308,6 +308,7 @@ class TokenTest extends TestCase
 
             ['asString',   Token::SYMBOL, 'abc'       ],
 
+            ['asNumber',   Token::STRING, 'abc'       ],
             ['asNumber',   Token::SYMBOL, 'abc'       ],
         ];
     }

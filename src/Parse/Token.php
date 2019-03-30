@@ -269,8 +269,11 @@ class Token
                 return 1 * $this->text;
 
             case self::STRING:
-                // TODO - should check $this->text is actually a valid number
-                return 1 * $this->text;
+                if (is_numeric($this->text)) {
+                    return 1 * $this->text;
+                } else {
+                    throw new RuntimeException("Not a valid number: {$this->text}");
+                }
 
             case self::HEX:
                 return hexdec($this->text);

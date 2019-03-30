@@ -342,9 +342,11 @@ class Diff extends Command
             }
 
             foreach ($connectionNames as $connectionName) {
-                echo "-- --------------------------------\n";
-                echo "--   Connection: $connectionName\n";
-                echo "-- --------------------------------\n";
+                $output->writeln("<info>");
+                $output->writeln("-- --------------------------------");
+                $output->writeln("--   Connection: $connectionName");
+                $output->writeln("-- --------------------------------");
+                $output->writeln("</info>");
                 $connection = $config->getConnection($connectionName);
                 $entry = $config->getEntry($connectionName);
                 $dbName = $entry['connection']['dbname'];
@@ -379,7 +381,7 @@ class Diff extends Command
                 }, []);
 
                 foreach ($statements as $query) {
-                    echo "$query;\n\n";
+                    $output->writeln("$query;\n");
                 }
 
                 $this->applyChanges($connection, $connectionName, $statements);

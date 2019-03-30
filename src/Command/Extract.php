@@ -136,7 +136,7 @@ class Extract extends Command
             }
         } else {
             foreach ($dump->getDDL() as $query) {
-                echo "$query;\n\n";
+                $output->writeln("$query;\n");
             }
         }
     }

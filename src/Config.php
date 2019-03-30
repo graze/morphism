@@ -2,7 +2,12 @@
 
 namespace Graze\Morphism;
 
+use Doctrine\DBAL\Configuration;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\DriverManager;
 use RuntimeException;
+use Symfony\Component\Yaml\Parser;
 
 /**
  * A parser for config files
@@ -33,7 +38,7 @@ class Config
             throw new RuntimeException("Specified config file does not exist: {$this->path}");
         }
 
-        $parser = new \Symfony\Component\Yaml\Parser;
+        $parser = new Parser();
         $config = $parser->parse(file_get_contents($this->path));
 
         if (!isset($config['databases'])) {
@@ -111,14 +116,14 @@ class Config
      * connectionName.
      *
      * @param string $connectionName
-     * @return \Doctrine\DBAL\Connection
-     * @throws \Doctrine\DBAL\DBALException
+     * @return Connection
+     * @throws DBALException
      */
     public function getConnection($connectionName)
     {
         $entry = $this->getEntry($connectionName);
-        $dbalConfig = new \Doctrine\DBAL\Configuration();
-        return \Doctrine\DBAL\DriverManager::getConnection($entry['connection'], $dbalConfig);
+        $dbalConfig = new Configuration();
+        return DriverManager::getConnection($entry['connection'], $dbalConfig);
     }
 
     /**

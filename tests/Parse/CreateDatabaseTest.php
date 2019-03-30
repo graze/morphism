@@ -4,6 +4,7 @@ namespace Graze\Morphism\Parse;
 
 use Graze\Morphism\Test\Parse\TestCase;
 use Mockery;
+use RuntimeException;
 
 class CreateDatabaseTest extends TestCase
 {
@@ -95,7 +96,7 @@ class CreateDatabaseTest extends TestCase
     }
 
     /**
-     * @expectedException \RuntimeException
+     * @expectedException RuntimeException
      */
     public function testBadParse()
     {
@@ -138,7 +139,7 @@ class CreateDatabaseTest extends TestCase
     }
 
     /**
-     * @expectedException \RuntimeException
+     * @expectedException RuntimeException
      */
     public function testBadAddTable()
     {
@@ -196,7 +197,7 @@ class CreateDatabaseTest extends TestCase
     }
 
     /**
-     * @expectedException \RuntimeException
+     * @expectedException RuntimeException
      */
     public function testBadGetDDL()
     {

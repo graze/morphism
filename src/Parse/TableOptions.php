@@ -1,6 +1,8 @@
 <?php
 namespace Graze\Morphism\Parse;
 
+use RuntimeException;
+
 /**
  * Represents a set of table options - MIN_ROWS, PACK_KEYS, COMMENT, etc.
  */
@@ -80,7 +82,7 @@ class TableOptions
                 if (!($token->type === Token::IDENTIFIER &&
                       in_array(strtoupper($token->text), ['CHARSET', 'CHARACTER', 'COLLATE']))
                 ) {
-                    throw new \RuntimeException("Expected CHARSET, CHARACTER SET or COLLATE");
+                    throw new RuntimeException("Expected CHARSET, CHARACTER SET or COLLATE");
                 }
             }
 
@@ -139,7 +141,7 @@ class TableOptions
 
             case 'INSERT_METHOD':
                 $this->parseEnum($stream, $option, ['NO', 'FIRST', 'LAST']);
-                throw new \RuntimeException("$option is not currently supported by this tool");
+                throw new RuntimeException("$option is not currently supported by this tool");
 
             case 'ROW_FORMAT':
                 $this->parseEnum($stream, $option, ['DEFAULT', 'DYNAMIC', 'FIXED', 'COMPRESSED', 'REDUNDANT', 'COMPACT']);
@@ -151,10 +153,10 @@ class TableOptions
             case 'STATS_SAMPLE_PAGES':
             case 'TABLESPACE':
             case 'UNION':
-                throw new \RuntimeException("$option is not currently supported by this tool");
+                throw new RuntimeException("$option is not currently supported by this tool");
 
             default:
-                throw new \RuntimeException("Unknown table option: $option");
+                throw new RuntimeException("Unknown table option: $option");
         }
     }
 
@@ -217,10 +219,10 @@ class TableOptions
         $stream->consume([[Token::SYMBOL, '=']]);
         $token = $stream->nextToken();
         if ($token->isEof()) {
-            throw new \RuntimeException("Unexpected end-of-file");
+            throw new RuntimeException("Unexpected end-of-file");
         }
         if (!in_array($token->type, [Token::IDENTIFIER, Token::STRING])) {
-            throw new \RuntimeException("Bad table option value: '$token->text'");
+            throw new RuntimeException("Bad table option value: '$token->text'");
         }
         $this->setOption($option, strtolower($token->text));
     }
@@ -245,11 +247,11 @@ class TableOptions
         $stream->consume([[Token::SYMBOL, '=']]);
         $token = $stream->nextToken();
         if (!in_array($token->type, [Token::IDENTIFIER, Token::NUMBER])) {
-            throw new \RuntimeException("Bad table option value");
+            throw new RuntimeException("Bad table option value");
         }
         $value = strtoupper($token->text);
         if (!in_array($value, $enums)) {
-            throw new \RuntimeException("Invalid option value, expected " . implode(' | ', $enums));
+            throw new RuntimeException("Invalid option value, expected " . implode(' | ', $enums));
         }
         $this->setOption($option, $value);
     }

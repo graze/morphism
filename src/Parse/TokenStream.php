@@ -551,6 +551,8 @@ class TokenStream
                 $offset + strlen($pregMatch[0])
             ];
         }
+
+        return [];
     }
 
     /**
@@ -564,6 +566,8 @@ class TokenStream
                 return $token;
             }
         }
+
+        return null;
     }
 
     /**

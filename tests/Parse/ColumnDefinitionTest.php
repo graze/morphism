@@ -2,7 +2,11 @@
 
 namespace Graze\Morphism\Parse;
 
-class ColumnDefinitionTest extends \Graze\Morphism\Test\Parse\TestCase
+use Exception;
+use Graze\Morphism\Test\Parse\TestCase;
+use RuntimeException;
+
+class ColumnDefinitionTest extends TestCase
 {
     /**
      * @dataProvider parseDatatypesProvider
@@ -249,7 +253,7 @@ class ColumnDefinitionTest extends \Graze\Morphism\Test\Parse\TestCase
     /**
      * @param string $text
      * @dataProvider parseInvalidDatatypesProvider
-     * @expectedException \RuntimeException
+     * @expectedException RuntimeException
      */
     public function testParseInvalidDatatypes($text)
     {
@@ -310,7 +314,7 @@ class ColumnDefinitionTest extends \Graze\Morphism\Test\Parse\TestCase
     /**
      * @param string $text
      * @dataProvider parseInvalidDefaultValuesProvider
-     * @expectedException \Exception
+     * @expectedException Exception
      */
     public function testParseInvalidDefaultValues($text)
     {

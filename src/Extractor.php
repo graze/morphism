@@ -5,6 +5,7 @@ namespace Graze\Morphism;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DBALException;
 use Graze\Morphism\Parse\Token;
+use PDO;
 
 /**
  * Fast database schema extractor - instead of using mysqldump, it talks
@@ -77,7 +78,7 @@ class Extractor
     {
         $sth = $this->dbh->prepare($sql);
         $sth->execute($binds);
-        $rows = $sth->fetchAll(\PDO::FETCH_OBJ);
+        $rows = $sth->fetchAll(PDO::FETCH_OBJ);
         return $rows;
     }
 

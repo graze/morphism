@@ -63,7 +63,7 @@ class CollationInfoTest extends TestCase
      */
     public function testConstructorWithBadArgs($charset, $collation)
     {
-        $collation = new CollationInfo($charset, $collation);
+        new CollationInfo($charset, $collation);
     }
 
     /**

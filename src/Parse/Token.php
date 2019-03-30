@@ -248,7 +248,7 @@ class Token
             case self::BIN:
                 $bytes = '';
                 for ($text = $this->text; $text !== ''; $text = substr($text, 0, -8)) {
-                    $bytes = chr(bindec(substr($text, -8))) . $bytes;
+                    $bytes = chr(/** @scrutinizer ignore-type */ bindec(substr($text, -8))) . $bytes;
                 }
                 return $bytes;
 
@@ -266,11 +266,11 @@ class Token
     {
         switch ($this->type) {
             case self::NUMBER:
-                return 0 + $this->text;
+                return 1 * $this->text;
 
             case self::STRING:
                 // TODO - should check $this->text is actually a valid number
-                return 0 + $this->text;
+                return 1 * $this->text;
 
             case self::HEX:
                 return hexdec($this->text);

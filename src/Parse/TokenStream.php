@@ -705,7 +705,7 @@ class TokenStream
         if ($token->type !== Token::NUMBER) {
             throw new RuntimeException("Expected number");
         }
-        return 0 + $token->text;
+        return 1 * $token->text;
     }
 
     /**

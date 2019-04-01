@@ -342,11 +342,9 @@ class Diff extends Command
             }
 
             foreach ($connectionNames as $connectionName) {
-                $output->write("<info>");
                 $output->writeln("-- --------------------------------");
                 $output->writeln("--   Connection: $connectionName");
-                $output->write("-- --------------------------------");
-                $output->writeln("</info>");
+                $output->writeln("-- --------------------------------");
                 $connection = $config->getConnection($connectionName);
                 $entry = $config->getEntry($connectionName);
                 $dbName = $entry['connection']['dbname'];

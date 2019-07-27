@@ -42,6 +42,7 @@ class Diff extends Command
     const OPTION_NO_ALTER_ENGINE    = 'no-alter-engine';
     const OPTION_LOG_SKIPPED        = 'log-skipped';
     const OPTION_NO_LOG_SKIPPED     = 'no-log-skipped';
+    const OPTION_NO_FOREIGN_KEY_CHECKS = 'no-foreign-key-checks';
 
     /** @var string */
     private $engine = 'InnoDB';
@@ -65,6 +66,8 @@ class Diff extends Command
     private $logDir = null;
     /** @var bool */
     private $logSkipped = true;
+    /** @var bool */
+    private $disableForeignKeyChecks = false;
 
     protected function configure()
     {
@@ -154,6 +157,7 @@ class Diff extends Command
 
         $this->addOption(self::OPTION_LOG_SKIPPED);
         $this->addOption(self::OPTION_NO_LOG_SKIPPED);
+        $this->addOption(self::OPTION_NO_FOREIGN_KEY_CHECKS);
     }
 
     /**
@@ -211,6 +215,10 @@ class Diff extends Command
         }
         if ($this->applyChanges == 'no') {
             return;
+        }
+    
+        if ($this->disableForeignKeyChecks) {
+            $connection->executeQuery('SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0');
         }
 
         $confirm = $this->applyChanges == 'confirm';
@@ -284,6 +292,10 @@ class Diff extends Command
                 );
             }
         }
+
+        if ($this->disableForeignKeyChecks) {
+            $connection->executeQuery('SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS');
+        }
     }
 
     /**
@@ -319,6 +331,10 @@ class Diff extends Command
 
         if ($input->getOption(self::OPTION_NO_LOG_SKIPPED)) {
             $this->logSkipped = false;
+        }
+
+        if ($input->getOption(self::OPTION_NO_FOREIGN_KEY_CHECKS)) {
+            $this->disableForeignKeyChecks = true;
         }
 
         try {

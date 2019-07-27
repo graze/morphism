@@ -328,7 +328,8 @@ class Extractor
             } else {
                 $defColumn .= " NULL";
             }
-            if (!is_null($column->COLUMN_DEFAULT)) {
+            // Maria DB defines null default columns as string 'NULL' rather than null, these need to be ignored.
+            if (!is_null($column->COLUMN_DEFAULT) && !($column->IS_NULLABLE == 'YES' && $column->COLUMN_DEFAULT == 'NULL')) {
                 if (in_array($column->DATA_TYPE, ['timestamp', 'datetime']) &&
                     $column->COLUMN_DEFAULT == 'CURRENT_TIMESTAMP'
                 ) {

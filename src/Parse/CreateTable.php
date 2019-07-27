@@ -369,7 +369,7 @@ class CreateTable
             $this->indexes[$index->name] = $index;
         }
         foreach ($foreigns as $foreign) {
-            $this->foreigns[] = $foreign;
+            $this->foreigns[$foreign->constraint] = $foreign;
         }
     }
 
@@ -417,6 +417,7 @@ class CreateTable
         $alters = array_merge(
             $this->diffColumns($that),
             $this->diffIndexes($that),
+            $this->diffForeigns($that),
             $this->diffOptions($that, [
                 'alterEngine' => $flags['alterEngine']
             ])
@@ -520,8 +521,6 @@ class CreateTable
                         $alter = "DROP PRIMARY KEY";
                         break;
 
-                // TODO - foreign keys???
-
                     default:
                         $alter = "DROP KEY " . Token::escapeIdentifier($indexName);
                         break;
@@ -535,6 +534,33 @@ class CreateTable
                 $index->toString() !== $this->indexes[$indexName]->toString()
             ) {
                 $alters[] = "ADD " . $index->toString();
+            }
+        }
+
+        return $alters;
+    }
+
+    /**
+     * @param CreateTable $that
+     * @return array
+     */
+    private function diffForeigns(CreateTable $that)
+    {
+        $alters = [];
+
+        foreach ($this->foreigns as $foreignName => $foreign) {
+            if (!array_key_exists($foreignName, $that->foreigns) ||
+                $foreign->toString() !== $that->foreigns[$foreignName]->toString()
+            ) {
+                $alters[] = "DROP FOREIGN KEY " . Token::escapeIdentifier($foreignName);
+            }
+        }
+
+        foreach ($that->foreigns as $foreignName => $foreign) {
+            if (!array_key_exists($foreignName, $this->foreigns) ||
+                $foreign->toString() !== $this->foreigns[$foreignName]->toString()
+            ) {
+                $alters[] = "ADD " . $foreign->toString();
             }
         }
 

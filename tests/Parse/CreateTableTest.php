@@ -136,6 +136,7 @@ class CreateTableTest extends TestCase
 
         foreach ([
                     'columns.sql',
+                    'foreignKeys.sql',
                     'indexes.sql',
                     'simpleDiff.sql'
                  ] as $file) {

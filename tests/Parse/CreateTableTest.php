@@ -115,6 +115,7 @@ class CreateTableTest extends TestCase
         $firstStream = $this->makeStream($firstTableText);
         $firstTable = new CreateTable($collation);
         $firstTable->setDefaultEngine('InnoDB');
+        $firstTable->setAddIndexForForeignKey(false);
         $firstTable->parse($firstStream);
 
         $secondStream = $this->makeStream($secondTableText);

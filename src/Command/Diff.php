@@ -181,6 +181,9 @@ class Diff extends Command
 
         $dump = new MysqlDump();
         $dump->setDefaultDatabase($dbName);
+        // Disable adding indexes for foreign keys on the current schema, if the new schema doesn't have the foreign
+        // key then both the foreign key and the index would be dropped however the index won't exist.
+        $dump->setAddIndexForForeignKey(false);
         $dump->parse($stream);
 
         return $dump;

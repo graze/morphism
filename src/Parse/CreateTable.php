@@ -25,6 +25,9 @@ class CreateTable
 
     /** @var array */
     private $covers = [];
+    
+    /** @var bool */
+    private $addIndexForForeignKey = true;
 
     /**
      * Constructor.
@@ -55,6 +58,16 @@ class CreateTable
     public function setDefaultEngine($engine)
     {
         $this->options->setDefaultEngine($engine);
+    }
+
+    /**
+     * Sets whether to add an index for each foreign key if one isn't defined, this is the default behaviour of MySQL.
+     *
+     * @param bool $addIndexForForeignKey
+     */
+    public function setAddIndexForForeignKey($addIndexForForeignKey)
+    {
+        $this->addIndexForForeignKey = $addIndexForForeignKey;
     }
 
     /**
@@ -288,19 +301,22 @@ class CreateTable
 
         foreach ($this->indexes as $index) {
             if ($index->type === 'FOREIGN KEY') {
-                // TODO - doesn't correctly deal with indexes like foo(10)
-                $lookup = implode('\0', $index->getColumns());
-                if (!array_key_exists($lookup, $this->covers)) {
-                    $newIndex = new IndexDefinition();
-                    $newIndex->type = 'KEY';
-                    $newIndex->columns = $index->columns;
-                    if (!is_null($index->constraint)) {
-                        $newIndex->name = $index->constraint;
-                    } elseif (!is_null($index->name)) {
-                        $newIndex->name = $index->name;
+                if ($this->addIndexForForeignKey) {
+                    // TODO - doesn't correctly deal with indexes like foo(10)
+                    $lookup = implode('\0', $index->getColumns());
+                    if (!array_key_exists($lookup, $this->covers)) {
+                        $newIndex = new IndexDefinition();
+                        $newIndex->type = 'KEY';
+                        $newIndex->columns = $index->columns;
+                        if (!is_null($index->constraint)) {
+                            $newIndex->name = $index->constraint;
+                        } elseif (!is_null($index->name)) {
+                            $newIndex->name = $index->name;
+                        }
+                        $indexes[] = $newIndex;
                     }
-                    $indexes[] = $newIndex;
                 }
+
                 $foreign = new IndexDefinition();
                 if (is_null($index->constraint)) {
                     $foreign->constraint = $this->name . '_ibfk_' . ++$ibfkCounter;
@@ -369,7 +385,7 @@ class CreateTable
             $this->indexes[$index->name] = $index;
         }
         foreach ($foreigns as $foreign) {
-            $this->foreigns[] = $foreign;
+            $this->foreigns[$foreign->constraint] = $foreign;
         }
     }
 
@@ -417,6 +433,7 @@ class CreateTable
         $alters = array_merge(
             $this->diffColumns($that),
             $this->diffIndexes($that),
+            $this->diffForeigns($that),
             $this->diffOptions($that, [
                 'alterEngine' => $flags['alterEngine']
             ])
@@ -520,8 +537,6 @@ class CreateTable
                         $alter = "DROP PRIMARY KEY";
                         break;
 
-                // TODO - foreign keys???
-
                     default:
                         $alter = "DROP KEY " . Token::escapeIdentifier($indexName);
                         break;
@@ -535,6 +550,33 @@ class CreateTable
                 $index->toString() !== $this->indexes[$indexName]->toString()
             ) {
                 $alters[] = "ADD " . $index->toString();
+            }
+        }
+
+        return $alters;
+    }
+
+    /**
+     * @param CreateTable $that
+     * @return array
+     */
+    private function diffForeigns(CreateTable $that)
+    {
+        $alters = [];
+
+        foreach ($this->foreigns as $foreignName => $foreign) {
+            if (!array_key_exists($foreignName, $that->foreigns) ||
+                $foreign->toString() !== $that->foreigns[$foreignName]->toString()
+            ) {
+                $alters[] = "DROP FOREIGN KEY " . Token::escapeIdentifier($foreignName);
+            }
+        }
+
+        foreach ($that->foreigns as $foreignName => $foreign) {
+            if (!array_key_exists($foreignName, $this->foreigns) ||
+                $foreign->toString() !== $this->foreigns[$foreignName]->toString()
+            ) {
+                $alters[] = "ADD " . $foreign->toString();
             }
         }
 

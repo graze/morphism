@@ -115,6 +115,7 @@ class CreateTableTest extends TestCase
         $firstStream = $this->makeStream($firstTableText);
         $firstTable = new CreateTable($collation);
         $firstTable->setDefaultEngine('InnoDB');
+        $firstTable->setAddIndexForForeignKey(false);
         $firstTable->parse($firstStream);
 
         $secondStream = $this->makeStream($secondTableText);
@@ -136,6 +137,7 @@ class CreateTableTest extends TestCase
 
         foreach ([
                     'columns.sql',
+                    'foreignKeys.sql',
                     'indexes.sql',
                     'simpleDiff.sql'
                  ] as $file) {

@@ -25,6 +25,8 @@ class MysqlDump
     private $defaultEngine = 'InnoDB';
     /** @var CollationInfo */
     private $defaultCollation = null;
+    /** @var bool */
+    private $addIndexForForeignKey = true;
 
     /**
      * Constructor
@@ -105,6 +107,16 @@ class MysqlDump
     }
 
     /**
+     * Sets whether to add an index for each foreign key if one isn't defined, this is the default behaviour of MySQL.
+     *
+     * @param bool $addIndexForForeignKey
+     */
+    public function setAddIndexForForeignKey($addIndexForForeignKey)
+    {
+        $this->addIndexForForeignKey = $addIndexForForeignKey;
+    }
+
+    /**
      * Sets the default collation to assume when no collation or charset
      * is specified in CREATE DATABASE or CREATE TABLE.
      *
@@ -151,6 +163,7 @@ class MysqlDump
                 }
                 $table = new CreateTable($this->database->getCollation());
                 $table->setDefaultEngine($this->defaultEngine);
+                $table->setAddIndexForForeignKey($this->addIndexForForeignKey);
                 $table->parse($stream);
                 $stream->expect(Token::SYMBOL, ';');
 

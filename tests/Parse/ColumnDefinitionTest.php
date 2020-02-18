@@ -96,6 +96,8 @@ class ColumnDefinitionTest extends TestCase
             ["x datetime on update current_timestamp",   "`x` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP"],
             ["x datetime default current_timestamp on update current_timestamp",
                 "`x` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"],
+            ["x datetime default current_timestamp default_generated on update current_timestamp",
+                "`x` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"],
 
             ["x timestamp",                               "`x` timestamp NOT NULL"],
             ["x timestamp default 0",                     "`x` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00'"],

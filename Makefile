@@ -55,7 +55,10 @@ test-unit: ## Run the unit testsuite.
 test-functional: example
 	docker-compose run --rm morphism diff morphism.conf
 	docker-compose run --rm morphism dump morphism.conf
-	docker-compose run --rm db mysqldump -hdb -umorphism -pmorphism morphism-test > dump.sql
+# MySQL 8 generates a warning about password on command line being insecure, mysqldump doesn't have an option to 
+# specify the config in a file so just ignore the warning. Running through bash so stderr on the container can be 
+# redirected.
+	docker-compose run --rm db bash -c "mysqldump -hdb -umorphism -pmorphism morphism-test 2>/dev/null" >dump.sql
 	docker-compose run --rm morphism lint dump.sql
 	docker-compose run --rm morphism extract dump.sql
 	@rm -f dump.sql

@@ -20,6 +20,9 @@ class CreateTable
     /** @var IndexDefinition[] definitions of foreign keys */
     public $foreigns = [];
 
+    /** @var CheckDefinition[] definitions of checks */
+    public $checks = [];
+
     /** @var TableOptions */
     public $options = null;
 
@@ -121,6 +124,8 @@ class CreateTable
                     $this->parseIndex($stream, 'UNIQUE KEY', $constraint);
                 } elseif ($stream->consume('FOREIGN KEY')) {
                     $this->parseIndex($stream, 'FOREIGN KEY', $constraint);
+                } elseif ($stream->consume('CHECK')) {
+                    $this->parseCheck($stream, $constraint);
                 } else {
                     throw new RuntimeException("Bad CONSTRAINT");
                 }
@@ -597,5 +602,16 @@ class CreateTable
             'alterEngine' => $flags['alterEngine']
         ]);
         return ($diff == '') ? [] : [$diff];
+    }
+
+    /**
+     * @param TokenStream $stream
+     * @param string|null $name
+     */
+    private function parseCheck(TokenStream $stream, $name = null)
+    {
+        $check = new CheckDefinition();
+        $check->parse($stream, $name);
+        $this->checks[] = $check;
     }
 }

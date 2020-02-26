@@ -1,7 +1,7 @@
 SHELL = /bin/sh
 
 DOCKER = $(shell which docker)
-PHP_VER := 7.2
+PHP_VER := 7.4
 IMAGE := graze/php-alpine:${PHP_VER}-test
 VOLUME := /srv
 DOCKER_RUN_BASE := ${DOCKER} run --rm -t -v $$(pwd):${VOLUME} -w ${VOLUME}
@@ -55,7 +55,10 @@ test-unit: ## Run the unit testsuite.
 test-functional: example
 	docker-compose run --rm morphism diff morphism.conf
 	docker-compose run --rm morphism dump morphism.conf
-	docker-compose run --rm db mysqldump -hdb -umorphism -pmorphism morphism-test > dump.sql
+# MySQL 8 generates a warning about password on command line being insecure, mysqldump doesn't have an option to 
+# specify the config in a file so just ignore the warning. Running through bash so stderr on the container can be 
+# redirected.
+	docker-compose run --rm db bash -c "mysqldump -hdb -umorphism -pmorphism morphism-test 2>/dev/null" >dump.sql
 	docker-compose run --rm morphism lint dump.sql
 	docker-compose run --rm morphism extract dump.sql
 	@rm -f dump.sql
@@ -73,6 +76,8 @@ test-matrix: ## Run the unit tests against multiple targets.
 	${MAKE} PHP_VER="7.0" build-update test
 	${MAKE} PHP_VER="7.1" build-update test
 	${MAKE} PHP_VER="7.2" build-update test
+	${MAKE} PHP_VER="7.3" build-update test
+	${MAKE} PHP_VER="7.4" build-update test
 
 test-coverage: ## Run all tests and output coverage to the console.
 	${DOCKER_RUN} phpdbg7 -qrr vendor/bin/phpunit --coverage-text

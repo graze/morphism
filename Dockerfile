@@ -5,7 +5,7 @@ COPY . /app
 
 RUN composer install --no-ansi --no-dev --no-interaction --no-progress --no-scripts --optimize-autoloader --prefer-dist
 
-FROM graze/php-alpine:7.2 AS run
+FROM graze/php-alpine:7.4 AS run
 
 LABEL org.label-schema.schema-version="1.0" \
     org.label-schema.vendor="graze" \

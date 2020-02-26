@@ -12,7 +12,7 @@
     "license": "MIT",
     "config": {
         "platform": {
-            "php": "7.2"
+            "php": "7.4"
         }
     },
     "authors": [
@@ -29,7 +29,7 @@
         }
     ],
     "require": {
-        "php": "^7.1",
+        "php": "^7.2",
 
         "doctrine/dbal": "^2.5",
         "symfony/console": "^2.8 | ^3 | ^4",
@@ -39,7 +39,7 @@
         "graze/standards": "^2.0",
         "mockery/mockery": "^1.2",
         "phpunit/phpunit": "^5.7.21 | ^6 | ^7",
-        "squizlabs/php_codesniffer": "^3.3.1",
+        "squizlabs/php_codesniffer": "^3.5.0",
         "symfony/var-dumper": "^4.2"
     },
     "autoload": {

@@ -493,6 +493,10 @@ class ColumnDefinition
                 $this->autoIncrement = true;
                 $this->nullable = false;
                 $this->default = null;
+            } elseif ($token1->eq(Token::IDENTIFIER, 'DEFAULT_GENERATED')
+            ) {
+                // DEFAULT_GENERATED is new in MySQL 8 and not required.
+                continue;
             } else {
                 $stream->rewind($mark);
                 break;

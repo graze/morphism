@@ -88,6 +88,7 @@ class ColumnDefinition
         'longtext'   => [ 'blob',      [0    ], null,    false,  true,   true,   null, ],
         'enum'       => [ 'enum',      [0    ], null,    false,  false,  true,   0,    ],
         'set'        => [ 'set',       [0    ], null,    false,  false,  true,   '',   ],
+        'json'       => [ 'json',      [0    ], null,    false,  false,  false,  null, ],
     ];
     /** @var array */
     private static $typeInfoCache = [];

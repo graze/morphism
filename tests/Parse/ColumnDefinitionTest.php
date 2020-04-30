@@ -247,6 +247,10 @@ class ColumnDefinitionTest extends TestCase
             ["x real",                "`x` double DEFAULT NULL"],
             ["x real(8,3)",           "`x` double(8,3) DEFAULT NULL"],
 
+            ["x json",                "`x` json"],
+            ["x json NULL",           "`x` json"],
+            ["x json NOT NULL",       "`x` json NOT NULL"],
+
             // Ignore unrecognised column options
             ["x int foo",             "`x` int(11) DEFAULT NULL"],
         ];

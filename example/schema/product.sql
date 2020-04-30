@@ -5,6 +5,7 @@ CREATE TABLE `product` (
   `weight` decimal(11,2) NOT NULL,
   `launch_date` date DEFAULT NULL,
   `internal_note` text,
+  `properties` json NULL,
   `updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `added` datetime NOT NULL,
   `deleted` datetime DEFAULT NULL,

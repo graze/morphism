@@ -103,7 +103,7 @@ class Fastdump extends Command
         $config = new Config($this->configFile);
         $config->parse();
 
-        if (! $this->connectionNames) {
+        if (!$this->connectionNames) {
             $this->connectionNames = $config->getConnectionNames();
         }
 
@@ -162,7 +162,7 @@ class Fastdump extends Command
                         }
                     }
 
-                    if (! $path) {
+                    if (!$path) {
                         $path = sprintf('%s/%s.sql', $schemaDefinitionPaths[0], $table->getName());
                     }
 

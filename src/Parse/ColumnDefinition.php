@@ -378,7 +378,7 @@ class ColumnDefinition
                 }
                 $this->collation->setBinaryCollation();
             } elseif ($token1->eq(Token::IDENTIFIER, 'CHARSET') ||
-                $token1->eq(Token::IDENTIFIER, 'CHARACTER') && $stream->consume('SET')
+                ($token1->eq(Token::IDENTIFIER, 'CHARACTER') && $stream->consume('SET'))
             ) {
                 if (!$typeInfo->allowCharset) {
                     throw new RuntimeException("Unexpected CHARSET");
@@ -476,7 +476,7 @@ class ColumnDefinition
             ) {
                 $stream->consume('KEY');
                 $this->uniqueKey = true;
-            } elseif ($token1->eq(Token::IDENTIFIER, 'PRIMARY') && $stream->consume('KEY') ||
+            } elseif (($token1->eq(Token::IDENTIFIER, 'PRIMARY') && $stream->consume('KEY')) ||
                 $token1->eq(Token::IDENTIFIER, 'KEY')
             ) {
                 $this->primaryKey = true;

@@ -10,6 +10,7 @@ use PDO;
 /**
  * Fast database schema extractor - instead of using mysqldump, it talks
  * directly to the INFORMATION_SCHEMA, resulting in a 2x speedup.
+ * phpcs:ignoreFile Squiz.NamingConventions.ValidVariableName
  */
 class Extractor
 {

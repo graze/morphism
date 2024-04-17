@@ -402,7 +402,7 @@ class CreateTable
                 if (++$count > 1) {
                     throw new RuntimeException("There can be only one AUTO_INCREMENT column");
                 }
-                if (! array_key_exists($column->name, $this->covers)) {
+                if (!array_key_exists($column->name, $this->covers)) {
                     throw new RuntimeException("AUTO_INCREMENT column must be defined as a key");
                 }
             }

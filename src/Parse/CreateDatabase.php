@@ -201,7 +201,7 @@ class CreateDatabase
                 $tableDiff = $thisTable->diff($thatTable, [
                     'alterEngine' => $flags['alterEngine'],
                 ]);
-                if (! empty($tableDiff)) {
+                if (!empty($tableDiff)) {
                     $diff = array_merge($diff, $tableDiff);
                 }
             }

@@ -34,7 +34,7 @@ class Config
      */
     public function parse()
     {
-        if (! file_exists($this->path)) {
+        if (!file_exists($this->path)) {
             throw new RuntimeException("Specified config file does not exist: {$this->path}");
         }
 
@@ -70,7 +70,7 @@ class Config
             if (!$schemaDefinitionPaths) {
                 $schemaDefinitionPaths = 'schema/'.$connectionName;
             }
-            if (! is_array($schemaDefinitionPaths)) {
+            if (!is_array($schemaDefinitionPaths)) {
                 $schemaDefinitionPaths = [ $schemaDefinitionPaths ];
             }
 

@@ -1,7 +1,7 @@
 CREATE TABLE `product` (
-  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
   `name` text NOT NULL,
-  `description` int(11) unsigned NOT NULL,
+  `description` int unsigned NOT NULL,
   `weight` decimal(11,2) NOT NULL,
   `launch_date` date DEFAULT NULL,
   `internal_note` text,

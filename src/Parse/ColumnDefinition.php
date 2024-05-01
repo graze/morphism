@@ -60,12 +60,12 @@ class ColumnDefinition
     private static $typeInfoMap = [
         //                             format   default  allow   allow   allow   uninitialised
         // datatype       kind         Spec     Lengths  Autoinc Binary  Charset Value
-        'bit'        => [ 'bit',       [0,1  ], [1],     false,  false,  false,  0,    ],
-        'tinyint'    => [ 'int',       [0,1  ], [3,4],   true,   false,  false,  0,    ],
-        'smallint'   => [ 'int',       [0,1  ], [5,6],   true,   false,  false,  0,    ],
-        'mediumint'  => [ 'int',       [0,1  ], [8,9],   true,   false,  false,  0,    ],
-        'int'        => [ 'int',       [0,1  ], [10,11], true,   false,  false,  0,    ],
-        'bigint'     => [ 'int',       [0,1  ], [20,20], true,   false,  false,  0,    ],
+        'bit'        => [ 'bit',       [0,1  ], null,    false,  false,  false,  0,    ],
+        'tinyint'    => [ 'int',       [0,1  ], null,    true,   false,  false,  0,    ],
+        'smallint'   => [ 'int',       [0,1  ], null,    true,   false,  false,  0,    ],
+        'mediumint'  => [ 'int',       [0,1  ], null,    true,   false,  false,  0,    ],
+        'int'        => [ 'int',       [0,1  ], null,    true,   false,  false,  0,    ],
+        'bigint'     => [ 'int',       [0,1  ], null,    true,   false,  false,  0,    ],
         'double'     => [ 'decimal',   [0,  2], null,    true,   false,  false,  0,    ], // prec = 22
         'float'      => [ 'decimal',   [0,  2], null,    true,   false,  false,  0,    ], // prec = 12
         'decimal'    => [ 'decimal',   [0,1,2], [10,10], false,  false,  false,  0,    ],
@@ -181,7 +181,7 @@ class ColumnDefinition
             'allowDefault'       => !is_null($data[6]),
             'uninitialisedValue' => $data[6],
         ];
-        $typeInfo->allowSign = $typeInfo->allowZerofill = in_array($typeInfo->kind, ['int', 'decimal']);
+        $typeInfo->allowSign = in_array($typeInfo->kind, ['int', 'decimal']);
         self::$typeInfoCache[$this->type] = $typeInfo;
 
         return $typeInfo;
@@ -206,7 +206,6 @@ class ColumnDefinition
                 case 'serial':
                     // SERIAL is an alias for  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE
                     $this->type = 'bigint';
-                    $this->length = 20;
                     $this->unsigned = true;
                     $this->nullable = false;
                     $this->autoIncrement = true;
@@ -277,13 +276,31 @@ class ColumnDefinition
 
             case 'bool':
             case 'boolean':
-                $format = [1];
                 /* Take a copy so that edits don't make it back into the runtime cache. */
                 $typeInfo = clone $typeInfo;
                 $typeInfo->allowSign = false;
-                $typeInfo->allowZerofill = false;
                 break;
 
+            case 'tinyint':
+            case 'smallint':
+            case 'mediumint':
+            case 'int':
+            case 'bigint':
+            case 'int1':
+            case 'int2':
+            case 'int3':
+            case 'int4':
+            case 'int8':
+            case 'middleint':
+            case 'integer':
+                $spec = $typeInfo->formatSpec;
+                // Skip for display width spec for integer data types was deprecated after 8.0.19
+                if ($stream->consume([[Token::SYMBOL, '(']])) {
+                    $stream->nextToken();
+                    $stream->nextToken();
+                }
+                break;
+    
             default:
                 $spec = $typeInfo->formatSpec;
                 if ($stream->consume([[Token::SYMBOL, '(']])) {
@@ -318,10 +335,7 @@ class ColumnDefinition
             }
 
             if ($token1->eq(Token::IDENTIFIER, 'ZEROFILL')) {
-                if (!$typeInfo->allowZerofill) {
-                    throw new RuntimeException("Unexpected ZEROFILL");
-                }
-                $this->zerofill = true;
+                throw new RuntimeException("Unexpected ZEROFILL");
             } elseif ($token1->eq(Token::IDENTIFIER, 'UNSIGNED')) {
                 if (!$typeInfo->allowSign) {
                     throw new RuntimeException("Unexpected UNSIGNED");
@@ -336,10 +350,6 @@ class ColumnDefinition
                 $stream->rewind($mark);
                 break;
             }
-        }
-
-        if ($this->zerofill) {
-            $this->unsigned = true;
         }
 
         $defaultLengths = $typeInfo->defaultLengths;
@@ -522,18 +532,10 @@ class ColumnDefinition
                 return $this->elements[0];
 
             case 'int':
-                if ($this->zerofill) {
-                    $length = $this->length;
-                    return sprintf("%0{$length}d", 0);
-                }
                 return '0';
 
             case 'decimal':
                 $decimals = is_null($this->decimals) ? 0 : $this->decimals;
-                if ($this->zerofill) {
-                    $length = $this->length;
-                    return sprintf("%0{$length}.{$decimals}f", 0);
-                }
                 return sprintf("%.{$decimals}f", 0);
 
             default:
@@ -575,12 +577,7 @@ class ColumnDefinition
                 return $token->asNumber();
 
             case 'int':
-                if ($this->zerofill) {
-                    $length = $this->length;
-                    return sprintf("%0{$length}d", $token->asNumber());
-                } else {
-                    return $token->asNumber();
-                }
+                return $token->asNumber();
                 // Comment to appease this phpcs rule:
                 // PSR2.ControlStructures.SwitchDeclaration.TerminatingComment
                 // There must be a comment when fall-through is intentional
@@ -588,12 +585,7 @@ class ColumnDefinition
 
             case 'decimal':
                 $decimals = is_null($this->decimals) ? 0 : $this->decimals;
-                if ($this->zerofill) {
-                    $length = $this->length;
-                    return sprintf("%0{$length}.{$decimals}f", $token->asNumber());
-                } else {
-                    return sprintf("%.{$decimals}f", $token->asNumber());
-                }
+                return sprintf("%.{$decimals}f", $token->asNumber());
                 // Comment to appease this phpcs rule:
                 // PSR2.ControlStructures.SwitchDeclaration.TerminatingComment
                 // There must be a comment when fall-through is intentional
@@ -745,10 +737,6 @@ class ColumnDefinition
 
         if ($this->unsigned) {
             $text .= " unsigned";
-        }
-
-        if ($this->zerofill) {
-            $text .= " zerofill";
         }
 
         if ($typeInfo->allowCharset) {

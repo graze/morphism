@@ -5,7 +5,7 @@ create table t (
     index (x)
 );
 CREATE TABLE `t` ( 
-    `x` int(11) DEFAULT NULL,
+    `x` int DEFAULT NULL,
     KEY `x` (`x`) 
 ) ENGINE=InnoDB;
 
@@ -15,7 +15,7 @@ create table t (
     key (x) 
 );
 CREATE TABLE `t` (
-    `x` int(11) DEFAULT NULL,
+    `x` int DEFAULT NULL,
     KEY `x` (`x`) 
 ) ENGINE=InnoDB;
 
@@ -27,8 +27,8 @@ create table t (
     key (x,y)
 );
 CREATE TABLE `t` (
-    `x` int(11) DEFAULT NULL,
-    `y` int(11) DEFAULT NULL,
+    `x` int DEFAULT NULL,
+    `y` int DEFAULT NULL,
     KEY `x` (`x`),
     KEY `x_2` (`x`,`y`) 
 ) ENGINE=InnoDB;
@@ -41,8 +41,8 @@ create table t (
     key (x,y)
 );
 CREATE TABLE `t` (
-    `x` int(11) NOT NULL DEFAULT '0',
-    `y` int(11) DEFAULT NULL,
+    `x` int NOT NULL DEFAULT '0',
+    `y` int DEFAULT NULL,
     PRIMARY KEY (`x`),
     KEY `x` (`x`,`y`) 
 ) ENGINE=InnoDB;

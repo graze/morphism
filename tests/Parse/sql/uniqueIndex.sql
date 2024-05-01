@@ -5,7 +5,7 @@ create table t (
     unique (x)
 );
 CREATE TABLE `t` (
-    `x` int(11) DEFAULT NULL,
+    `x` int DEFAULT NULL,
     UNIQUE KEY `x` (`x`) 
 ) ENGINE=InnoDB;
 
@@ -15,7 +15,7 @@ create table t (
     constraint unique (x)
 );
 CREATE TABLE `t` (
-    `x` int(11) DEFAULT NULL,
+    `x` int DEFAULT NULL,
     UNIQUE KEY `x` (`x`) 
 ) ENGINE=InnoDB;
 
@@ -25,7 +25,7 @@ create table t (
     unique key (x)
 );
 CREATE TABLE `t` (
-    `x` int(11) DEFAULT NULL,
+    `x` int DEFAULT NULL,
     UNIQUE KEY `x` (`x`) 
 ) ENGINE=InnoDB;
 
@@ -35,7 +35,7 @@ create table t (
     unique index (x)
 );
 CREATE TABLE `t` (
-    `x` int(11) DEFAULT NULL,
+    `x` int DEFAULT NULL,
     UNIQUE KEY `x` (`x`)
 ) ENGINE=InnoDB;
 
@@ -45,6 +45,6 @@ create table t (
     constraint con unique key (x)
 );
 CREATE TABLE `t` (
-    `x` int(11) DEFAULT NULL,
+    `x` int DEFAULT NULL,
     UNIQUE KEY `con` (`x`)
 ) ENGINE=InnoDB;

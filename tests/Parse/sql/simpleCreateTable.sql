@@ -38,7 +38,7 @@ exception RuntimeException "Expected a datatype"
 -- test ----------------------------------------
 create table x (int int);
 CREATE TABLE `x` (
-    `int` int(11) DEFAULT NULL
+    `int` int DEFAULT NULL
 ) ENGINE=InnoDB;
 
 -- test ----------------------------------------
@@ -52,7 +52,7 @@ exception RuntimeException "Expected identifier"
 -- test ----------------------------------------
 create table `table` (a int);
 CREATE TABLE `table` (
-    `a` int(11) DEFAULT NULL
+    `a` int DEFAULT NULL
 ) ENGINE=InnoDB;
 
 -- test - Multiple auto increment columns

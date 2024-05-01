@@ -263,7 +263,7 @@ class CreateDatabaseTest extends TestCase
         /** @var CreateTable|Mockery\MockInterface $tableA */
         $tableA = Mockery::mock(CreateTable::class);
         $tableA->shouldReceive('getName')->andReturn('t');
-        $tableA->shouldReceive('getDDL')->andReturn(["CREATE TABLE `t` (\n  `a` int(11) DEFAULT NULL\n) ENGINE=E"]);
+        $tableA->shouldReceive('getDDL')->andReturn(["CREATE TABLE `t` (\n  `a` int DEFAULT NULL\n) ENGINE=E"]);
 
         $db2 = new CreateDatabase($collationInfo);
         $db2->addTable($tableA);
@@ -272,7 +272,7 @@ class CreateDatabaseTest extends TestCase
             $db1,
             $db2,
             [],
-            ["CREATE TABLE `t` (\n  `a` int(11) DEFAULT NULL\n) ENGINE=E"]
+            ["CREATE TABLE `t` (\n  `a` int DEFAULT NULL\n) ENGINE=E"]
         ];
 
         // Table added
@@ -285,7 +285,7 @@ class CreateDatabaseTest extends TestCase
             $db1,
             $db2,
             [],
-            ["CREATE TABLE `t` (\n  `a` int(11) DEFAULT NULL\n) ENGINE=E"]
+            ["CREATE TABLE `t` (\n  `a` int DEFAULT NULL\n) ENGINE=E"]
         ];
 
         // Table added (but ignored)
@@ -331,12 +331,12 @@ class CreateDatabaseTest extends TestCase
         /** @var CreateTable|Mockery\MockInterface $tableWithEngineBar */
         $tableWithEngineBar = Mockery::mock(CreateTable::class);
         $tableWithEngineBar->shouldReceive('getName')->andReturn('t');
-        $tableWithEngineBar->shouldReceive('getDDL')->andReturn(["CREATE TABLE `t` (\n  `a` int(11) DEFAULT NULL\n) ENGINE=BAR"]);
+        $tableWithEngineBar->shouldReceive('getDDL')->andReturn(["CREATE TABLE `t` (\n  `a` int DEFAULT NULL\n) ENGINE=BAR"]);
 
         /** @var CreateTable|Mockery\MockInterface $tableWithEngineFoo */
         $tableWithEngineFoo = Mockery::mock(CreateTable::class);
         $tableWithEngineFoo->shouldReceive('getName')->andReturn('t');
-        $tableWithEngineFoo->shouldReceive('getDDL')->andReturn(["CREATE TABLE `t` (\n  `a` int(11) DEFAULT NULL\n) ENGINE=FOO"]);
+        $tableWithEngineFoo->shouldReceive('getDDL')->andReturn(["CREATE TABLE `t` (\n  `a` int DEFAULT NULL\n) ENGINE=FOO"]);
         $tableWithEngineFoo
             ->shouldReceive('diff')
             ->with(

@@ -30,40 +30,36 @@ class ColumnDefinitionTest extends TestCase
     public function parseDatatypesProvider()
     {
         return [
-            ["x int",                       "`x` int(11) DEFAULT NULL"],
-            ["x int signed",                "`x` int(11) DEFAULT NULL"],
-            ["x int unsigned",              "`x` int(10) unsigned DEFAULT NULL"],
-            ["x int(5)",                    "`x` int(5) DEFAULT NULL"],
-            ["x int(5) default null",       "`x` int(5) DEFAULT NULL"],
-            ["x int not null default 1",    "`x` int(11) NOT NULL DEFAULT '1'"],
-            ["x int zerofill",              "`x` int(10) unsigned zerofill DEFAULT NULL"],
-            ["x int zerofill unsigned",     "`x` int(10) unsigned zerofill DEFAULT NULL"],
-            ["x int unsigned zerofill",     "`x` int(10) unsigned zerofill DEFAULT NULL"],
-            ["x int default 1",             "`x` int(11) DEFAULT '1'"],
-            ["x int(4) zerofill default 1", "`x` int(4) unsigned zerofill DEFAULT '0001'"],
-            ["x int auto_increment",        "`x` int(11) NOT NULL AUTO_INCREMENT"],
-            ["x int comment 'blah'",        "`x` int(11) DEFAULT NULL COMMENT 'blah'"],
-            ["x int serial default value",  "`x` int(11) NOT NULL AUTO_INCREMENT"],
+            ["x int",                       "`x` int DEFAULT NULL"],
+            ["x int signed",                "`x` int DEFAULT NULL"],
+            ["x int unsigned",              "`x` int unsigned DEFAULT NULL"],
+            ["x int(5)",                    "`x` int DEFAULT NULL"],
+            ["x int(5) default null",       "`x` int DEFAULT NULL"],
+            ["x int not null default 1",    "`x` int NOT NULL DEFAULT '1'"],
+            ["x int default 1",             "`x` int DEFAULT '1'"],
+            ["x int auto_increment",        "`x` int NOT NULL AUTO_INCREMENT"],
+            ["x int comment 'blah'",        "`x` int DEFAULT NULL COMMENT 'blah'"],
+            ["x int serial default value",  "`x` int NOT NULL AUTO_INCREMENT"],
 
-            ["x int primary key",           "`x` int(11) NOT NULL"],
-            ["x int key",                   "`x` int(11) NOT NULL"],
-            ["x int unique",                "`x` int(11) DEFAULT NULL"],
-            ["x int unique key",            "`x` int(11) DEFAULT NULL"],
+            ["x int primary key",           "`x` int NOT NULL"],
+            ["x int key",                   "`x` int NOT NULL"],
+            ["x int unique",                "`x` int DEFAULT NULL"],
+            ["x int unique key",            "`x` int DEFAULT NULL"],
 
-            ["x bit",                       "`x` bit(1) DEFAULT NULL"],
+            ["x bit",                       "`x` bit DEFAULT NULL"],
             ["x bit(4)",                    "`x` bit(4) DEFAULT NULL"],
             ["x bit(4) default 4",          "`x` bit(4) DEFAULT b'100'"],
             ["x bit(4) default b'0101'",    "`x` bit(4) DEFAULT b'101'"],
             ["x bit(8) default x'e4'",      "`x` bit(8) DEFAULT b'11100100'"],
 
-            ["x tinyint",                   "`x` tinyint(4) DEFAULT NULL"],
-            ["x tinyint unsigned",          "`x` tinyint(3) unsigned DEFAULT NULL"],
-            ["x smallint",                  "`x` smallint(6) DEFAULT NULL"],
-            ["x smallint unsigned",         "`x` smallint(5) unsigned DEFAULT NULL"],
-            ["x mediumint",                 "`x` mediumint(9) DEFAULT NULL"],
-            ["x mediumint unsigned",        "`x` mediumint(8) unsigned DEFAULT NULL"],
-            ["x bigint",                    "`x` bigint(20) DEFAULT NULL"],
-            ["x bigint unsigned",           "`x` bigint(20) unsigned DEFAULT NULL"],
+            ["x tinyint",                   "`x` tinyint DEFAULT NULL"],
+            ["x tinyint unsigned",          "`x` tinyint unsigned DEFAULT NULL"],
+            ["x smallint",                  "`x` smallint DEFAULT NULL"],
+            ["x smallint unsigned",         "`x` smallint unsigned DEFAULT NULL"],
+            ["x mediumint",                 "`x` mediumint DEFAULT NULL"],
+            ["x mediumint unsigned",        "`x` mediumint unsigned DEFAULT NULL"],
+            ["x bigint",                    "`x` bigint DEFAULT NULL"],
+            ["x bigint unsigned",           "`x` bigint unsigned DEFAULT NULL"],
 
             ["x double",                    "`x` double DEFAULT NULL"],
             ["x double unsigned",           "`x` double unsigned DEFAULT NULL"],
@@ -79,7 +75,7 @@ class ColumnDefinitionTest extends TestCase
             ["x decimal(8,3)",              "`x` decimal(8,3) DEFAULT NULL"],
             ["x decimal default 1",         "`x` decimal(10,0) DEFAULT '1'"],
             ["x decimal(5,3) default 1",    "`x` decimal(5,3) DEFAULT '1.000'"],
-            ["x decimal(7,3) zerofill default 1",   "`x` decimal(7,3) unsigned zerofill DEFAULT '001.000'"],
+            ["x decimal(7,3) unsigned default 1",    "`x` decimal(7,3) unsigned DEFAULT '1.000'"],
 
             ["x date",                      "`x` date DEFAULT NULL"],
             ["x date default 0",            "`x` date DEFAULT '0000-00-00'"],
@@ -182,7 +178,7 @@ class ColumnDefinitionTest extends TestCase
             ["x set('a', 'b', 'c') NOT NULL",      "`x` set('a','b','c') NOT NULL"],
             ["x set('a', 'b', 'c') default ''",      "`x` set('a','b','c') DEFAULT ''"],
 
-            ["x serial",                 "`x` bigint(20) unsigned NOT NULL AUTO_INCREMENT"],
+            ["x serial",                 "`x` bigint unsigned NOT NULL AUTO_INCREMENT"],
 
             ["x character",              "`x` char(1) DEFAULT NULL"],
             ["x character(10)",          "`x` char(10) DEFAULT NULL"],
@@ -196,38 +192,38 @@ class ColumnDefinitionTest extends TestCase
             ["x long varchar",        "`x` mediumtext"],
             ["x long",                "`x` mediumtext"],
 
-            ["x bool",                "`x` tinyint(1) DEFAULT NULL"],
-            ["x boolean",             "`x` tinyint(1) DEFAULT NULL"],
-            ["x bool NOT NULL",       "`x` tinyint(1) NOT NULL"],
-            ["x boolean NOT NULL",    "`x` tinyint(1) NOT NULL"],
+            ["x bool",                "`x` tinyint DEFAULT NULL"],
+            ["x boolean",             "`x` tinyint DEFAULT NULL"],
+            ["x bool NOT NULL",       "`x` tinyint NOT NULL"],
+            ["x boolean NOT NULL",    "`x` tinyint NOT NULL"],
 
-            ["x int1",                "`x` tinyint(4) DEFAULT NULL"],
-            ["x int1(3)",             "`x` tinyint(3) DEFAULT NULL"],
-            ["x int1 NOT NULL",       "`x` tinyint(4) NOT NULL"],
+            ["x int1",                "`x` tinyint DEFAULT NULL"],
+            ["x int1(3)",             "`x` tinyint DEFAULT NULL"],
+            ["x int1 NOT NULL",       "`x` tinyint NOT NULL"],
 
-            ["x int2",                "`x` smallint(6) DEFAULT NULL"],
-            ["x int2(3)",             "`x` smallint(3) DEFAULT NULL"],
-            ["x int2 NOT NULL",       "`x` smallint(6) NOT NULL"],
+            ["x int2",                "`x` smallint DEFAULT NULL"],
+            ["x int2(3)",             "`x` smallint DEFAULT NULL"],
+            ["x int2 NOT NULL",       "`x` smallint NOT NULL"],
 
-            ["x int3",                "`x` mediumint(9) DEFAULT NULL"],
-            ["x int3(3)",             "`x` mediumint(3) DEFAULT NULL"],
-            ["x int3 NOT NULL",       "`x` mediumint(9) NOT NULL"],
+            ["x int3",                "`x` mediumint DEFAULT NULL"],
+            ["x int3(3)",             "`x` mediumint DEFAULT NULL"],
+            ["x int3 NOT NULL",       "`x` mediumint NOT NULL"],
 
-            ["x middleint",           "`x` mediumint(9) DEFAULT NULL"],
-            ["x middleint(3)",        "`x` mediumint(3) DEFAULT NULL"],
-            ["x middleint NOT NULL",  "`x` mediumint(9) NOT NULL"],
+            ["x middleint",           "`x` mediumint DEFAULT NULL"],
+            ["x middleint(3)",        "`x` mediumint DEFAULT NULL"],
+            ["x middleint NOT NULL",  "`x` mediumint NOT NULL"],
 
-            ["x int4",                "`x` int(11) DEFAULT NULL"],
-            ["x int4(3)",             "`x` int(3) DEFAULT NULL"],
-            ["x int4 NOT NULL",       "`x` int(11) NOT NULL"],
+            ["x int4",                "`x` int DEFAULT NULL"],
+            ["x int4(3)",             "`x` int DEFAULT NULL"],
+            ["x int4 NOT NULL",       "`x` int NOT NULL"],
 
-            ["x integer",             "`x` int(11) DEFAULT NULL"],
-            ["x integer(3)",          "`x` int(3) DEFAULT NULL"],
-            ["x integer NOT NULL",    "`x` int(11) NOT NULL"],
+            ["x integer",             "`x` int DEFAULT NULL"],
+            ["x integer(3)",          "`x` int DEFAULT NULL"],
+            ["x integer NOT NULL",    "`x` int NOT NULL"],
 
-            ["x int8",                "`x` bigint(20) DEFAULT NULL"],
-            ["x int8(3)",             "`x` bigint(3) DEFAULT NULL"],
-            ["x int8 NOT NULL",       "`x` bigint(20) NOT NULL"],
+            ["x int8",                "`x` bigint DEFAULT NULL"],
+            ["x int8(3)",             "`x` bigint DEFAULT NULL"],
+            ["x int8 NOT NULL",       "`x` bigint NOT NULL"],
 
             ["x dec",                 "`x` decimal(10,0) DEFAULT NULL"],
             ["x dec(8)",              "`x` decimal(8,0) DEFAULT NULL"],
@@ -252,7 +248,7 @@ class ColumnDefinitionTest extends TestCase
             ["x json NOT NULL",       "`x` json NOT NULL"],
 
             // Ignore unrecognised column options
-            ["x int foo",             "`x` int(11) DEFAULT NULL"],
+            ["x int foo",             "`x` int DEFAULT NULL"],
         ];
     }
 
@@ -280,6 +276,8 @@ class ColumnDefinitionTest extends TestCase
             ["x null"],
             // No identifier
             ["int"],
+            // Unexpected ZEROFILL keyword
+            ["x int zerofill"],
             // No comma separator
             ["x set('a'|'b')"],
             // Unexpected parentheses
@@ -408,10 +406,8 @@ class ColumnDefinitionTest extends TestCase
             // [ Column definition, uninitialised value ]
             ["x enum('a', 'b', 'c')",   "a"],
             ["x int",                   "0"],
-            ["x int(5) zerofill",       "00000"],
             ["x decimal",               "0"],
             ["x decimal(5,3)",          "0.000"],
-            ["x decimal(5,1) zerofill", "000.0"],
             ["x char",                  ""],
             ["x blob",                  null],
         ];

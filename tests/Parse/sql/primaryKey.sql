@@ -5,7 +5,7 @@ create table t (
     x text
 );
 CREATE TABLE `t` (
-    `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+    `id` int unsigned NOT NULL AUTO_INCREMENT,
     `x` text,
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB;
@@ -15,7 +15,7 @@ create table t (
     x int primary key
 ); 
 CREATE TABLE `t` (
-    `x` int(11) NOT NULL,
+    `x` int NOT NULL,
     PRIMARY KEY (`x`)
 ) ENGINE=InnoDB;
 
@@ -24,7 +24,7 @@ create table t (
     x int not null primary key
 );
 CREATE TABLE `t` (
-    `x` int(11) NOT NULL,
+    `x` int NOT NULL,
     PRIMARY KEY (`x`)
 ) ENGINE=InnoDB;
 
@@ -34,7 +34,7 @@ create table t (
     primary key (x)
 );
 CREATE TABLE `t` (
-    `x` int(11) NOT NULL DEFAULT '0',
+    `x` int NOT NULL DEFAULT '0',
     PRIMARY KEY (`x`)
 ) ENGINE=InnoDB;
 
@@ -44,18 +44,8 @@ create table t (
     primary key(x)
 );
 CREATE TABLE `t` (
-    `x` int(11) NOT NULL,
+    `x` int NOT NULL,
     PRIMARY KEY (`x`)
-) ENGINE=InnoDB;
-
--- test ----------------------------------------
-create table t (
-    x int(4) zerofill,
-    primary key (x)
-);
-CREATE TABLE `t` (
-    `x` int(4) unsigned zerofill NOT NULL DEFAULT '0000',
-    PRIMARY KEY (`x`) 
 ) ENGINE=InnoDB;
 
 -- test ----------------------------------------
@@ -65,8 +55,8 @@ create table t (
     primary key (x,y) 
 );
 CREATE TABLE `t` (
-    `x` int(11) NOT NULL DEFAULT '0',
-    `y` int(11) NOT NULL DEFAULT '0',
+    `x` int NOT NULL DEFAULT '0',
+    `y` int NOT NULL DEFAULT '0',
     PRIMARY KEY (`x`,`y`)
 ) ENGINE=InnoDB;
 
@@ -76,7 +66,7 @@ create table t (
     constraint primary key (x)
 );
 CREATE TABLE `t` (
-    `x` int(11) NOT NULL DEFAULT '0',
+    `x` int NOT NULL DEFAULT '0',
     PRIMARY KEY (`x`) 
 ) ENGINE=InnoDB;
 
@@ -86,7 +76,7 @@ create table t (
     constraint con primary key (x)
 );
 CREATE TABLE `t` (
-    `x` int(11) NOT NULL DEFAULT '0',
+    `x` int NOT NULL DEFAULT '0',
     PRIMARY KEY (`x`)
 ) ENGINE=InnoDB;
 

@@ -6,7 +6,7 @@ create table t (
 );
 CREATE TABLE `t` (
     `x` text,
-    `y` int(11) DEFAULT NULL
+    `y` int DEFAULT NULL
 ) ENGINE=InnoDB;
 
 -- test ----------------------------------------
@@ -17,8 +17,8 @@ create table t (
     d int not null default 0
 );
 CREATE TABLE `t` (
-    `a` int(11) DEFAULT NULL,
-    `b` int(11) DEFAULT NULL,
-    `c` int(11) NOT NULL,
-    `d` int(11) NOT NULL DEFAULT '0'
+    `a` int DEFAULT NULL,
+    `b` int DEFAULT NULL,
+    `c` int NOT NULL,
+    `d` int NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB;

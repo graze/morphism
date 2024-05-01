@@ -2,14 +2,14 @@
 create table t (a int);
 create table t (a int primary key);
 ALTER TABLE `t`
-MODIFY COLUMN `a` int(11) NOT NULL,
+MODIFY COLUMN `a` int NOT NULL,
 ADD PRIMARY KEY (`a`)
 
 -- test - Remove primary key
 create table t (a int primary key);
 create table t (a int);
 ALTER TABLE `t`
-MODIFY COLUMN `a` int(11) DEFAULT NULL,
+MODIFY COLUMN `a` int DEFAULT NULL,
 DROP PRIMARY KEY
 
 -- test - Add a named index

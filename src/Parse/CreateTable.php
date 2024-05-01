@@ -476,6 +476,18 @@ class CreateTable
                 $thisDefinition = $this->columns[$columnName]->toString($this->getCollation());
                 $thatDefinition = $that->columns[$columnName]->toString($that->getCollation());
                 
+                // Display width specification for integer data types was deprecated after 8.0.19
+                $patterns = [
+                    '/tinyint\(\d+\)/',
+                    '/smallint\(\d+\)/',
+                    '/mediumint\(\d+\)/',
+                    '/int\(\d+\)/',
+                    '/bigint\(\d+\)/'
+                ];
+                $replacements = ['tinyint', 'smallint', 'mediumint', 'int', 'bigint'];
+                $thisDefinition = preg_replace($patterns, $replacements, $thisDefinition);
+                $thatDefinition = preg_replace($patterns, $replacements, $thatDefinition);
+
                 if (str_contains($thisDefinition, 'utf8mb3')) {
                     $thisDefinition = str_replace('utf8mb3', 'utf8', $thisDefinition);
                 }
@@ -495,7 +507,6 @@ class CreateTable
                     $thisPosition   !== $thatPosition
                 ) {
                     $alter = "MODIFY COLUMN " . $thatDefinition;
-
                     // position has changed
                     if ($thisPosition !== $thatPosition) {
                         $alter .= $thatPosition;

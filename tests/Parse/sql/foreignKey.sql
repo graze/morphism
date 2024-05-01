@@ -4,7 +4,7 @@ create table t (
     foreign key (ux) references u (x)
 );
 CREATE TABLE `t` (
-    `ux` int(11) DEFAULT NULL,
+    `ux` int DEFAULT NULL,
     KEY `ux` (`ux`),
     CONSTRAINT `t_ibfk_1` FOREIGN KEY (`ux`) REFERENCES `u` (`x`)
 ) ENGINE=InnoDB;
@@ -15,7 +15,7 @@ create table t (
     foreign key fk_t_u_x (ux) references u (x)
 );
 CREATE TABLE `t` (
-    `ux` int(11) DEFAULT NULL,
+    `ux` int DEFAULT NULL,
     KEY `fk_t_u_x` (`ux`),
     CONSTRAINT `t_ibfk_1` FOREIGN KEY (`ux`) REFERENCES `u` (`x`)
 ) ENGINE=InnoDB;
@@ -26,8 +26,8 @@ create table t (
     vx int, foreign key (vx) references v (x)
 );
 CREATE TABLE `t` (
-    `ux` int(11) DEFAULT NULL,
-    `vx` int(11) DEFAULT NULL,
+    `ux` int DEFAULT NULL,
+    `vx` int DEFAULT NULL,
     KEY `ux` (`ux`),
     KEY `vx` (`vx`),
     CONSTRAINT `t_ibfk_1` FOREIGN KEY (`ux`) REFERENCES `u` (`x`),
@@ -40,7 +40,7 @@ create table t (
     constraint c1 foreign key (ux) references u (x)
 );
 CREATE TABLE `t` (
-    `ux` int(11) DEFAULT NULL,
+    `ux` int DEFAULT NULL,
     KEY `c1` (`ux`),
     CONSTRAINT `c1` FOREIGN KEY (`ux`) REFERENCES `u` (`x`)
 ) ENGINE=InnoDB;
@@ -52,7 +52,7 @@ create table t (
     foreign key (ux) references u (x)
 );
 CREATE TABLE `t` (
-    `ux` int(11) DEFAULT NULL,
+    `ux` int DEFAULT NULL,
     KEY `k1` (`ux`),
     CONSTRAINT `t_ibfk_1` FOREIGN KEY (`ux`) REFERENCES `u` (`x`)
 ) ENGINE=InnoDB;
@@ -65,8 +65,8 @@ create table t (
     foreign key (ux) references u (x)
 );
 CREATE TABLE `t` (
-    `ux` int(11) DEFAULT NULL,
-    `ty` int(11) DEFAULT NULL,
+    `ux` int DEFAULT NULL,
+    `ty` int DEFAULT NULL,
     KEY `k1` (`ux`,`ty`),
     CONSTRAINT `t_ibfk_1` FOREIGN KEY (`ux`) REFERENCES `u` (`x`)
 ) ENGINE=InnoDB;
@@ -79,8 +79,8 @@ create table t (
     foreign key (ux) references u (x)
 );
 CREATE TABLE `t` (
-    `ux` int(11) DEFAULT NULL,
-    `ty` int(11) DEFAULT NULL,
+    `ux` int DEFAULT NULL,
+    `ty` int DEFAULT NULL,
     KEY `k1` (`ty`,`ux`),
     KEY `ux` (`ux`),
     CONSTRAINT `t_ibfk_1` FOREIGN KEY (`ux`) REFERENCES `u` (`x`)
@@ -94,8 +94,8 @@ create table t (
     foreign key (ux) references u (x)
 );
 CREATE TABLE `t` (
-    `ux` int(11) DEFAULT NULL,
-    `ty` int(11) DEFAULT NULL,
+    `ux` int DEFAULT NULL,
+    `ty` int DEFAULT NULL,
     KEY `k1` (`ty`),
     KEY `ux` (`ux`),
     CONSTRAINT `t_ibfk_1` FOREIGN KEY (`ux`) REFERENCES `u` (`x`)
@@ -109,8 +109,8 @@ create table t (
     key k1 (ty)
 );
 CREATE TABLE `t` (
-    `ux` int(11) DEFAULT NULL,
-    `ty` int(11) DEFAULT NULL,
+    `ux` int DEFAULT NULL,
+    `ty` int DEFAULT NULL,
     KEY `ux` (`ux`),
     KEY `k1` (`ty`),
     CONSTRAINT `t_ibfk_1` FOREIGN KEY (`ux`) REFERENCES `u` (`x`)

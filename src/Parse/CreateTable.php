@@ -475,6 +475,13 @@ class CreateTable
                 // An existing column is being changed
                 $thisDefinition = $this->columns[$columnName]->toString($this->getCollation());
                 $thatDefinition = $that->columns[$columnName]->toString($that->getCollation());
+                
+                if (str_contains($thisDefinition, 'utf8mb3')) {
+                    $thisDefinition = str_replace('utf8mb3', 'utf8', $thisDefinition);
+                }
+                if (str_contains($thatDefinition, 'utf8mb3')) {
+                    $thatDefinition = str_replace('utf8mb3', 'utf8', $thatDefinition);
+                }
 
                 // about to 'add' $columnName - get its location in the currently
                 // permuted state of the tabledef

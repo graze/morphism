@@ -193,6 +193,11 @@ class CollationInfo
     public function setCollation($collation)
     {
         $collation = strtolower($collation);
+        if (str_contains($collation, 'utf8mb3')) {
+            $collation = str_replace('utf8mb3', 'utf8', $collation);
+            $this->charset =  str_replace('utf8mb3', 'utf8', $this->charset);
+        }
+
         $charset = self::getCollationCharset($collation);
         if (is_null($charset)) {
             throw new RuntimeException("unknown collation '$collation'");

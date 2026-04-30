@@ -11,13 +11,13 @@ class TestCase extends PHPUnitTestCase
     /** @var bool */
     protected $oldQuoteNames;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->oldQuoteNames = Token::getQuoteNames();
         Token::setQuoteNames(true);
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         Token::setQuoteNames($this->oldQuoteNames);
     }

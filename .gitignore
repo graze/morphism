@@ -1,6 +1,7 @@
 /morphism.conf
 /ocular.phar
 /phpunit.xml
+/.phpunit.result.cache
 /schema
 /schema2
 /tests/report

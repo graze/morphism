@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  test:
+    name: PHP ${{ matrix.php }}${{ matrix.prefer-lowest && ' (lowest)' || '' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.2', '7.3', '7.4']
+        prefer-lowest: ['', '--prefer-lowest']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: pcov
+          tools: composer:v2
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache composer files
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ matrix.php }}-${{ matrix.prefer-lowest }}-${{ hashFiles('composer.json') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-${{ matrix.php }}-${{ matrix.prefer-lowest }}-
+            ${{ runner.os }}-composer-${{ matrix.php }}-
+
+      - name: Configure composer platform
+        run: composer config platform.php "$(php -r 'echo PHP_VERSION;')"
+
+      - name: Install dependencies
+        run: composer update --no-interaction --prefer-dist ${{ matrix.prefer-lowest }}
+
+      - name: Run phpcs
+        run: vendor/bin/phpcs -p --warning-severity=0 src/ tests/
+
+      - name: Run phpunit
+        run: vendor/bin/phpunit --coverage-clover=./tests/report/coverage.clover
+
+      - name: Upload coverage to Scrutinizer
+        if: matrix.php == '7.4' && matrix.prefer-lowest == '' && github.event_name == 'push'
+        continue-on-error: true
+        run: |
+          if [ -f ./tests/report/coverage.clover ]; then
+            wget https://scrutinizer-ci.com/ocular.phar
+            php ocular.phar code-coverage:upload --format=php-clover ./tests/report/coverage.clover
+          fi
+
+  functional:
+    name: Functional tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 7.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Install docker-compose v1 shim
+        run: |
+          sudo tee /usr/local/bin/docker-compose >/dev/null <<'SH'
+          #!/usr/bin/env bash
+          exec docker compose "$@"
+          SH
+          sudo chmod +x /usr/local/bin/docker-compose
+
+      - name: Run functional tests
+        run: make test-functional

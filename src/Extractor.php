@@ -443,7 +443,13 @@ class Extractor
         $defTableOptions = [];
         $defTableOptions[] = "ENGINE=$table->ENGINE";
         if (strcasecmp($table->ROW_FORMAT, 'COMPACT') != 0) {
-            $defTableOptions[] = "ROW_FORMAT=$table->ROW_FORMAT";
+            // ROW_FORMAT=FIXED is only valid for MyISAM; MySQL 8 errors with
+            // 1031 if applied to InnoDB. Drop it silently for InnoDB.
+            $skipRowFormat = strcasecmp((string) $table->ROW_FORMAT, 'FIXED') === 0
+                && strcasecmp((string) $table->ENGINE, 'InnoDB') === 0;
+            if (!$skipRowFormat) {
+                $defTableOptions[] = "ROW_FORMAT=$table->ROW_FORMAT";
+            }
         }
         if ($table->AUTO_INCREMENT) {
             $defTableOptions[] = "AUTO_INCREMENT=$table->AUTO_INCREMENT";

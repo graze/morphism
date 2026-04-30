@@ -165,6 +165,9 @@ class CollationInfo
     public function setCharset($charset)
     {
         $charset = strtolower($charset);
+        if ($charset === 'utf8mb3') {
+            $charset = 'utf8';
+        }
         $defaultCollation = self::getCharsetDefaultCollation($charset);
         if (is_null($defaultCollation)) {
             throw new RuntimeException("unknown character set '$charset'");

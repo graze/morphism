@@ -488,10 +488,10 @@ class CreateTable
                 $thisDefinition = preg_replace($patterns, $replacements, $thisDefinition);
                 $thatDefinition = preg_replace($patterns, $replacements, $thatDefinition);
 
-                if (str_contains($thisDefinition, 'utf8mb3')) {
+                if (strpos($thisDefinition, 'utf8mb3') !== false) {
                     $thisDefinition = str_replace('utf8mb3', 'utf8', $thisDefinition);
                 }
-                if (str_contains($thatDefinition, 'utf8mb3')) {
+                if (strpos($thatDefinition, 'utf8mb3') !== false) {
                     $thatDefinition = str_replace('utf8mb3', 'utf8', $thatDefinition);
                 }
 

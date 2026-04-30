@@ -9,20 +9,11 @@ jobs:
   test:
     name: PHP ${{ matrix.php }}${{ matrix.prefer-lowest && ' (lowest)' || '' }}
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.experimental || false }}
     strategy:
       fail-fast: false
       matrix:
         php: ['7.2', '7.3', '7.4']
         prefer-lowest: ['', '--prefer-lowest']
-        experimental: [false]
-        include:
-          - php: 'nightly'
-            prefer-lowest: ''
-            experimental: true
-          - php: 'nightly'
-            prefer-lowest: '--prefer-lowest'
-            experimental: true
     steps:
       - uses: actions/checkout@v4
 
@@ -72,6 +63,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup PHP 7.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
 
       - name: Install docker-compose v1 shim
         run: |

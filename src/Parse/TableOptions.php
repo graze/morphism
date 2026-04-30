@@ -300,6 +300,14 @@ class TableOptions
         ] as $option) {
             if ($this->options[$option] !== $this->defaultOptions[$option]) {
                 $value = $this->options[$option];
+                // ROW_FORMAT=FIXED is only valid for MyISAM; MySQL 8 errors with
+                // 1031 if applied to InnoDB. Drop it silently for InnoDB.
+                if ($option === 'ROW_FORMAT'
+                    && strcasecmp((string) $value, 'FIXED') === 0
+                    && strcasecmp((string) $this->engine, 'InnoDB') === 0
+                ) {
+                    continue;
+                }
                 if (in_array($option, ['COMMENT', 'CONNECTION'])) {
                     $value = Token::escapeString($value);
                 }

@@ -89,7 +89,10 @@ class TableOptionsTest extends TestCase
 
             ["row_format=default",          "ENGINE=InnoDB"],
             ["row_format=dynamic",          "ENGINE=InnoDB ROW_FORMAT=DYNAMIC"],
-            ["row_format=fixed",            "ENGINE=InnoDB ROW_FORMAT=FIXED"],
+            // ROW_FORMAT=FIXED is invalid for InnoDB on MySQL 8 (error 1031);
+            // morphism silently drops it so the table can be created.
+            ["row_format=fixed",            "ENGINE=InnoDB"],
+            ["engine=MyISAM row_format=fixed", "ENGINE=MyISAM ROW_FORMAT=FIXED"],
             ["row_format=compressed",       "ENGINE=InnoDB ROW_FORMAT=COMPRESSED"],
             ["row_format=redundant",        "ENGINE=InnoDB ROW_FORMAT=REDUNDANT"],
             ["row_format=compact",          "ENGINE=InnoDB ROW_FORMAT=COMPACT"],

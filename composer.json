@@ -29,11 +29,11 @@
         }
     ],
     "require": {
-        "php": "^7.2",
+        "php": "^7.4",
 
         "doctrine/dbal": "^2.5",
-        "symfony/console": "^2.8 | ^3 | ^4",
-        "symfony/yaml": "^2.6 | ^3 | ^4"
+        "symfony/console": "^5",
+        "symfony/yaml": "^5"
     },
     "require-dev": {
         "graze/standards": "^2.0",

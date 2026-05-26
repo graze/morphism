@@ -582,9 +582,9 @@ class TokenStream
     }
 
     /**
-     * @param mixed $mark
+     * @param \stdClass $mark
      */
-    public function rewind($mark)
+    public function rewind(\stdClass $mark)
     {
         $this->offset        = $mark->offset;
         $this->inConditional = $mark->inConditional;
@@ -594,7 +594,7 @@ class TokenStream
      * This function will consume the requested content from the stream without trying to parse and tokenise it.
      * It is used by {@see peek()}.
      *
-     * @param mixed $spec
+     * @param string|array $spec
      * @return bool
      */
     public function consume($spec)
@@ -636,7 +636,7 @@ class TokenStream
     }
 
     /**
-     * @param mixed $spec
+     * @param string|array $spec
      * @return bool
      */
     public function peek($spec)

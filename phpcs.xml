@@ -15,6 +15,11 @@
         <exclude name="Squiz.Commenting.FunctionComment.ScalarTypeHintMissing" />
     </rule>
 
+    <rule ref="Squiz.Commenting.FunctionComment.TypeHintMissing">
+        <!-- PHP 7.4 has no `mixed` type; tests legitimately use mixed-typed dataProvider params -->
+        <exclude-pattern>*/tests/*</exclude-pattern>
+    </rule>
+
     <rule ref="Squiz.NamingConventions.ValidVariableName.NotCamelCaps">
         <!-- excluded because it's handling raw database query results -->
         <exclude-pattern>*/src/Extractor.php</exclude-pattern>

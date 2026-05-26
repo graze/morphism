@@ -571,7 +571,7 @@ class TokenStream
     }
 
     /**
-     * @return object
+     * @return \stdClass
      */
     public function getMark()
     {
@@ -582,9 +582,9 @@ class TokenStream
     }
 
     /**
-     * @param \stdClass $mark
+     * @param object $mark
      */
-    public function rewind(\stdClass $mark)
+    public function rewind(object $mark)
     {
         $this->offset        = $mark->offset;
         $this->inConditional = $mark->inConditional;

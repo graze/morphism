@@ -9,7 +9,7 @@ DOCKER_RUN := ${DOCKER_RUN_BASE} ${IMAGE}
 
 PREFER_LOWEST ?=
 
-.PHONY: build build-update composer-% clean help run
+.PHONY: build build-update build-docker build-docker-multiarch composer-% clean help run
 .PHONY: lint lint-fix
 .PHONY: test test-unit test-integration test-lowest test-matrix test-coverage test-coverage-html test-coverage-clover
 
@@ -37,6 +37,22 @@ composer-%: ## Run a composer command, `make "composer-<command> [...]"`.
 
 ensure-conf-file: # Ensure that there is a configuration file in dev
 	@test -f morphism.conf || cp example/morphism.conf.example morphism.conf
+
+PLATFORMS ?= linux/amd64,linux/arm64
+
+build-docker: ## Build the docker image for the host architecture and load it locally.
+	docker buildx build --load \
+        --build-arg BUILD_DATE="$$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+        --build-arg VCS_REF="$$(git rev-parse --short HEAD)" \
+        -t graze/morphism .
+
+build-docker-multiarch: ## Build the docker image for multiple architectures (no load; set PUSH=1 to push).
+	docker buildx build \
+        --platform ${PLATFORMS} \
+        $(if $(PUSH),--push,) \
+        --build-arg BUILD_DATE="$$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+        --build-arg VCS_REF="$$(git rev-parse --short HEAD)" \
+        -t graze/morphism .
 
 # Testing
 

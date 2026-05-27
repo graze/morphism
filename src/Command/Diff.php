@@ -304,9 +304,10 @@ class Diff extends Command
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
+     * @return int
      * @throws Exception
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->configFile = $input->getArgument(self::ARGUMENT_CONFIG_FILE);
         $this->connectionNames = $input->getArgument(self::ARGUMENT_CONNECTIONS);
@@ -408,5 +409,7 @@ class Diff extends Command
         } catch (Exception $e) {
             throw new Exception($e->getMessage() . "\n\n" . $e->getTraceAsString());
         }
+
+        return 0;
     }
 }

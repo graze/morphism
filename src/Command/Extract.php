@@ -85,9 +85,10 @@ class Extract extends Command
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
+     * @return int
      * @throws Exception
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->mysqldump = $input->getArgument(self::ARGUMENT_MYSQL_DUMP_FILE);
 
@@ -139,5 +140,7 @@ class Extract extends Command
                 $output->writeln("$query;\n");
             }
         }
+
+        return 0;
     }
 }

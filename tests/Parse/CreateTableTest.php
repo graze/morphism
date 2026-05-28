@@ -50,7 +50,7 @@ class CreateTableTest extends TestCase
                 $this->fail("expected an $expectedExceptionType exception, but none was thrown");
             } else {
                 $this->assertInstanceOf($expectedExceptionType, $threw, "wrong exception type thrown");
-                $this->assertRegExp("/$expectedMessageRegex/", $e->getMessage(), "wrong exception message");
+                $this->assertMatchesRegularExpression("/$expectedMessageRegex/", $e->getMessage(), "wrong exception message");
             }
         } elseif (is_null($threw)) {
             $ddl = $table->getDDL();

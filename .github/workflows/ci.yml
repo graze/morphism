@@ -12,8 +12,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['7.4']
-        prefer-lowest: ['', '--prefer-lowest']
+        php: ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5']
+        prefer-lowest: ['']
+        # The lowest supported dependencies (e.g. doctrine/dbal ^2.5) predate
+        # PHP 8 support, so only exercise --prefer-lowest on the minimum PHP.
+        include:
+          - php: '7.4'
+            prefer-lowest: '--prefer-lowest'
     steps:
       - uses: actions/checkout@v4
 

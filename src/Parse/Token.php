@@ -105,7 +105,7 @@ class Token
     public function eq($type, $text)
     {
         return ($this->type === $type)
-            && strcasecmp($this->text, $text) === 0;
+            && strcasecmp((string) $this->text, (string) $text) === 0;
     }
 
     /**

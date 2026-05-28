@@ -95,11 +95,10 @@ class CreateDatabaseTest extends TestCase
         ];
     }
 
-    /**
-     * @expectedException RuntimeException
-     */
     public function testBadParse()
     {
+        $this->expectException(RuntimeException::class);
+
         $stream = $this->makeStream('foo');
         $database = new CreateDatabase(new CollationInfo());
         $database->parse($stream);
@@ -138,11 +137,10 @@ class CreateDatabaseTest extends TestCase
         $this->assertArrayHasKey($tableName, $database->tables);
     }
 
-    /**
-     * @expectedException RuntimeException
-     */
     public function testBadAddTable()
     {
+        $this->expectException(RuntimeException::class);
+
         $createTable = new CreateTable(new CollationInfo());
         $database = new CreateDatabase(new CollationInfo());
         $database->addTable($createTable);
@@ -157,7 +155,7 @@ class CreateDatabaseTest extends TestCase
     {
         $ddl = $database->getDDL();
 
-        $this->assertInternalType('array', $ddl);
+        $this->assertIsArray($ddl);
         $this->assertEquals(1, count($ddl));
         $this->assertEquals($sql, $ddl[0]);
     }
@@ -196,11 +194,10 @@ class CreateDatabaseTest extends TestCase
         return $testCases;
     }
 
-    /**
-     * @expectedException RuntimeException
-     */
     public function testBadGetDDL()
     {
+        $this->expectException(RuntimeException::class);
+
         $database = new CreateDatabase(new CollationInfo());
         $database->getDDL();
     }

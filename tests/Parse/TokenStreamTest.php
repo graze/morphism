@@ -23,9 +23,9 @@ class TokenStreamTest extends TestCase
         $this->assertThat($stream, $this->isInstanceOf(__NAMESPACE__ . '\TokenStream'));
     }
 
-    /** @expectedException Exception */
     public function testNewFromFileNotFound()
     {
+        $this->expectException(Exception::class);
         TokenStream::newFromFile(dirname(__FILE__) . "/file_not_found");
     }
 
@@ -117,7 +117,7 @@ class TokenStreamTest extends TestCase
             [ "{$bq}{$bq}",                     Token::IDENTIFIER, ''],
             [ "{$bq}hello{$bq}",                Token::IDENTIFIER, 'hello'],
             [ "{$bq}hello{$bq}{$bq}world{$bq}", Token::IDENTIFIER, "hello{$bq}world"],      // `` => `
-            [ "{$bq}hello{$bs}{$bs}world{$bq}", Token::IDENTIFIER, "hello{$bs}${bs}world"], // \\ => \\
+            [ "{$bq}hello{$bs}{$bs}world{$bq}", Token::IDENTIFIER, "hello{$bs}{$bs}world"], // \\ => \\
             [ "{$bq}hello{$bs}nworld{$bq}",     Token::IDENTIFIER, "hello{$bs}nworld"],     // \n => \n
 
             // hex literals
@@ -170,10 +170,11 @@ class TokenStreamTest extends TestCase
     /**
      * @param string $text
      * @dataProvider provideBadLogicNextToken
-     * @expectedException LogicException
      */
     public function testBadLogicNextToken($text)
     {
+        $this->expectException(LogicException::class);
+
         $stream = $this->makeStream($text);
         $stream->nextToken();
     }
@@ -199,10 +200,11 @@ class TokenStreamTest extends TestCase
     /**
      * @param string $text
      * @dataProvider provideBadRuntimeNextToken
-     * @expectedException RuntimeException
      */
     public function testBadRuntimeNextToken($text)
     {
+        $this->expectException(RuntimeException::class);
+
         $stream = $this->makeStream($text);
         $stream->nextToken();
     }
@@ -322,9 +324,9 @@ class TokenStreamTest extends TestCase
         $stream->expect(Token::IDENTIFIER, 'create');
     }
 
-    /** @expectedException Exception */
     public function testExpectFail()
     {
+        $this->expectException(Exception::class);
         $stream = $this->makeStream('create table t');
         $stream->expect(Token::IDENTIFIER, 'drop');
     }
@@ -445,7 +447,11 @@ EOF;
         // Use reflection to set the internal offset to the place where error is.
         $reflection = new ReflectionClass($stream);
         $property = $reflection->getProperty('offset');
-        $property->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            // setAccessible() is required before PHP 8.1; it became a no-op in 8.1
+            // and is deprecated from 8.5 onwards.
+            $property->setAccessible(true);
+        }
         $property->setValue($stream, 32);
 
         $message = $stream->contextualise("unknown datatype 'bar'");

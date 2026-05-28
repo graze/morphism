@@ -59,10 +59,10 @@ class CollationInfoTest extends TestCase
      * @param string $charset
      * @param string $collation
      * @dataProvider providerConstructorWithBadArgs
-     * @expectedException RuntimeException
      */
     public function testConstructorWithBadArgs($charset, $collation)
     {
+        $this->expectException(RuntimeException::class);
         new CollationInfo($charset, $collation);
     }
 
@@ -106,9 +106,9 @@ class CollationInfoTest extends TestCase
         $this->assertFalse((new CollationInfo('utf8', 'utf8_bin'))->isBinaryCharset());
     }
 
-    /** @expectedException LogicException */
     public function testInvalidIsBinaryCharset()
     {
+        $this->expectException(LogicException::class);
         (new CollationInfo())->isBinaryCharset();
     }
 
@@ -123,9 +123,9 @@ class CollationInfoTest extends TestCase
         $this->assertFalse((new CollationInfo('latin1', 'latin1_general_ci'))->isDefaultCollation());
     }
 
-    /** @expectedException LogicException */
     public function testInvalidSiDefaulfCollation()
     {
+        $this->expectException(LogicException::class);
         (new CollationInfo())->isDefaultCollation();
     }
 
@@ -140,15 +140,15 @@ class CollationInfoTest extends TestCase
         $this->assertSame('utf8', $collation->getCharset());
     }
 
-    /** @expectedException Exception */
     public function testSetCharsetFail()
     {
+        $this->expectException(Exception::class);
         (new CollationInfo('latin1'))->setCharset('utf8');
     }
 
-    /** @expectedException LogicException */
     public function testEmptyCharsetFail()
     {
+        $this->expectException(LogicException::class);
         (new CollationInfo())->getCharset();
     }
 
@@ -165,9 +165,9 @@ class CollationInfoTest extends TestCase
         $this->assertSame('utf8_general_ci', $collation->getCollation());
     }
 
-    /** @expectedException Exception */
     public function testSetCollationFail()
     {
+        $this->expectException(Exception::class);
         (new CollationInfo('latin1'))->setCollation('utf8_general_ci');
     }
 
@@ -180,9 +180,9 @@ class CollationInfoTest extends TestCase
         $this->assertSame('utf8_bin', $collation->getCollation());
     }
 
-    /** @expectedException LogicException */
     public function testEmptyCollationFail()
     {
+        $this->expectException(LogicException::class);
         (new CollationInfo())->getCollation();
     }
 }

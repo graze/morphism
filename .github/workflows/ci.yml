@@ -12,8 +12,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['7.4']
-        prefer-lowest: ['', '--prefer-lowest']
+        php: ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5']
+        prefer-lowest: ['']
+        # The lowest supported dependencies (e.g. doctrine/dbal ^2.5) predate
+        # PHP 8 support, so only exercise --prefer-lowest on the minimum PHP.
+        include:
+          - php: '7.4'
+            prefer-lowest: '--prefer-lowest'
     steps:
       - uses: actions/checkout@v4
 
@@ -21,7 +26,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          coverage: pcov
+          coverage: none
           tools: composer:v2
 
       - name: Get composer cache directory
@@ -47,16 +52,7 @@ jobs:
         run: vendor/bin/phpcs -p --warning-severity=0 src/ tests/
 
       - name: Run phpunit
-        run: vendor/bin/phpunit --coverage-clover=./tests/report/coverage.clover
-
-      - name: Upload coverage to Scrutinizer
-        if: matrix.php == '7.4' && matrix.prefer-lowest == '' && github.event_name == 'push'
-        continue-on-error: true
-        run: |
-          if [ -f ./tests/report/coverage.clover ]; then
-            wget https://scrutinizer-ci.com/ocular.phar
-            php ocular.phar code-coverage:upload --format=php-clover ./tests/report/coverage.clover
-          fi
+        run: vendor/bin/phpunit
 
   functional:
     name: Functional tests

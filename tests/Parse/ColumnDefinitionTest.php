@@ -255,10 +255,11 @@ class ColumnDefinitionTest extends TestCase
     /**
      * @param string $text
      * @dataProvider parseInvalidDatatypesProvider
-     * @expectedException RuntimeException
      */
     public function testParseInvalidDatatypes($text)
     {
+        $this->expectException(RuntimeException::class);
+
         $stream = $this->makeStream($text);
         $column = new ColumnDefinition();
         $column->parse($stream);
@@ -318,10 +319,11 @@ class ColumnDefinitionTest extends TestCase
     /**
      * @param string $text
      * @dataProvider parseInvalidDefaultValuesProvider
-     * @expectedException Exception
      */
     public function testParseInvalidDefaultValues($text)
     {
+        $this->expectException(Exception::class);
+
         $stream = $this->makeStream($text);
         $column = new ColumnDefinition();
         $column->parse($stream);

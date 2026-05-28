@@ -121,10 +121,11 @@ class TableOptionsTest extends TestCase
     /**
      * @dataProvider badParseProvider
      * @param string $text
-     * @expectedException RuntimeException
      */
     public function testBadParse($text)
     {
+        $this->expectException(RuntimeException::class);
+
         $stream = $this->makeStream($text);
 
         $options = new TableOptions(new CollationInfo());

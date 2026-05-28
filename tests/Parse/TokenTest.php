@@ -69,8 +69,8 @@ class TokenTest extends TestCase
         $unescaped = Token::fromString(
             "ijk{$bs}a" .
             "jkl{$bs}f" .
-            "klm{$bs}${sq}" .
-            "lmn{$bs}${dq}" .
+            "klm{$bs}{$sq}" .
+            "lmn{$bs}{$dq}" .
             "mno{$bs}?" .
             "nop{$bs}176" .
             "opq{$bs}x7e" .
@@ -82,8 +82,8 @@ class TokenTest extends TestCase
                 Token::STRING,
                 "ijk" . "a" .
                 "jkl" . "f" .
-                "klm" . "${sq}" .
-                "lmn" . "${dq}" .
+                "klm" . "{$sq}" .
+                "lmn" . "{$dq}" .
                 "mno" . "?" .
                 "nop" . "176" .
                 "opq" . "x7e" .
@@ -98,15 +98,15 @@ class TokenTest extends TestCase
 
         foreach ([
             ""              => "",
-            "{$sq}${sq}"    => "{$sq}",
-            "abc{$sq}${sq}" => "abc{$sq}",
-            "{$sq}${sq}abc" => "{$sq}abc",
+            "{$sq}{$sq}"    => "{$sq}",
+            "abc{$sq}{$sq}" => "abc{$sq}",
+            "{$sq}{$sq}abc" => "{$sq}abc",
         ] as $arg => $result) {
             $token = Token::fromString($arg, $sq);
             $this->assertTrue($token->eq(Token::STRING, $result));
         }
 
-        $token = Token::fromString("{$sq}${sq}", $sq);
+        $token = Token::fromString("{$sq}{$sq}", $sq);
         $this->assertTrue($token->eq(Token::STRING, "{$sq}"));
     }
 
@@ -275,13 +275,13 @@ class TokenTest extends TestCase
 
     /**
      * @dataProvider providerAsXyzError
-     * @expectedException Exception
      * @param string $method
      * @param string $type
      * @param string $arg
      */
     public function testAsXyzError($method, $type, $arg)
     {
+        $this->expectException(Exception::class);
         (new Token($type, $arg))->$method();
     }
 
